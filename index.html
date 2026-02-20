@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERRAWATCH Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --primary: #0f766e;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #1f2937;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --safe: #16a34a;
+}
+* { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+body { margin:0; background: var(--bg); color: var(--text); }
+header { background: var(--primary); color: white; padding: 18px; text-align:center; font-size:26px; font-weight:bold; }
+.subtitle { font-size:14px; opacity:0.9; margin-top:4px; }
+.container { padding:16px; max-width:1200px; margin:auto; }
+.status-banner { background: var(--safe); color:white; padding:14px; border-radius:14px; font-size:20px; text-align:center; margin-bottom:16px; font-weight:bold; }
+.node { background: var(--card); border-radius:20px; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; border-left:10px solid var(--safe); transition: border-color 0.3s ease; }
+.node.safe { border-left-color: var(--safe); }
+.node.warning { border-left-color: var(--warning); }
+.node.danger { border-left-color: var(--danger); }
+.node-header { padding:18px; font-size:20px; font-weight:bold; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:#e6fffa; }
+.node-status { font-size:14px; padding:4px 10px; border-radius:999px; color:white; margin-right:8px; }
+.badge-safe { background: var(--safe); }
+.badge-warning { background: var(--warning); }
+.badge-danger { background: var(--danger); }
+.node-content { display:none; padding:14px; }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+.card { background: #ffffff; border-radius:16px; padding:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); text-align:center; font-size:16px; }
+footer { text-align:center; padding:18px; font-size:13px; opacity:0.7; }
+.controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:16px; }
+.btn { background: var(--primary); color:white; border:none; padding:14px 20px; font-size:18px; border-radius:14px; cursor:pointer; min-width:160px; }
+.btn:hover { opacity:0.9; }
+canvas { width:100%; max-height:240px; }
+.rodCanvas { width:100%; height:240px; }
+</style>
+</head>
+<body>
+
+<header>
+  TERRAWATCH Landslide Monitoring
+  <div class="subtitle">Real-Time Early Warning System</div>
+</header>
+
+<div class="container">
+<div id="statusBanner" class="status-banner">STATUS: SAFE</div>
+<div class="controls">
+  <button class="btn" onclick="expandAll(true)">Open All Nodes</button>
+  <button class="btn" onclick="expandAll(false)">Close All Nodes</button>
+  <button class="btn" onclick="fetchAllNodes()">Refresh</button>
+</div>
+
+<!-- Node 1 -->
+<div class="node safe" id="node1">
+  <div class="node-header" onclick="toggleNode(this)">
+    <div>Node 1 – Monitoring Area <span id="badge-node1" class="node-status badge-safe">SAFE</span></div>
+    <span>▼</span>
+  </div>
+  <div class="node-content">
+    <div class="grid">
+      <div class="card">
+        <h3>Tilt Position</h3>
+        <canvas id="node1-rod" class="rodCanvas"></canvas>
+      </div>
+      <div class="card">
+        <h3>Soil Moisture (%)</h3>
+        <canvas id="node1-moisture-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Node 2 -->
+<div class="node safe" id="node2">
+  <div class="node-header" onclick="toggleNode(this)">
+    <div>Node 2 – Monitoring Area <span id="badge-node2" class="node-status badge-safe">SAFE</span></div>
+    <span>▼</span>
+  </div>
+  <div class="node-content">
+    <div class="grid">
+      <div class="card">
+        <h3>Tilt Position</h3>
+        <canvas id="node2-rod" class="rodCanvas"></canvas>
+      </div>
+      <div class="card">
+        <h3>Soil Moisture (%)</h3>
+        <canvas id="node2-moisture-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<footer>TERRAWATCH © 2026 • Accessible Monitoring Dashboard</footer>
+
+<script>
+function toggleNode(header) {
+  const node = header.closest('.node');
+  const content = node.querySelector('.node-content');
+  const arrow = header.querySelector('span:last-child');
+  if(content.style.display === 'block'){ content.style.display='none'; arrow.textContent='▼'; }
+  else{ content.style.display='block'; arrow.textContent='▲'; }
+}
+function expandAll(open){
+  document.querySelectorAll('.node-content').forEach(c=>c.style.display=open?'block':'none');
+  document.querySelectorAll('.node-header span:last-child').forEach(a=>a.textContent=open?'▲':'▼');
+}
+
+function classifyRisk(tilt, moisture){
+  if(tilt>=10 || moisture>=85) return 'danger';
+  if(tilt>=5 || moisture>=70) return 'warning';
+  return 'safe';
+}
+function applyNodeStatus(nodeId, status){
+  const node=document.getElementById(nodeId);
+  const badge=document.getElementById('badge-'+nodeId);
+  node.classList.remove('safe','warning','danger');
+  badge.classList.remove('badge-safe','badge-warning','badge-danger');
+  if(status==='danger'){node.classList.add('danger'); badge.classList.add('badge-danger'); badge.textContent='DANGER';}
+  else if(status==='warning'){node.classList.add('warning'); badge.classList.add('badge-warning'); badge.textContent='WARNING';}
+  else{node.classList.add('safe'); badge.classList.add('badge-safe'); badge.textContent='SAFE';}
+}
+
+const nodes=[
+  {id:'node1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:1, moisture:2}},
+  {id:'node2', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:1, moisture:2}}
+];
+
+// Chart setup
+const charts={};
+nodes.forEach(node=>{
+  charts[node.id+'-moisture'] = new Chart(document.getElementById(node.id+'-moisture-chart'), {
+    type:'line',
+    data:{labels:[], datasets:[{label:'Moisture %', data:[], borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,0.1)'}]},
+    options:{responsive:true, animation:false, scales:{y:{beginAtZero:true,max:100}}}
+  });
+});
+
+// Draw rod tilt
+function drawRod(canvasId, angle){
+  const canvas=document.getElementById(canvasId);
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width=canvas.offsetWidth;
+  const h=canvas.height=canvas.offsetHeight;
+  ctx.clearRect(0,0,w,h);
+
+  const centerX=w/2;
+  const baseY=h*0.9;
+  const length=h*0.6;
+
+  const rad=angle*Math.PI/180;
+  const endX=centerX + length*Math.sin(rad);
+  const endY=baseY - length*Math.cos(rad);
+
+  ctx.lineWidth=6;
+  ctx.strokeStyle='#0f766e';
+  ctx.beginPath();
+  ctx.moveTo(centerX,baseY);
+  ctx.lineTo(endX,endY);
+  ctx.stroke();
+
+  ctx.fillStyle='#111';
+  ctx.font='16px Arial';
+  ctx.fillText(angle.toFixed(1)+'°',10,20);
+}
+
+async function fetchNode(node){
+  try{
+    const url=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=20`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const feeds=data.feeds;
+
+    const tiltArr=feeds.map(f=>parseFloat(f[`field${node.fields.tilt}`])||0);
+    const moistureArr=feeds.map(f=>parseFloat(f[`field${node.fields.moisture}`])||0);
+    const labels=feeds.map(f=>f.created_at.split('T')[1].split('Z')[0]);
+
+    const lastTilt=tiltArr[tiltArr.length-1]||0;
+    const lastMoisture=moistureArr[moistureArr.length-1]||0;
+
+    drawRod(node.id+'-rod', lastTilt);
+
+    const status=classifyRisk(lastTilt,lastMoisture);
+    applyNodeStatus(node.id,status);
+
+    const moistureChart=charts[node.id+'-moisture'];
+    moistureChart.data.labels=labels;
+    moistureChart.data.datasets[0].data=moistureArr;
+    moistureChart.update();
+
+  }catch(err){console.log('Error:',err);}  
+}
+
+function fetchAllNodes(){nodes.forEach(fetchNode); updateOverall();}
+
+function updateOverall(){
+  const banner=document.getElementById('statusBanner');
+  let finalStatus='safe';
+  nodes.forEach(n=>{
+    const nodeEl=document.getElementById(n.id);
+    if(nodeEl.classList.contains('danger')) finalStatus='danger';
+    else if(nodeEl.classList.contains('warning') && finalStatus!=='danger') finalStatus='warning';
+  });
+  if(finalStatus==='danger'){banner.textContent='STATUS: DANGER'; banner.style.background='#dc2626';}
+  else if(finalStatus==='warning'){banner.textContent='STATUS: WARNING'; banner.style.background='#d97706';}
+  else{banner.textContent='STATUS: SAFE'; banner.style.background='#16a34a';}
+}
+
+fetchAllNodes();
+setInterval(fetchAllNodes,20000);
+</script>
+
+</body>
+</html>
