@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LandsITrack">
 <link rel="apple-touch-icon" href="icon-192.png">
-<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});</script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1009,15 +1009,9 @@ function showSplash() {
 
 function hideSplash() {
   document.getElementById('installSplash').style.display = 'none';
-  sessionStorage.setItem('splashSeen', '1');
 }
 
-// Auto-show on first visit if not already installed
-if (!isStandalone && !sessionStorage.getItem('splashSeen')) {
-  setTimeout(showSplash, 600);
-}
-
-// Hide install button if running as installed app
+// Hide install button if already running as installed app
 if (isStandalone) {
   document.getElementById('installHeaderBtn').classList.add('hidden');
 }
