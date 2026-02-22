@@ -5,19 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LandsITrack — Landslide Monitoring</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#134e4a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LandsITrack">
 <link rel="apple-touch-icon" href="icon-192.png">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
-</script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --teal:#0d9488; --teal-dark:#0f766e; --teal-deep:#134e4a;
@@ -45,6 +40,9 @@ header{background:var(--teal-deep);padding:0 24px;height:64px;display:flex;align
 .last-update{font-size:11px;color:#99d6d0;font-family:var(--mono);}
 .admin-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .2s;}
 .admin-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.install-header-btn{background:#0d9488;border:none;color:#fff;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;white-space:nowrap;}
+.install-header-btn:hover{background:#0f766e;}
+.install-header-btn.hidden{display:none;}
 nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 20px;}
 .nav-btn{background:none;border:none;font-family:var(--sans);font-size:14px;font-weight:500;color:var(--text-muted);padding:14px 20px;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;}
 .nav-btn:hover{color:var(--teal);}
@@ -223,14 +221,42 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 </head>
 <body>
 
+<!-- INSTALL SPLASH -->
+<div id="installSplash" style="display:none;position:fixed;inset:0;z-index:2000;background:#134e4a;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;">
+  <div style="font-size:72px;margin-bottom:16px;">🏔️</div>
+  <div style="font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:#fff;margin-bottom:6px;">Lands<span style="color:#5eead4;">I</span>Track</div>
+  <div style="font-size:12px;color:#99d6d0;font-family:'Space Mono',monospace;margin-bottom:32px;letter-spacing:2px;">REAL-TIME LANDSLIDE MONITORING</div>
+  <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:24px 28px;max-width:320px;width:100%;margin-bottom:28px;">
+    <div style="font-size:13px;color:#cffafe;line-height:1.8;margin-bottom:16px;">Install LandsITrack on your device for quick access — works like a real app, no App Store needed.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#5eead4;text-align:left;">
+      <div>&#x2705; &nbsp;Live sensor alerts</div>
+      <div>&#x2705; &nbsp;Works offline</div>
+      <div>&#x2705; &nbsp;Home screen icon</div>
+      <div>&#x2705; &nbsp;Real-time Firebase sync</div>
+    </div>
+  </div>
+  <!-- Android/Desktop: native prompt button -->
+  <button id="splashInstallBtn" style="display:none;width:100%;max-width:300px;background:#0d9488;color:#fff;border:none;padding:16px;border-radius:14px;font-family:'Space Mono',monospace;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;letter-spacing:.5px;">&#x1F4F2; Install App</button>
+  <!-- iOS: step-by-step guide -->
+  <div id="splashIosGuide" style="display:none;width:100%;max-width:300px;margin-bottom:12px;">
+    <div style="background:rgba(255,255,255,.1);border-radius:14px;padding:18px;font-size:13px;color:#fff;line-height:2;text-align:left;">
+      <strong style="display:block;margin-bottom:8px;font-family:'Space Mono',monospace;color:#5eead4;">To install on iPhone:</strong>
+      1. Tap the <strong>Share</strong> button &#x25A1;&#x2191; at the bottom<br>
+      2. Scroll and tap <strong>"Add to Home Screen"</strong><br>
+      3. Tap <strong>Add</strong> &mdash; done!
+    </div>
+  </div>
+  <button id="splashSkipBtn" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;padding:10px;font-family:'DM Sans',sans-serif;margin-top:4px;">Skip &mdash; open in browser instead</button>
+</div>
+
 <header>
   <div class="logo">
     <div class="logo-icon">🏔️</div>
     <div class="logo-text">Lands<span>I</span>Track</div>
   </div>
   <div class="header-right">
-    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
     <div class="last-update" id="lastUpdate">—</div>
+    <button class="install-header-btn" id="installHeaderBtn">📲 Install App</button>
     <button class="admin-btn" id="adminOpenBtn" title="Admin Panel">🔒</button>
   </div>
 </header>
@@ -963,6 +989,65 @@ function refreshAdminPanel() {
         }).join('');
   });
 }
+
+// ── PWA Install ──
+let deferredPrompt = null;
+const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+const isStandalone = window.navigator.standalone === true ||
+                     window.matchMedia('(display-mode: standalone)').matches;
+
+function showSplash() {
+  const s = document.getElementById('installSplash');
+  s.style.display = 'flex';
+  s.style.flexDirection = 'column';
+  // Show correct UI for platform
+  if (isIos) {
+    document.getElementById('splashIosGuide').style.display = 'block';
+  }
+  // splashInstallBtn shown via beforeinstallprompt on Android/desktop
+}
+
+function hideSplash() {
+  document.getElementById('installSplash').style.display = 'none';
+  sessionStorage.setItem('splashSeen', '1');
+}
+
+// Hide install button if already running as installed app
+if (isStandalone) {
+  document.getElementById('installHeaderBtn').classList.add('hidden');
+}
+
+// Android/Desktop: capture the install prompt
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show the install button inside the splash
+  document.getElementById('splashInstallBtn').style.display = 'block';
+});
+
+async function triggerInstall() {
+  if (deferredPrompt) {
+    // Android/Desktop: native prompt
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === 'accepted') hideSplash();
+  } else {
+    // iOS or already dismissed prompt: show splash with guide
+    showSplash();
+  }
+}
+
+document.getElementById('splashInstallBtn').addEventListener('click', triggerInstall);
+document.getElementById('splashSkipBtn').addEventListener('click', hideSplash);
+document.getElementById('installHeaderBtn').addEventListener('click', triggerInstall);
+
+window.addEventListener('appinstalled', () => {
+  hideSplash();
+  document.getElementById('installHeaderBtn').classList.add('hidden');
+  deferredPrompt = null;
+});
+
 </script>
 </body>
 </html>
