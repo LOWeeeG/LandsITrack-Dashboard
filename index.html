@@ -1012,7 +1012,12 @@ function hideSplash() {
   sessionStorage.setItem('splashSeen', '1');
 }
 
-// Hide install button if already running as installed app
+// Auto-show on first visit if not already installed
+if (!isStandalone && !sessionStorage.getItem('splashSeen')) {
+  setTimeout(showSplash, 600);
+}
+
+// Hide install button if running as installed app
 if (isStandalone) {
   document.getElementById('installHeaderBtn').classList.add('hidden');
 }
