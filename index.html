@@ -40,7 +40,7 @@ header{background:var(--teal-deep);padding:0 24px;height:64px;display:flex;align
 .last-update{font-size:11px;color:#99d6d0;font-family:var(--mono);}
 .admin-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .2s;}
 .admin-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
-.install-header-btn{display:none;background:#0d9488;border:none;color:#fff;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;white-space:nowrap;align-items:center;gap:6px;}
+.install-header-btn{display:flex;background:#0d9488;border:none;color:#fff;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;white-space:nowrap;align-items:center;gap:6px;}
 .install-header-btn:hover{background:#0f766e;}.install-header-btn.hidden{display:none!important;}
 .install-header-btn.hidden{display:none;}
 nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 20px;}
@@ -565,6 +565,56 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   </div>
 </div>
 
+<!-- INSTALL GUIDE MODAL -->
+<div id="installGuide" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center;padding:0;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;font-family:'DM Sans',sans-serif;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:#0f2b2a;">📲 Install LandsITrack</div>
+      <button id="installGuideClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:#4b7b78;line-height:1;">✕</button>
+    </div>
+
+    <!-- Android instructions -->
+    <div id="guideAndroid">
+      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Chrome</strong>:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">⋮</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>3-dot menu</strong> at the top right of Chrome</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">➕</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">✅</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Install</strong> — done! Find it on your home screen.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS instructions -->
+    <div id="guideIos" style="display:none;">
+      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Safari</strong>:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">⬆️</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>Share button</strong> at the bottom of Safari</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">➕</div>
+          <div style="font-size:13px;color:#0f2b2a;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">✅</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Add</strong> — done! Find it on your home screen.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="sync-toast" id="syncToast">🔄 Calibration synced from another device</div>
 <footer>LandsITrack © 2026 &nbsp;·&nbsp; Real-Time Landslide Monitoring System &nbsp;·&nbsp; Auto-refresh every 15s</footer>
 
@@ -964,32 +1014,54 @@ function refreshAdminPanel() {
 
 // ── PWA Install ──
 let deferredPrompt = null;
+const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+const isStandalone = window.navigator.standalone === true ||
+                     window.matchMedia('(display-mode: standalone)').matches;
 
-// Capture the install prompt when browser offers it
+// Capture native prompt if browser offers it (Android/Desktop Chrome)
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show the button now that we can actually install
-  document.getElementById('installHeaderBtn').style.display = 'flex';
 });
 
-// Hide button if already installed
-window.addEventListener('appinstalled', () => {
+// Hide install button if already running as installed app
+if (isStandalone) {
   document.getElementById('installHeaderBtn').style.display = 'none';
-  deferredPrompt = null;
-});
+}
 
-// Hide button by default — only show when prompt is ready
-document.getElementById('installHeaderBtn').style.display = 'none';
+function openInstallGuide() {
+  const guide = document.getElementById('installGuide');
+  guide.style.display = 'flex';
+  // Show the right instructions for the platform
+  document.getElementById('guideIos').style.display     = isIos ? 'block' : 'none';
+  document.getElementById('guideAndroid').style.display = isIos ? 'none'  : 'block';
+}
+
+function closeInstallGuide() {
+  document.getElementById('installGuide').style.display = 'none';
+}
 
 document.getElementById('installHeaderBtn').addEventListener('click', async () => {
   if (deferredPrompt) {
-    // Trigger native browser install prompt
+    // Browser is ready — trigger native one-tap install
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
     document.getElementById('installHeaderBtn').style.display = 'none';
+  } else {
+    // Show step-by-step guide (always works on any browser/platform)
+    openInstallGuide();
   }
+});
+
+document.getElementById('installGuideClose').addEventListener('click', closeInstallGuide);
+document.getElementById('installGuide').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeInstallGuide();
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installHeaderBtn').style.display = 'none';
+  deferredPrompt = null;
 });
 </script>
 </body>
