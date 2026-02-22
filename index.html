@@ -565,12 +565,6 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   </div>
 </div>
 
-<!-- INSTALL GUIDE MODAL -->
-<div id="installGuide" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center;padding:0;">
-  <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;font-family:'DM Sans',sans-serif;">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:#0f2b2a;">📲 Install LandsITrack</div>
       <button id="installGuideClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:#4b7b78;line-height:1;">✕</button>
     </div>
 
@@ -613,6 +607,85 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
     </div>
 
   </div>
+</div>
+
+<!-- INSTALL MODAL -->
+<div id="installModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px;">
+
+  <!-- SPLASH SCREEN (shown first) -->
+  <div id="installSplash" style="background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <!-- Header -->
+    <div style="background:#134e4a;padding:28px 24px 22px;text-align:center;">
+      <div style="font-size:56px;margin-bottom:10px;">🏔️</div>
+      <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#fff;">Lands<span style="color:#5eead4;">I</span>Track</div>
+      <div style="font-size:11px;color:#99d6d0;font-family:'Space Mono',monospace;letter-spacing:2px;margin-top:4px;">LANDSLIDE MONITORING</div>
+    </div>
+    <!-- Body -->
+    <div style="padding:22px 24px;">
+      <div style="font-size:14px;color:#0f2b2a;font-weight:600;margin-bottom:6px;">Install this app on your device</div>
+      <div style="font-size:13px;color:#4b7b78;line-height:1.7;margin-bottom:18px;">Get quick access to live landslide monitoring — works like a real app, right from your home screen.</div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Live tilt &amp; moisture sensor alerts</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Real-time Firebase sync</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Works offline</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> No App Store needed</div>
+      </div>
+      <button id="splashInstallBtn" style="width:100%;background:#0d9488;color:#fff;border:none;padding:14px;border-radius:12px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">Install</button>
+      <button id="splashCancelBtn" style="width:100%;background:none;border:1.5px solid #cce9e5;color:#4b7b78;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- GUIDE SCREEN (shown after Install is tapped) -->
+  <div id="installGuide" style="display:none;background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:#134e4a;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#fff;">How to Install</div>
+      <button id="installGuideClose" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:22px 24px;">
+
+      <!-- Android steps -->
+      <div id="guideAndroid">
+        <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Chrome</strong> and follow these steps:</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong style="font-size:18px;line-height:1;">⋮</strong> menu at the <strong>top right</strong> of Chrome</div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add to Home screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
+          </div>
+        </div>
+        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Chrome</strong> on Android. If you're using a different browser, open this page in Chrome first.</div>
+      </div>
+
+      <!-- iOS steps -->
+      <div id="guideIos" style="display:none;">
+        <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Safari</strong> and follow these steps:</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong>Share button ⬆</strong> at the bottom of Safari</div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
+          </div>
+        </div>
+        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Safari</strong> on iPhone. If you're using Chrome or another browser, switch to Safari first.</div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <div class="sync-toast" id="syncToast">🔄 Calibration synced from another device</div>
@@ -1018,48 +1091,55 @@ const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
 const isStandalone = window.navigator.standalone === true ||
                      window.matchMedia('(display-mode: standalone)').matches;
 
-// Capture native prompt if browser offers it (Android/Desktop Chrome)
+if (isStandalone) {
+  document.getElementById('installHeaderBtn').style.display = 'none';
+}
+
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
 });
 
-// Hide install button if already running as installed app
-if (isStandalone) {
-  document.getElementById('installHeaderBtn').style.display = 'none';
+function openModal() {
+  document.getElementById('installModal').style.display = 'flex';
+  document.getElementById('installSplash').style.display = 'block';
+  document.getElementById('installGuide').style.display  = 'none';
+}
+function closeModal() {
+  document.getElementById('installModal').style.display = 'none';
+}
+function showGuide() {
+  document.getElementById('installSplash').style.display = 'none';
+  document.getElementById('installGuide').style.display  = 'block';
+  document.getElementById('guideIos').style.display      = isIos ? 'block' : 'none';
+  document.getElementById('guideAndroid').style.display  = isIos ? 'none'  : 'block';
 }
 
-function openInstallGuide() {
-  const guide = document.getElementById('installGuide');
-  guide.style.display = 'flex';
-  // Show the right instructions for the platform
-  document.getElementById('guideIos').style.display     = isIos ? 'block' : 'none';
-  document.getElementById('guideAndroid').style.display = isIos ? 'none'  : 'block';
-}
+document.getElementById('installHeaderBtn').addEventListener('click', openModal);
+document.getElementById('splashCancelBtn').addEventListener('click', closeModal);
+document.getElementById('installGuideClose').addEventListener('click', closeModal);
+document.getElementById('installModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
 
-function closeInstallGuide() {
-  document.getElementById('installGuide').style.display = 'none';
-}
-
-document.getElementById('installHeaderBtn').addEventListener('click', async () => {
+document.getElementById('splashInstallBtn').addEventListener('click', async () => {
   if (deferredPrompt) {
-    // Browser is ready — trigger native one-tap install
+    // Browser is ready — native one-tap install
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    document.getElementById('installHeaderBtn').style.display = 'none';
+    if (outcome === 'accepted') {
+      closeModal();
+      document.getElementById('installHeaderBtn').style.display = 'none';
+    }
   } else {
-    // Show step-by-step guide (always works on any browser/platform)
-    openInstallGuide();
+    // Show step-by-step guide
+    showGuide();
   }
 });
 
-document.getElementById('installGuideClose').addEventListener('click', closeInstallGuide);
-document.getElementById('installGuide').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeInstallGuide();
-});
-
 window.addEventListener('appinstalled', () => {
+  closeModal();
   document.getElementById('installHeaderBtn').style.display = 'none';
   deferredPrompt = null;
 });
