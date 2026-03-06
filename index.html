@@ -217,6 +217,23 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   .level-card{grid-template-columns:auto 1fr;}
   .level-card-icon{display:none;}
 }
+
+.history-date-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.history-mode-toggle{display:flex;border-radius:8px;overflow:hidden;border:1.5px solid var(--teal-dark);}
+.mode-btn{background:none;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
+.mode-btn.active{background:var(--teal-dark);color:#fff;}
+.date-input{background:rgba(255,255,255,.07);border:1.5px solid var(--teal-dark);border-radius:8px;color:#fff;padding:7px 10px;font-family:var(--mono);font-size:12px;outline:none;}
+.date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.7;cursor:pointer;}
+.date-input option{background:#0f2b2a;color:#fff;}
+
+.lang-toggle{display:flex;justify-content:center;margin:16px 0 4px;gap:0;}
+.lang-btn{background:none;border:1.5px solid var(--teal-dark);padding:8px 22px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
+.lang-btn:first-child{border-radius:8px 0 0 8px;}
+.lang-btn:last-child{border-radius:0 8px 8px 0;border-left:none;}
+.lang-btn.active{background:var(--teal-dark);color:#fff;}
+.ceb{display:none;}
+.guide-page-ceb .eng{display:none;}
+.guide-page-ceb .ceb{display:block;}
 </style>
 </head>
 <body>
@@ -360,7 +377,43 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <button class="node-tab active" id="htab-node1">Node 1</button>
         <button class="node-tab" id="htab-node2">Node 2</button>
       </div>
-      <button class="btn" id="loadBtn">📊 Load History</button>
+      <div class="history-date-row">
+        <div class="history-mode-toggle">
+          <button class="mode-btn active" id="modeRecent">Recent</button>
+          <button class="mode-btn" id="modeDate">By Date</button>
+        </div>
+        <div id="datePicker" style="display:none;align-items:center;gap:8px;">
+          <input type="date" id="historyDate" class="date-input">
+          <select id="historyHour" class="date-input" style="width:auto;">
+            <option value="">All day</option>
+            <option value="0">12 AM</option>
+            <option value="1">1 AM</option>
+            <option value="2">2 AM</option>
+            <option value="3">3 AM</option>
+            <option value="4">4 AM</option>
+            <option value="5">5 AM</option>
+            <option value="6">6 AM</option>
+            <option value="7">7 AM</option>
+            <option value="8">8 AM</option>
+            <option value="9">9 AM</option>
+            <option value="10">10 AM</option>
+            <option value="11">11 AM</option>
+            <option value="12">12 PM</option>
+            <option value="13">1 PM</option>
+            <option value="14">2 PM</option>
+            <option value="15">3 PM</option>
+            <option value="16">4 PM</option>
+            <option value="17">5 PM</option>
+            <option value="18">6 PM</option>
+            <option value="19">7 PM</option>
+            <option value="20">8 PM</option>
+            <option value="21">9 PM</option>
+            <option value="22">10 PM</option>
+            <option value="23">11 PM</option>
+          </select>
+        </div>
+        <button class="btn" id="loadBtn">📊 Load</button>
+      </div>
     </div>
   </div>
   <div class="threshold-legend">
@@ -389,110 +442,168 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 
 <!-- GUIDE — your edited text preserved exactly -->
 <div class="page" id="guidePage">
-  <div class="guide-intro">
-    <h2>How LandsITrack Works</h2>
-    <p>This system monitors two sensors installed in the ground, a tilt sensor and a soil moisture sensor. Together, they detect early signs of a possible landslide and automatically alert the right people, so communities can react quickly and safely, before disaster strikes.</p>
+
+  <!-- Language Toggle -->
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="langEng" >English</button>
+    <button class="lang-btn" id="langCeb" >Bisaya</button>
   </div>
 
+  <!-- INTRO -->
+  <div class="guide-intro">
+    <h2 class="eng">How LandsITrack Works</h2>
+    <h2 class="ceb">Unsaon Paglihok sa LandsITrack</h2>
+    <p class="eng">This system monitors two sensors installed in the ground, a tilt sensor and a soil moisture sensor. Together, they detect early signs of a possible landslide and automatically alert the right people, so communities can react quickly and safely, before disaster strikes.</p>
+    <p class="ceb">Kining sistema nagbantay sa duha ka sensor nga gitanom sa yuta — ang tilt sensor ug ang soil moisture sensor. Magkauban, makamatikod sila sa sayo nga timailhan sa posibleng landslide ug awtomatikong mag-alerto sa angay nga mga tawo, aron ang mga komunidad makareaksyon sa dali ug luwas, sa dili pa moabot ang katalagman.</p>
+  </div>
+
+  <!-- SECTION 1 -->
   <div class="guide-section">
-    <div class="guide-section-title">Why We Monitor Landslides</div>
+    <div class="guide-section-title eng">Why We Monitor Landslides</div>
+    <div class="guide-section-title ceb">Ngano nga Gimonitor Nato ang Mga Landslide</div>
     <div class="explainer-card">
       <div class="explainer-icon">🏘️</div>
-      <div class="explainer-title">The Problem with Landslides</div>
-      <div class="explainer-text">
+      <div class="explainer-title eng">The Problem with Landslides</div>
+      <div class="explainer-title ceb">Ang Problema sa mga Landslide</div>
+      <div class="explainer-text eng">
         Landslides are one of the most dangerous natural disasters in mountainous communities, and one of the most silent. Unlike typhoons or floods, they often give very little visible warning before they happen. The ground can look completely normal one moment and collapse the next.<br><br>
         In many barangays, communities live on or near slopes. After heavy rains, the soil slowly weakens and shifts, sometimes for hours or days before anything is visible on the surface. By the time cracks appear or the ground starts moving noticeably, it may already be too late to evacuate safely.<br><br>
         <strong>This is exactly the problem LandsITrack is built to solve.</strong> By placing sensors directly in the ground, the system can detect invisible early movement, the kind that happens underground before anything shows on the surface, and alert the right people with enough time to act.
       </div>
-      <div class="explainer-highlight">⏱️ Early warning is the difference between a safe evacuation and a tragedy. LandsITrack gives communities that extra time.</div>
+      <div class="explainer-text ceb">
+        Ang landslide ang usa sa pinaka-delikado nga natural nga kalamidad sa mga komunidad sa kabukiran, ug usa sa labing hilom. Dili sama sa mga bagyo o baha, kasagaran diyutay ra kaayo ang makita nga babala o sinyalis sa dili pa kini mahitabo. Ang yuta hingpit nga normal lang ang hitsura sa usa ka gutlo ug molutaw sa sunod.<br><br>
+        Sa daghang mga barangay, ang mga komunidad nagpuyo sa o duol sa mga daplin sa bukid. Human sa kusog nga ulan, ang yuta hinay-hinay nga mohuyang ug mobalhin, usahay sulod sa pila ka oras o pila ka adlaw sa dili pa adunay makita nga kausaban sa ibabaw. Sa oras nga magsugod na og pakita ang mga bitak sa yuta o klaro nang naglihok ang yuta, posible nga ulahi na kaayo aron makalikay o makabiya nga luwas ang mga tawo.<br><br>
+        <strong>Kini mismo nga problema mao gitukod ang LandsITrack para masulbad.</strong> Pinaagi sa pagbutang og mga sensor direkta sa sulod sa yuta, ang sistema makahimo sa pag-detect sa dili makita nga sayo nga paglihok sa yuta, ang klase sa paglihok nga mahitabo ilalom sa yuta sa dili pa kini makita sa ibabaw, ug makahatag og pasidaan sa hustong mga tawo sa sakto nga oras aron makalihok sila dayon.
+      </div>
+      <div class="explainer-highlight eng">⏱️ Early warning is the difference between a safe evacuation and a tragedy. LandsITrack gives communities that extra time.</div>
+      <div class="explainer-highlight ceb">⏱️ Ang sayo nga babala mao ang kalainan tali sa luwas nga pag-evacuate ug usa ka trahedya. Ang LandsITrack naghatag sa komunidad og dugang nga oras aron makapangandam ug makalihok dayon.</div>
     </div>
   </div>
 
+  <!-- SECTION 2 -->
   <div class="guide-section">
-    <div class="guide-section-title">What the Sensors Measure — and Why</div>
+    <div class="guide-section-title eng">What the Sensors Measure, and Why</div>
+    <div class="guide-section-title ceb">Unsa ang Gisukod sa mga Sensor, ug Ngano</div>
     <div class="sensor-explainer">
       <div class="explainer-card">
         <div class="explainer-icon">📐</div>
-        <div class="explainer-title">Tilt Angle</div>
-        <div class="explainer-text">
+        <div class="explainer-title eng">Tilt Angle</div>
+        <div class="explainer-title ceb">Anggulo sa Pagtilad (Tilt)</div>
+        <div class="explainer-text eng">
           When the ground is stable, the sensor rod stands straight up at 0°. If the ground beneath it starts to shift or slide, the sensor leans with it, and that lean is measured in degrees.<br><br>
           Even a small tilt, like 5°, can be a significant early warning sign that the soil is beginning to move underground. The larger the angle, the further the ground has shifted.
         </div>
-        <div class="explainer-highlight">🪨 Think of it like planting a stick straight into a hillside. If the ground moves, the stick leans. LandsITrack measures exactly how far it leans, automatically and in real time.</div>
+        <div class="explainer-text ceb">
+          Kung stable o lig-on ang yuta, ang sensor rod magtindog nga tul-id sa 0°. Kung ang yuta sa ilalom magsugod na og lihok o mudahili, ang sensor mokiling uban niini, ug kana nga pagkiling masukod sa degrees.<br><br>
+          Bisan gamay nga pagkiling, sama sa 5°, mahimong importante nga sayo nga pasidaan nga ang yuta nagsugod na og lihok sa ilalom sa yuta. Mas dako ang angle, mas dako usab ang gilay-on nga nalihok sa yuta.
+        </div>
+        <div class="explainer-highlight eng">🪨 Think of it like planting a stick straight into a hillside. If the ground moves, the stick leans. LandsITrack measures exactly how far it leans, automatically and in real time.</div>
+        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid. Sukdon sa LandsITrack kung unsa ka layo ang paghilid, awtomatiko.</div>
         <br>
-        <div class="explainer-text"><strong>Why we measure tilt:</strong> Ground movement is the most direct sign of a slope becoming unstable. The tilt sensor captures movement at the source, deep in the ground, before it becomes visible at the surface. It is the clearest, most direct evidence that a landslide may be forming.</div>
+        <div class="explainer-text eng"><strong>Why we measure tilt:</strong> Ground movement is the most direct sign of a slope becoming unstable. The tilt sensor captures movement at the source, deep in the ground, before it becomes visible at the surface. It is the clearest, most direct evidence that a landslide may be forming.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang tilt:</strong> Ang paglihok sa yuta mao ang labing direkta nga timailhan nga ang daplin sa bukid nagsugod sa pagkadili-lig-on. Ang tilt sensor nagkuha sa paglihok sa tinubdan niini — lawom sa yuta — sa wala pa kini makita sa ibabaw. Kini ang labing klaro ug direkta nga ebidensya nga ang landslide mahimong nagporma na.</div>
       </div>
       <div class="explainer-card">
         <div class="explainer-icon">💧</div>
-        <div class="explainer-title">Soil Moisture</div>
-        <div class="explainer-text">
+        <div class="explainer-title eng">Soil Moisture</div>
+        <div class="explainer-title ceb">Kahumok sa Yuta (Soil Moisture)</div>
+        <div class="explainer-text eng">
           The soil moisture sensor measures how much water has soaked into the soil, as a percentage from 0% (dry) to 100% (completely saturated). When soil absorbs too much rainwater, it becomes heavier and loses its internal friction, the grip that holds soil particles together on a slope.<br><br>
           Wet, heavy, slippery soil is far more likely to slide than dry, firm soil.
         </div>
-        <div class="explainer-highlight">🌧️ Think of dry sand vs. wet sand. Dry sand holds. Wet sand flows. The same principle applies to hillside soil after heavy rain, at a certain point, water overwhelms the soil's ability to stay in place.</div>
+        <div class="explainer-text ceb">
+          Ang soil moisture sensor mosukod kung pila ka tubig ang nasuyop sa yuta, nga gipakita isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga nabasa o saturated). Kung ang yuta mosuyop og sobra nga tubig gikan sa ulan, kini mahimong mas bug-at ug mawadan og internal friction, o ang kapit nga nagkupot sa mga partikulo sa yuta aron magpabiling lig-on sa bakilid.<br><br>
+          Ang basa, bug-at, ug madulas nga yuta mas dali kaayo mo-slide kumpara sa uga ug lig-on nga yuta.
+        </div>
+        <div class="explainer-highlight eng">🌧️ Think of dry sand vs. wet sand. Dry sand holds. Wet sand flows. The same principle applies to hillside soil after heavy rain, at a certain point, water overwhelms the soil's ability to stay in place.</div>
+        <div class="explainer-highlight ceb">🌧️ Hunahunaa ang uga nga balas kontra basa nga balas. Ang uga nga balas naghawid. Ang basa nga balas nagdagayday. Ang mao rang prinsipyo ang magamit sa yuta sa bukid human sa kusog nga ulan, sa usa ka punto, ang tubig molapas sa kakayahan sa yuta nga magpabilin sa lugar.</div>
         <br>
-        <div class="explainer-text"><strong>Why we measure moisture:</strong> Most landslides in tropical regions are triggered by rainfall. Water accumulates in the soil over hours, slowly weakening it. By monitoring moisture continuously, LandsITrack can catch this weakening process early, even before the ground starts moving, giving even more advance warning.</div>
+        <div class="explainer-text eng"><strong>Why we measure moisture:</strong> Most landslides in tropical regions are triggered by rainfall. Water accumulates in the soil over hours, slowly weakening it. By monitoring moisture continuously, LandsITrack can catch this weakening process early, even before the ground starts moving, giving even more advance warning.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang moisture:</strong> Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan. Ang tubig nagtipun-og sa yuta sulod sa mga oras, hinay-hinay nga nagpaluya niini. Pinaagi sa padayon nga pagmonitor sa moisture, makuha sa LandsITrack kining proseso sa pagluya sa sayo pa — bisan sa wala pa magsugod ang yuta sa paglihok — naghatag og dugang pang sayo nga babala.</div>
       </div>
     </div>
   </div>
 
+  <!-- SECTION 3 -->
   <div class="guide-section">
-    <div class="guide-section-title">How the Two Sensors Work Together</div>
+    <div class="guide-section-title eng">How the Two Sensors Work Together</div>
+    <div class="guide-section-title ceb">Unsaon Pagtinabangay sa Duha ka Sensor</div>
     <div class="explainer-card">
       <div class="explainer-icon">🔗</div>
-      <div class="explainer-title">A Complete Picture of Risk</div>
-      <div class="explainer-text">
+      <div class="explainer-title eng">A Complete Picture of Risk</div>
+      <div class="explainer-title ceb">Kompletong Hulagway sa Peligro</div>
+      <div class="explainer-text eng">
         Neither sensor alone tells the full story. Tilt without moisture could mean the ground shifted long ago and is stable now. Moisture without tilt could mean the soil is wet but still holding. But when <strong>both sensors show elevated readings at the same time</strong>, wet soil that is also starting to tilt, that combination is a strong signal that a slope is actively failing.<br><br>
         This is why LandsITrack uses both together to calculate an alert level. The system checks both readings on every update and takes the worse of the two as the basis for the alert.
       </div>
-      <div class="explainer-highlight">🧠 Two sensors watching the same slope, day and night, rain or shine, that's the core of why LandsITrack works as an early warning system.</div>
+      <div class="explainer-text ceb">
+        Ang matag sensor dili makahatag sa tibuok nga hulagway kung mag-inusara lang. Ang tilt nga walay taas nga moisture mahimong nagpasabot nga nalihok na ang yuta kaniadto pero stable na karon. Ang moisture nga walay tilt mahimong nagpasabot nga basa ang yuta pero nagkupot gihapon ug lig-on. Apan kung parehong taas ang reading sa duha ka sensor sa parehas nga oras, basa ang yuta ug nagsugod usab og kiling, kana nga kombinasyon kusog nga timailhan nga ang bakilid nagsugod na og kapakyasan o mahimong mag-landslide.<br><br>
+        Mao kini ang rason ngano nga gigamit sa LandsITrack ang duha ka sensor aron makalkula ang alert level. Ang sistema motan-aw sa duha ka readings sa matag update ug gamiton ang pinakataas o pinakadelikado nga reading isip basehan sa alerto.
+      </div>
+      <div class="explainer-highlight eng">🧠 Two sensors watching the same slope, day and night, rain or shine, that's the core of why LandsITrack works as an early warning system.</div>
+      <div class="explainer-highlight ceb">🧠 Duha ka sensor ang nagbantay sa mao rang daplin sa bukid — adlaw ug gabii, ulan man o adlaw — mao kana ang kasing-kasing sa rason ngano nga ang LandsITrack naglihok isip sistema sa sayo nga babala.</div>
     </div>
   </div>
 
+  <!-- SECTION 4 -->
   <div class="guide-section">
-    <div class="guide-section-title">Alert Levels &amp; Response Actions</div>
+    <div class="guide-section-title eng">Alert Levels &amp; Response Actions</div>
+    <div class="guide-section-title ceb">Mga Antas sa Alerto &amp; Aksyon sa Pagtubag</div>
     <div class="level-cards">
       <div class="level-card l1">
         <div class="level-card-num">1</div>
         <div class="level-card-body">
-          <div class="level-card-name">Low Risk — Movement Detected</div>
+          <div class="level-card-name eng">Low Risk — Movement Detected</div>
+          <div class="level-card-name ceb">Ubos nga Peligro — Namatikdan ang Paglihok</div>
           <div class="level-card-threshold">Tilt ≥ 5° &nbsp;|&nbsp; Moisture ≥ 60%</div>
-          <div class="level-card-desc">The sensors are picking up early signs of ground movement or elevated soil moisture. Not yet dangerous, but the situation needs to be watched closely.</div>
-          <div class="level-card-action"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation. No evacuation yet, just awareness.</div>
+          <div class="level-card-desc eng">The sensors are picking up early signs of ground movement or elevated soil moisture. Not yet dangerous, but the situation needs to be watched closely.</div>
+          <div class="level-card-desc ceb">Ang mga sensor nagkuha sa sayo nga mga timailhan sa paglihok sa yuta o taas nga kahumok sa yuta. Dili pa delikado, apan kinahanglan bantayan pag-ayo ang sitwasyon.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation. No evacuation yet, just awareness.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan ang sitwasyon. Wala pa'y evacuation, pagmata lang.</div>
         </div>
         <div class="level-card-icon">👀</div>
       </div>
       <div class="level-card l2">
         <div class="level-card-num">2</div>
         <div class="level-card-body">
-          <div class="level-card-name">Moderate Risk — Elevated Movement</div>
+          <div class="level-card-name eng">Moderate Risk — Elevated Movement</div>
+          <div class="level-card-name ceb">Katamtamang Peligro — Taas nga Paglihok</div>
           <div class="level-card-threshold">Tilt ≥ 10° &nbsp;|&nbsp; Moisture ≥ 75%</div>
-          <div class="level-card-desc">Ground movement or soil saturation has increased to a level that requires active attention. The risk is real, and decisions about preparedness need to be made now.</div>
-          <div class="level-card-action"><strong>WHO IS NOTIFIED</strong>Officials are alerted again with an escalated warning. BDRRMC begins evaluating whether to prepare for a possible evacuation, gathering resources, identifying routes, and briefing response teams.</div>
+          <div class="level-card-desc eng">Ground movement or soil saturation has increased to a level that requires active attention. The risk is real, and decisions about preparedness need to be made now.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta o saturation sa yuta mitaas na sa antas nga nagkinahanglan og aktibong atensyon. Tinuod na ang peligro, ug kinahanglan na nga buhaton ang mga desisyon bahin sa pagpangandam.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Officials are alerted again with an escalated warning. BDRRMC begins evaluating whether to prepare for a possible evacuation, gathering resources, identifying routes, and briefing response teams.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation, nagtipon og mga kahinguhaan, nagila sa mga ruta, ug nagbriefing sa mga response team.</div>
         </div>
         <div class="level-card-icon">⚠️</div>
       </div>
       <div class="level-card l3">
         <div class="level-card-num">3</div>
         <div class="level-card-body">
-          <div class="level-card-name">High Risk — Targeted Alert</div>
+          <div class="level-card-name eng">High Risk — Targeted Alert</div>
+          <div class="level-card-name ceb">Taas nga Peligro — Targeted nga Alerto</div>
           <div class="level-card-threshold">Tilt ≥ 15° &nbsp;|&nbsp; Moisture ≥ 85%</div>
-          <div class="level-card-desc">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
-          <div class="level-card-action"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent directly to residents in the specific purok where the movement is happening. People in safe areas are not alarmed. Evacuation of the affected purok is likely ordered.</div>
+          <div class="level-card-desc eng">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro — aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent directly to residents in the specific purok where the movement is happening. People in safe areas are not alarmed. Evacuation of the affected purok is likely ordered.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala direkta sa mga residente sa partikular nga purok diin nagkahitabo ang paglihok. Ang mga tawo sa luwas nga mga lugar dili alarma. Lagmit na nga mag-order og evacuation ang apektadong purok.</div>
         </div>
         <div class="level-card-icon">🔶</div>
       </div>
       <div class="level-card l4">
         <div class="level-card-num">4</div>
         <div class="level-card-body">
-          <div class="level-card-name">Critical — Evacuate Now</div>
+          <div class="level-card-name eng">Critical — Evacuate Now</div>
+          <div class="level-card-name ceb">Kritikal — Molupad Na Karon</div>
           <div class="level-card-threshold">Multiple sensors at high severity</div>
-          <div class="level-card-desc">Multiple sensors reporting dangerous readings simultaneously. The threat is larger and could affect not just one area but surrounding zones as well.</div>
-          <div class="level-card-action"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to residents in the affected purok and all neighboring puroks. Everyone in the danger zone and nearby areas is told to evacuate immediately.</div>
+          <div class="level-card-desc eng">Multiple sensors reporting dangerous readings simultaneously. The threat is larger and could affect not just one area but surrounding zones as well.</div>
+          <div class="level-card-desc ceb">Daghang mga sensor ang nag-report og delikadong mga basahan sa samang panahon. Ang hulga mas dako na ug mahimong makaapekto dili lang sa usa ka lugar kondili sa mga kasikbit nga lugar usab.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to residents in the affected purok and all neighboring puroks. Everyone in the danger zone and nearby areas is told to evacuate immediately.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga residente sa apektadong purok ug sa tanan nga kasikbit nga mga purok. Ang tanan sa danger zone ug sa mga duol nga lugar gisugo nga moluwas dayon.</div>
         </div>
         <div class="level-card-icon">🚨</div>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -789,6 +900,23 @@ document.getElementById('htab-node1').addEventListener('click', () => selectHist
 document.getElementById('htab-node2').addEventListener('click', () => selectHistoryNode('node2'));
 document.getElementById('loadBtn').addEventListener('click', loadHistory);
 
+// History mode toggle
+document.getElementById('modeRecent').addEventListener('click', () => {
+  document.getElementById('modeRecent').classList.add('active');
+  document.getElementById('modeDate').classList.remove('active');
+  document.getElementById('datePicker').style.display = 'none';
+});
+document.getElementById('modeDate').addEventListener('click', () => {
+  document.getElementById('modeDate').classList.add('active');
+  document.getElementById('modeRecent').classList.remove('active');
+  document.getElementById('datePicker').style.display = 'flex';
+  // Default date picker to today
+  if (!document.getElementById('historyDate').value) {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('historyDate').value = today;
+  }
+});
+
 // Admin modal
 document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
 document.getElementById('adminCloseBtn').addEventListener('click', closeAdmin);
@@ -945,26 +1073,90 @@ function resetWrap(wid, icon) {
 }
 
 async function loadHistory() {
-  const btn = document.getElementById('loadBtn');
+  const btn  = document.getElementById('loadBtn');
   btn.textContent = '⏳ Loading…'; btn.disabled = true;
   try {
-    const node = nodes.find(nd => nd.id === activeHistoryNode);
-    const res  = await fetch(`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=30`);
+    const node     = nodes.find(nd => nd.id === activeHistoryNode);
+    const byDate   = document.getElementById('modeDate').classList.contains('active');
+    const dateVal  = document.getElementById('historyDate').value;
+    const hourVal  = document.getElementById('historyHour').value;
+
+    let fetchURL;
+
+    if (byDate && dateVal) {
+      // Build start/end timestamps for ThingSpeak date query
+      const [yr, mo, dy] = dateVal.split('-').map(Number);
+      let startDt, endDt;
+
+      if (hourVal !== '') {
+        // Specific hour window
+        const h = parseInt(hourVal);
+        startDt = new Date(Date.UTC(yr, mo-1, dy, h, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, h+1, 0, 0));
+      } else {
+        // Full day
+        startDt = new Date(Date.UTC(yr, mo-1, dy, 0, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, 23, 59, 59));
+      }
+
+      const fmt = dt => dt.toISOString().replace('T',' ').replace('.000Z','');
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json`
+               + `?api_key=${node.apiKey}`
+               + `&start=${encodeURIComponent(fmt(startDt))}`
+               + `&end=${encodeURIComponent(fmt(endDt))}`
+               + `&results=100`;
+    } else {
+      // Recent 30 readings
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=30`;
+    }
+
+    const res  = await fetch(fetchURL);
     const data = await res.json();
+
+    if (!data.feeds || data.feeds.length === 0) {
+      document.getElementById('tiltChartWrap').innerHTML =
+        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      document.getElementById('moistChartWrap').innerHTML =
+        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      btn.textContent = '📊 Load'; btn.disabled = false;
+      return;
+    }
+
     const labels=[], tiltVals=[], moistVals=[];
     data.feeds.forEach(f => {
-      labels.push(new Date(f.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      const d = new Date(f.created_at);
+      // Show date + time if viewing a specific date, time only for recent
+      if (byDate && dateVal) {
+        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      } else {
+        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      }
       tiltVals.push(parseFloat(f['field' + node.fields.tilt])     || 0);
       moistVals.push(parseFloat(f['field' + node.fields.moisture]) || 0);
     });
+
+    // Update chart titles to show what date/range was loaded
+    const nodeLabel = activeHistoryNode === 'node1' ? 'Node 1' : 'Node 2';
+    const dateLabel = byDate && dateVal
+      ? new Date(dateVal + 'T00:00:00').toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})
+      : 'last 30 readings';
+    const hourLabel = (byDate && dateVal && hourVal !== '')
+      ? ' — ' + document.getElementById('historyHour').options[document.getElementById('historyHour').selectedIndex].text
+      : '';
+    document.getElementById('tiltChartTitle').textContent  = nodeLabel + ' — Tilt Angle (' + dateLabel + hourLabel + ')';
+    document.getElementById('moistChartTitle').textContent = nodeLabel + ' — Soil Moisture (' + dateLabel + hourLabel + ')';
+
     renderChart('tiltChartWrap', labels, tiltVals, 'True Tilt (°)', '#0d9488',
       v => { const t=Math.abs(v); return t>=20?'#dc2626':t>=15?'#ea580c':t>=10?'#ca8a04':t>=5?'#16a34a':'#0d9488'; },
       [{value:5,color:'#16a34a'},{value:10,color:'#ca8a04'},{value:15,color:'#ea580c'},{value:20,color:'#dc2626'}]);
     renderChart('moistChartWrap', labels, moistVals, 'Moisture (%)', '#3b82f6',
       v => v>=95?'#dc2626':v>=85?'#ea580c':v>=75?'#ca8a04':v>=60?'#16a34a':'#3b82f6',
       [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}]);
-  } catch(e) { console.error(e); }
-  btn.textContent = '🔄 Refresh'; btn.disabled = false;
+
+  } catch(e) {
+    console.error('History load error:', e);
+  }
+  btn.textContent = '📊 Load'; btn.disabled = false;
 }
 
 function renderChart(wid, labels, vals, label, color, pointColorFn, thresholds) {
@@ -1149,6 +1341,22 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('installHeaderBtn').style.display = 'none';
   deferredPrompt = null;
 });
+// ── Language Toggle ──
+function setLang(lang) {
+  const page = document.getElementById('guidePage');
+  if (lang === 'ceb') {
+    page.classList.add('guide-page-ceb');
+    document.getElementById('langCeb').classList.add('active');
+    document.getElementById('langEng').classList.remove('active');
+  } else {
+    page.classList.remove('guide-page-ceb');
+    document.getElementById('langEng').classList.add('active');
+    document.getElementById('langCeb').classList.remove('active');
+  }
+}
+document.getElementById('langEng').addEventListener('click', () => setLang('eng'));
+document.getElementById('langCeb').addEventListener('click', () => setLang('ceb'));
+
 </script>
 </body>
 </html>
