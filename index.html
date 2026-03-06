@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandsITrack — Landslide Monitoring</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#134e4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LandsITrack">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/LandsITrack-Dashboard/sw.js').catch(()=>{});</script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#0d9488; --teal-dark:#0f766e; --teal-deep:#134e4a;
+  --bg:#f0fafa; --surface:#fff; --surface2:#f8fffe;
+  --text:#0f2b2a; --text-muted:#4b7b78; --border:#cce9e5;
+  --mono:'Space Mono',monospace; --sans:'DM Sans',sans-serif;
+  --shadow:0 4px 24px rgba(13,148,136,.10);
+  --safe:#059669; --safe-bg:#d1fae5; --safe-border:#6ee7b7;
+  --l1:#16a34a; --l1-bg:#dcfce7; --l1-border:#86efac;
+  --l2:#ca8a04; --l2-bg:#fef9c3; --l2-border:#fde047;
+  --l3:#ea580c; --l3-bg:#ffedd5; --l3-border:#fdba74;
+  --l4:#dc2626; --l4-bg:#fee2e2; --l4-border:#fca5a5;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--teal-deep);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.25);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:36px;height:36px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-text{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;}
+.logo-text span{color:#5eead4;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.live-pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:999px;font-size:12px;color:#5eead4;font-family:var(--mono);font-weight:700;}
+.live-dot{width:7px;height:7px;background:#34d399;border-radius:50%;animation:pdot 2s infinite;}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.last-update{font-size:11px;color:#99d6d0;font-family:var(--mono);}
+.admin-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .2s;}
+.admin-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.install-header-btn{display:flex;background:#0d9488;border:none;color:#fff;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;white-space:nowrap;align-items:center;gap:6px;}
+.install-header-btn:hover{background:#0f766e;}.install-header-btn.hidden{display:none!important;}
+.install-header-btn.hidden{display:none;}
+nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 20px;}
+.nav-btn{background:none;border:none;font-family:var(--sans);font-size:14px;font-weight:500;color:var(--text-muted);padding:14px 20px;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;}
+.nav-btn:hover{color:var(--teal);}
+.nav-btn.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600;}
+.page{display:none;padding:24px 20px;max-width:1100px;margin:auto;}
+.page.active{display:block;}
+.status-banner{border-radius:16px;padding:16px 22px;margin-bottom:22px;display:flex;align-items:center;gap:16px;font-weight:600;border:1.5px solid;transition:all .4s;}
+.status-banner.safe{background:var(--safe-bg);color:#064e3b;border-color:var(--safe-border);}
+.status-banner.l1{background:var(--l1-bg);color:#14532d;border-color:var(--l1-border);}
+.status-banner.l2{background:var(--l2-bg);color:#713f12;border-color:var(--l2-border);}
+.status-banner.l3{background:var(--l3-bg);color:#7c2d12;border-color:var(--l3-border);}
+.status-banner.l4{background:var(--l4-bg);color:#7f1d1d;border-color:var(--l4-border);animation:bflash 1.1s ease-in-out infinite;}
+@keyframes bflash{0%,100%{opacity:1}50%{opacity:.82}}
+.banner-icon{font-size:28px;flex-shrink:0;}
+.banner-body{flex:1;}
+.banner-level{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;opacity:.75;margin-bottom:3px;}
+.banner-message{font-size:15px;font-weight:600;margin-bottom:3px;}
+.banner-action{font-size:12px;opacity:.85;font-weight:400;}
+.nodes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:20px;}
+.node-card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;border:1.5px solid var(--border);transition:box-shadow .3s,border-color .3s;}
+.node-card.safe{border-color:var(--safe-border);}
+.node-card.l1{border-color:var(--l1-border);}
+.node-card.l2{border-color:var(--l2-border);box-shadow:0 4px 24px rgba(202,138,4,.14);}
+.node-card.l3{border-color:var(--l3-border);box-shadow:0 4px 24px rgba(234,88,12,.16);}
+.node-card.l4{border-color:var(--l4-border);box-shadow:0 4px 24px rgba(220,38,38,.2);}
+.node-header{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:var(--surface2);border-bottom:1px solid var(--border);transition:background .2s;}
+.node-header:hover{background:#edfdf8;}
+.node-title{display:flex;align-items:center;gap:10px;}
+.node-num{width:34px;height:34px;background:var(--teal-deep);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;}
+.node-name{font-size:16px;font-weight:600;}
+.node-loc{font-size:12px;color:var(--text-muted);margin-top:1px;}
+.node-right{display:flex;align-items:center;gap:10px;}
+.chevron{color:var(--text-muted);font-size:12px;transition:transform .3s;}
+.chevron.open{transform:rotate(180deg);}
+.node-status-tag{font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;}
+.tag-safe{background:var(--safe-bg);color:#064e3b;}
+.tag-l1{background:var(--l1-bg);color:#14532d;}
+.tag-l2{background:var(--l2-bg);color:#713f12;}
+.tag-l3{background:var(--l3-bg);color:#7c2d12;}
+.tag-l4{background:var(--l4-bg);color:#7f1d1d;animation:flash 1s infinite;}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.5}}
+.node-body{padding:20px;display:none;}
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.sensor-panel{background:var(--bg);border-radius:14px;padding:16px;border:1px solid var(--border);}
+.sensor-label{font-size:11px;font-family:var(--mono);letter-spacing:1px;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;}
+.calibrated-badge{display:inline-block;background:#fef9c3;border:1px solid #fde047;color:#713f12;font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:999px;margin-left:4px;vertical-align:middle;}
+.tilt-scene{display:flex;flex-direction:column;align-items:center;position:relative;height:160px;}
+.tilt-ground{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:110px;height:14px;background:linear-gradient(to bottom,#6b7280,#4b5563);border-radius:6px;overflow:hidden;}
+.tilt-ground::before{content:'';position:absolute;top:4px;left:0;right:0;height:2px;background:rgba(255,255,255,.15);}
+.tilt-ground::after{content:'▪ ▪ ▪';color:rgba(255,255,255,.2);font-size:8px;letter-spacing:4px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+.tilt-rod-wrap{position:absolute;bottom:14px;left:50%;width:0;height:0;transform-origin:center bottom;transition:transform .85s cubic-bezier(0.34,1.4,0.64,1);}
+.tilt-rod{position:absolute;bottom:0;left:-5px;width:10px;height:110px;background:linear-gradient(to right,#374151,#1f2937,#374151);border-radius:5px 5px 3px 3px;}
+.tilt-rod::before{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:radial-gradient(circle at 40% 35%,#5eead4,#0d9488);border-radius:50%;box-shadow:0 0 8px rgba(13,148,136,.5);}
+.tilt-rod::after{content:'';position:absolute;top:50px;left:50%;transform:translateX(-50%);width:16px;height:6px;background:#0d9488;border-radius:3px;}
+.tilt-readout{text-align:center;margin-top:4px;}
+.tilt-number{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;}
+.tilt-unit{font-size:11px;color:var(--text-muted);font-family:var(--mono);margin-top:2px;}
+.tilt-true{font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-top:3px;display:none;}
+.tilt-true.visible{display:block;}
+.moisture-visual{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.moisture-drop{font-size:32px;line-height:1;}
+.moisture-num{font-family:var(--mono);font-size:26px;font-weight:700;color:#1d4ed8;line-height:1;}
+.moisture-bar-wrap{width:100%;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
+.moisture-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#93c5fd,#2563eb);transition:width .8s cubic-bezier(0.34,1.2,0.64,1);}
+.moisture-label-text{font-size:11px;color:var(--text-muted);}
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.mini-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
+.mini-stat-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal-dark);}
+.mini-stat-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.action-panel{border-radius:12px;padding:12px 14px;border-left:4px solid;font-size:13px;display:none;}
+.action-panel.visible{display:block;}
+.action-panel.l1{background:var(--l1-bg);border-color:var(--l1);color:#14532d;}
+.action-panel.l2{background:var(--l2-bg);border-color:var(--l2);color:#713f12;}
+.action-panel.l3{background:var(--l3-bg);border-color:var(--l3);color:#7c2d12;}
+.action-panel.l4{background:var(--l4-bg);border-color:var(--l4);color:#7f1d1d;}
+.action-panel-title{font-weight:700;font-family:var(--mono);font-size:11px;letter-spacing:1px;margin-bottom:4px;}
+.history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:22px;font-weight:700;font-family:var(--mono);}
+.history-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.node-tabs{display:flex;gap:8px;}
+.node-tab{background:var(--surface);border:1.5px solid var(--border);color:var(--text-muted);padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.node-tab.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
+.node-tab:hover:not(.active){border-color:var(--teal);color:var(--teal);}
+.btn{background:var(--teal);color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:600;font-family:var(--sans);border-radius:10px;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;gap:8px;}
+.btn:hover{background:var(--teal-dark);}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.threshold-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+.tl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:var(--mono);}
+.tl-line{width:24px;height:3px;border-radius:2px;}
+.charts-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+.chart-card{background:var(--surface);border-radius:20px;padding:22px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.chart-card-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px;}
+.chart-wrap{height:240px;position:relative;}
+.chart-empty{height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);gap:8px;}
+.chart-empty-icon{font-size:36px;opacity:.35;}
+.chart-empty-text{font-size:13px;}
+.guide-intro{background:var(--teal-deep);color:#fff;border-radius:20px;padding:28px 30px;margin-bottom:28px;}
+.guide-intro h2{font-family:var(--mono);font-size:20px;margin-bottom:8px;}
+.guide-intro p{font-size:14px;opacity:.85;line-height:1.7;max-width:680px;}
+.guide-section{margin-bottom:32px;}
+.guide-section-title{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--teal-dark);text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.sensor-explainer{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.explainer-card{background:var(--surface);border-radius:18px;padding:22px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.explainer-icon{font-size:36px;margin-bottom:10px;}
+.explainer-title{font-size:17px;font-weight:700;margin-bottom:6px;}
+.explainer-text{font-size:13px;line-height:1.75;color:#374151;}
+.explainer-highlight{background:var(--bg);border-left:3px solid var(--teal);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.6;}
+.level-cards{display:grid;grid-template-columns:1fr;gap:14px;}
+.level-card{border-radius:16px;padding:20px 22px;border:1.5px solid;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;}
+.level-card.l1{background:var(--l1-bg);border-color:var(--l1-border);}
+.level-card.l2{background:var(--l2-bg);border-color:var(--l2-border);}
+.level-card.l3{background:var(--l3-bg);border-color:var(--l3-border);}
+.level-card.l4{background:var(--l4-bg);border-color:var(--l4-border);}
+.level-card-num{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;}
+.level-card.l1 .level-card-num{color:var(--l1);}
+.level-card.l2 .level-card-num{color:var(--l2);}
+.level-card.l3 .level-card-num{color:var(--l3);}
+.level-card.l4 .level-card-num{color:var(--l4);}
+.level-card-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+.level-card-desc{font-size:13px;line-height:1.7;color:#374151;margin-bottom:8px;}
+.level-card-threshold{font-family:var(--mono);font-size:11px;opacity:.7;margin-bottom:8px;}
+.level-card-action{background:rgba(0,0,0,.06);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;}
+.level-card-action strong{display:block;font-size:11px;letter-spacing:.5px;margin-bottom:3px;font-family:var(--mono);}
+.level-card-icon{font-size:28px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-header{background:var(--teal-deep);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;}
+.modal-title{font-family:var(--mono);font-size:16px;font-weight:700;color:#fff;}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1;padding:0 4px;}
+.modal-close:hover{color:#fff;}
+.modal-body{padding:24px;}
+.pin-label{font-size:14px;color:var(--text-muted);margin-bottom:16px;text-align:center;}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:20px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:background .15s,border-color .15s;}
+.pin-dot.filled{background:var(--teal);border-color:var(--teal);}
+.pin-dot.error{background:var(--l4);border-color:var(--l4);}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pin-key{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px;font-size:20px;font-family:var(--mono);font-weight:700;cursor:pointer;text-align:center;transition:background .15s,transform .1s;color:var(--text);}
+.pin-key:hover{background:#e6fafa;border-color:var(--teal);}
+.pin-key:active{transform:scale(.93);}
+.pin-key.del{font-size:14px;color:var(--text-muted);}
+.pin-key.zero{grid-column:2;}
+.pin-error{text-align:center;font-size:13px;color:var(--l4);margin-top:10px;min-height:20px;}
+.admin-panel{display:none;}
+.admin-panel.open{display:block;}
+.admin-section-title{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;}
+.admin-intro{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:16px;}
+.calibration-node{background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.calib-node-name{font-size:15px;font-weight:700;margin-bottom:10px;}
+.calib-info{font-size:12px;color:var(--text-muted);line-height:1.8;margin-bottom:10px;}
+.calib-info strong{color:var(--text);font-family:var(--mono);}
+.calib-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.calib-btn{background:var(--teal-deep);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:background .2s;}
+.calib-btn:hover{background:var(--teal-dark);}
+.calib-btn.clear{background:#6b7280;}
+.calib-btn.clear:hover{background:#4b5563;}
+.calib-log-title{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text-muted);margin:10px 0 5px;}
+.calib-log-entries{max-height:90px;overflow-y:auto;}
+.calib-log-entry{font-size:11px;font-family:var(--mono);color:var(--text-muted);padding:3px 0;border-bottom:1px solid var(--border);}
+.calib-log-empty{font-size:11px;color:var(--text-muted);font-style:italic;}
+.admin-note{background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 12px;font-size:12px;color:#064e3b;margin-top:14px;line-height:1.5;}
+.admin-signout{display:block;width:100%;margin-top:12px;background:none;border:1.5px solid var(--border);color:var(--text-muted);padding:10px;border-radius:10px;font-size:13px;font-family:var(--sans);cursor:pointer;transition:border-color .2s,color .2s;}
+.admin-signout:hover{border-color:#dc2626;color:#dc2626;}
+.sync-toast{position:fixed;bottom:24px;right:24px;background:var(--teal-deep);color:#fff;font-family:var(--mono);font-size:12px;padding:10px 16px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:none;}
+.sync-toast.show{opacity:1;transform:translateY(0);}
+footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);font-family:var(--mono);border-top:1px solid var(--border);margin-top:20px;}
+@media(max-width:640px){
+  .nodes-grid,.sensor-grid,.sensor-explainer{grid-template-columns:1fr;}
+  .logo-text,.last-update{display:none;}
+  .level-card{grid-template-columns:auto 1fr;}
+  .level-card-icon{display:none;}
+}
+
+.history-date-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.history-mode-toggle{display:flex;border-radius:8px;overflow:hidden;border:1.5px solid var(--teal-dark);}
+.mode-btn{background:none;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
+.mode-btn.active{background:var(--teal-dark);color:#fff;}
+.date-input{background:rgba(255,255,255,.07);border:1.5px solid var(--teal-dark);border-radius:8px;color:#fff;padding:7px 10px;font-family:var(--mono);font-size:12px;outline:none;}
+.date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.7;cursor:pointer;}
+.date-input option{background:#0f2b2a;color:#fff;}
+
+.lang-toggle{display:flex;justify-content:center;margin:16px 0 4px;gap:0;}
+.lang-btn{background:none;border:1.5px solid var(--teal-dark);padding:8px 22px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
+.lang-btn:first-child{border-radius:8px 0 0 8px;}
+.lang-btn:last-child{border-radius:0 8px 8px 0;border-left:none;}
+.lang-btn.active{background:var(--teal-dark);color:#fff;}
+.ceb{display:none;}
+.guide-page-ceb .eng{display:none;}
+.guide-page-ceb .ceb{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏔️</div>
+    <div class="logo-text">Lands<span>I</span>Track</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate">—</div>
+    <button class="install-header-btn" id="installHeaderBtn">📲 Install App</button>
+    <button class="admin-btn" id="adminOpenBtn" title="Admin Panel">🔒</button>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" data-page="homePage">Overview</button>
+  <button class="nav-btn" data-page="historyPage">History</button>
+  <button class="nav-btn" data-page="guidePage">How It Works</button>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="homePage">
+  <div id="statusBanner" class="status-banner safe">
+    <div class="banner-icon" id="bannerIcon">✅</div>
+    <div class="banner-body">
+      <div class="banner-level" id="bannerLevel">SYSTEM STATUS</div>
+      <div class="banner-message" id="bannerMessage">Node 1 and Node 2 are all normal</div>
+      <div class="banner-action" id="bannerAction">All sensors reading within safe limits. No action needed.</div>
+    </div>
+  </div>
+  <div class="nodes-grid">
+    <!-- NODE 1 -->
+    <div class="node-card safe" id="card-node1">
+      <div class="node-header">
+        <div class="node-title">
+          <div class="node-num">N1</div>
+          <div>
+            <div class="node-name">Node 1</div>
+            <div class="node-loc">Sensor Array Alpha</div>
+          </div>
+        </div>
+        <div class="node-right">
+          <span id="tag-node1" class="node-status-tag tag-safe">Safe</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="node-body">
+        <div class="sensor-grid">
+          <div class="sensor-panel">
+            <div class="sensor-label" id="node1-tiltLabel">Tilt Angle</div>
+            <div class="tilt-scene">
+              <div class="tilt-rod-wrap" id="node1-rodWrap"><div class="tilt-rod"></div></div>
+              <div class="tilt-ground"></div>
+            </div>
+            <div class="tilt-readout">
+              <div class="tilt-number" id="node1-tiltValue">0.0°</div>
+              <div class="tilt-unit" id="node1-tiltUnit">angle of tilt</div>
+              <div class="tilt-true" id="node1-tiltTrue"></div>
+            </div>
+          </div>
+          <div class="sensor-panel">
+            <div class="sensor-label">Soil Moisture</div>
+            <div class="moisture-visual">
+              <div class="moisture-drop">💧</div>
+              <div class="moisture-num" id="node1-moistureNum">—</div>
+              <div class="moisture-bar-wrap"><div class="moisture-bar-fill" id="node1-moistureFill"></div></div>
+              <div class="moisture-label-text" id="node1-moistureText">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-val" id="node1-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
+          <div class="mini-stat"><div class="mini-stat-val" id="node1-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
+        </div>
+        <div class="action-panel" id="node1-actionPanel">
+          <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
+          <div id="node1-actionText"></div>
+        </div>
+      </div>
+    </div>
+    <!-- NODE 2 -->
+    <div class="node-card safe" id="card-node2">
+      <div class="node-header">
+        <div class="node-title">
+          <div class="node-num">N2</div>
+          <div>
+            <div class="node-name">Node 2</div>
+            <div class="node-loc">Sensor Array Beta</div>
+          </div>
+        </div>
+        <div class="node-right">
+          <span id="tag-node2" class="node-status-tag tag-safe">Safe</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="node-body">
+        <div class="sensor-grid">
+          <div class="sensor-panel">
+            <div class="sensor-label" id="node2-tiltLabel">Tilt Angle</div>
+            <div class="tilt-scene">
+              <div class="tilt-rod-wrap" id="node2-rodWrap"><div class="tilt-rod"></div></div>
+              <div class="tilt-ground"></div>
+            </div>
+            <div class="tilt-readout">
+              <div class="tilt-number" id="node2-tiltValue">0.0°</div>
+              <div class="tilt-unit" id="node2-tiltUnit">angle of tilt</div>
+              <div class="tilt-true" id="node2-tiltTrue"></div>
+            </div>
+          </div>
+          <div class="sensor-panel">
+            <div class="sensor-label">Soil Moisture</div>
+            <div class="moisture-visual">
+              <div class="moisture-drop">💧</div>
+              <div class="moisture-num" id="node2-moistureNum">—</div>
+              <div class="moisture-bar-wrap"><div class="moisture-bar-fill" id="node2-moistureFill"></div></div>
+              <div class="moisture-label-text" id="node2-moistureText">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-val" id="node2-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
+          <div class="mini-stat"><div class="mini-stat-val" id="node2-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
+        </div>
+        <div class="action-panel" id="node2-actionPanel">
+          <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
+          <div id="node2-actionText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="historyPage">
+  <div class="history-header">
+    <div class="page-title">Historical Data</div>
+    <div class="history-controls">
+      <div class="node-tabs">
+        <button class="node-tab active" id="htab-node1">Node 1</button>
+        <button class="node-tab" id="htab-node2">Node 2</button>
+      </div>
+      <div class="history-date-row">
+        <div class="history-mode-toggle">
+          <button class="mode-btn active" id="modeRecent">Recent</button>
+          <button class="mode-btn" id="modeDate">By Date</button>
+        </div>
+        <div id="datePicker" style="display:none;align-items:center;gap:8px;">
+          <input type="date" id="historyDate" class="date-input">
+          <select id="historyHour" class="date-input" style="width:auto;">
+            <option value="">All day</option>
+            <option value="0">12 AM</option>
+            <option value="1">1 AM</option>
+            <option value="2">2 AM</option>
+            <option value="3">3 AM</option>
+            <option value="4">4 AM</option>
+            <option value="5">5 AM</option>
+            <option value="6">6 AM</option>
+            <option value="7">7 AM</option>
+            <option value="8">8 AM</option>
+            <option value="9">9 AM</option>
+            <option value="10">10 AM</option>
+            <option value="11">11 AM</option>
+            <option value="12">12 PM</option>
+            <option value="13">1 PM</option>
+            <option value="14">2 PM</option>
+            <option value="15">3 PM</option>
+            <option value="16">4 PM</option>
+            <option value="17">5 PM</option>
+            <option value="18">6 PM</option>
+            <option value="19">7 PM</option>
+            <option value="20">8 PM</option>
+            <option value="21">9 PM</option>
+            <option value="22">10 PM</option>
+            <option value="23">11 PM</option>
+          </select>
+        </div>
+        <button class="btn" id="loadBtn">📊 Load</button>
+      </div>
+    </div>
+  </div>
+  <div class="threshold-legend">
+    <div class="tl-item"><div class="tl-line" style="background:#059669"></div>Safe</div>
+    <div class="tl-item"><div class="tl-line" style="background:#ca8a04"></div>Level 2 line</div>
+    <div class="tl-item"><div class="tl-line" style="background:#ea580c"></div>Level 3 line</div>
+    <div class="tl-item"><div class="tl-line" style="background:#dc2626"></div>Level 4 line</div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-card-title" id="tiltChartTitle">Node 1 — True Tilt Angle (last 30 readings)</div>
+      <div id="tiltChartWrap" class="chart-empty">
+        <div class="chart-empty-icon">📈</div>
+        <div class="chart-empty-text">Select a node and press "Load History"</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title" id="moistChartTitle">Node 1 — Soil Moisture (last 30 readings)</div>
+      <div id="moistChartWrap" class="chart-empty">
+        <div class="chart-empty-icon">💧</div>
+        <div class="chart-empty-text">Select a node and press "Load History"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GUIDE — your edited text preserved exactly -->
+<div class="page" id="guidePage">
+
+  <!-- Language Toggle -->
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="langEng" >English</button>
+    <button class="lang-btn" id="langCeb" >Bisaya</button>
+  </div>
+
+  <!-- INTRO -->
+  <div class="guide-intro">
+    <h2 class="eng">How LandsITrack Works</h2>
+    <h2 class="ceb">Unsaon Paglihok sa LandsITrack</h2>
+    <p class="eng">This system monitors two sensors installed in the ground, a tilt sensor and a soil moisture sensor. Together, they detect early signs of a possible landslide and automatically alert the right people, so communities can react quickly and safely, before disaster strikes.</p>
+    <p class="ceb">Kining sistema nagbantay sa duha ka sensor nga gitanom sa yuta, ang tilt sensor ug ang soil moisture sensor. Magkauban, makamatikod sila sa sayo nga timailhan sa posibleng landslide ug awtomatikong mag-alerto sa angay nga mga tawo, aron ang mga komunidad makareaksyon sa dali ug luwas, sa dili pa moabot ang katalagman.</p>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="guide-section">
+    <div class="guide-section-title eng">Why We Monitor Landslides</div>
+    <div class="guide-section-title ceb">Ngano nga Gimonitor Nato ang Mga Landslide</div>
+    <div class="explainer-card">
+      <div class="explainer-icon">🏘️</div>
+      <div class="explainer-title eng">The Problem with Landslides</div>
+      <div class="explainer-title ceb">Ang Problema sa mga Landslide</div>
+      <div class="explainer-text eng">
+        Landslides are one of the most dangerous natural disasters in mountainous communities, and one of the most silent. Unlike typhoons or floods, they often give very little visible warning before they happen. The ground can look completely normal one moment and collapse the next.<br><br>
+        In many barangays, communities live on or near slopes. After heavy rains, the soil slowly weakens and shifts, sometimes for hours or days before anything is visible on the surface. By the time cracks appear or the ground starts moving noticeably, it may already be too late to evacuate safely.<br><br>
+        <strong>This is exactly the problem LandsITrack is built to solve.</strong> By placing sensors directly in the ground, the system can detect invisible early movement, the kind that happens underground before anything shows on the surface, and alert the right people with enough time to act.
+      </div>
+      <div class="explainer-text ceb">
+        Ang landslide ang usa sa pinaka-delikado nga natural nga kalamidad sa mga komunidad sa kabukiran, ug usa sa labing hilom. Dili sama sa mga bagyo o baha, kasagaran diyutay ra kaayo ang makita nga babala o sinyalis sa dili pa kini mahitabo. Ang yuta hingpit nga normal lang ang hitsura sa usa ka gutlo ug molutaw sa sunod.<br><br>
+        Sa daghang mga barangay, ang mga komunidad nagpuyo sa o duol sa mga daplin sa bukid. Human sa kusog nga ulan, ang yuta hinay-hinay nga mohuyang ug mobalhin, usahay sulod sa pila ka oras o pila ka adlaw sa dili pa adunay makita nga kausaban sa ibabaw. Sa oras nga magsugod na og pakita ang mga bitak sa yuta o klaro nang naglihok ang yuta, posible nga ulahi na kaayo aron makalikay o makabiya nga luwas ang mga tawo.<br><br>
+        <strong>Kini mismo nga problema mao gitukod ang LandsITrack para masulbad.</strong> Pinaagi sa pagbutang og mga sensor direkta sa sulod sa yuta, ang sistema makahimo sa pag-detect sa dili makita nga sayo nga paglihok sa yuta, ang klase sa paglihok nga mahitabo ilalom sa yuta sa dili pa kini makita sa ibabaw, ug makahatag og pasidaan sa hustong mga tawo sa sakto nga oras aron makalihok sila dayon.
+      </div>
+      <div class="explainer-highlight eng">⏱️ Early warning is the difference between a safe evacuation and a tragedy. LandsITrack gives communities that extra time.</div>
+      <div class="explainer-highlight ceb">⏱️ Ang sayo nga babala mao ang kalainan tali sa luwas nga pag-evacuate ug usa ka trahedya. Ang LandsITrack naghatag sa komunidad og dugang nga oras aron makapangandam ug makalihok dayon.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="guide-section">
+    <div class="guide-section-title eng">What the Sensors Measure, and Why</div>
+    <div class="guide-section-title ceb">Unsa ang Gisukod sa mga Sensor, ug Ngano</div>
+    <div class="sensor-explainer">
+      <div class="explainer-card">
+        <div class="explainer-icon">📐</div>
+        <div class="explainer-title eng">Tilt Angle</div>
+        <div class="explainer-title ceb">Anggulo sa Pagtilad (Tilt)</div>
+        <div class="explainer-text eng">
+          When the ground is stable, the sensor rod stands straight up at 0°. If the ground beneath it starts to shift or slide, the sensor leans with it, and that lean is measured in degrees.<br><br>
+          Even a small tilt, like 5°, can be a significant early warning sign that the soil is beginning to move underground. The larger the angle, the further the ground has shifted.
+        </div>
+        <div class="explainer-text ceb">
+          Kung stable o lig-on ang yuta, ang sensor rod magtindog nga tul-id sa 0°. Kung ang yuta sa ilalom magsugod na og lihok o mudahili, ang sensor mokiling uban niini, ug kana nga pagkiling masukod sa degrees.<br><br>
+          Bisan gamay nga pagkiling, sama sa 5°, mahimong importante nga sayo nga pasidaan nga ang yuta nagsugod na og lihok sa ilalom sa yuta. Mas dako ang angle, mas dako usab ang gilay-on nga nalihok sa yuta.
+        </div>
+        <div class="explainer-highlight eng">🪨 Think of it like planting a stick straight into a hillside. If the ground moves, the stick leans. LandsITrack measures exactly how far it leans, automatically and in real time.</div>
+        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid. Sukdon sa LandsITrack kung unsa ka layo ang paghilid, awtomatiko.</div>
+        <br>
+        <div class="explainer-text eng"><strong>Why we measure tilt:</strong> Ground movement is the most direct sign of a slope becoming unstable. The tilt sensor captures movement at the source, deep in the ground, before it becomes visible at the surface. It is the clearest, most direct evidence that a landslide may be forming.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang tilt:</strong> Ang paglihok sa yuta mao ang labing direkta nga timailhan nga ang daplin sa bukid nagsugod sa pagkadili-lig-on. Ang tilt sensor nagkuha sa paglihok sa tinubdan niini — lawom sa yuta — sa wala pa kini makita sa ibabaw. Kini ang labing klaro ug direkta nga ebidensya nga ang landslide mahimong nagporma na.</div>
+      </div>
+      <div class="explainer-card">
+        <div class="explainer-icon">💧</div>
+        <div class="explainer-title eng">Soil Moisture</div>
+        <div class="explainer-title ceb">Kahumok sa Yuta (Soil Moisture)</div>
+        <div class="explainer-text eng">
+          The soil moisture sensor measures how much water has soaked into the soil, as a percentage from 0% (dry) to 100% (completely saturated). When soil absorbs too much rainwater, it becomes heavier and loses its internal friction, the grip that holds soil particles together on a slope.<br><br>
+          Wet, heavy, slippery soil is far more likely to slide than dry, firm soil.
+        </div>
+        <div class="explainer-text ceb">
+          Ang soil moisture sensor mosukod kung pila ka tubig ang nasuyop sa yuta, nga gipakita isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga nabasa o saturated). Kung ang yuta mosuyop og sobra nga tubig gikan sa ulan, kini mahimong mas bug-at ug mawadan og internal friction, o ang kapit nga nagkupot sa mga partikulo sa yuta aron magpabiling lig-on sa bakilid.<br><br>
+          Ang basa, bug-at, ug madulas nga yuta mas dali kaayo mo-slide kumpara sa uga ug lig-on nga yuta.
+        </div>
+        <div class="explainer-highlight eng">🌧️ Think of dry sand vs. wet sand. Dry sand holds. Wet sand flows. The same principle applies to hillside soil after heavy rain, at a certain point, water overwhelms the soil's ability to stay in place.</div>
+        <div class="explainer-highlight ceb">🌧️ Hunahunaa ang uga nga balas kontra basa nga balas. Ang uga nga balas naghawid. Ang basa nga balas nagdagayday. Ang mao rang prinsipyo ang magamit sa yuta sa bukid human sa kusog nga ulan, sa usa ka punto, ang tubig molapas sa kakayahan sa yuta nga magpabilin sa lugar.</div>
+        <br>
+        <div class="explainer-text eng"><strong>Why we measure moisture:</strong> Most landslides in tropical regions are triggered by rainfall. Water accumulates in the soil over hours, slowly weakening it. By monitoring moisture continuously, LandsITrack can catch this weakening process early, even before the ground starts moving, giving even more advance warning.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang moisture:</strong> Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan. Ang tubig nagtipun-og sa yuta sulod sa mga oras, hinay-hinay nga nagpaluya niini. Pinaagi sa padayon nga pagmonitor sa moisture, makuha sa LandsITrack kining proseso sa pagluya sa sayo pa — bisan sa wala pa magsugod ang yuta sa paglihok — naghatag og dugang pang sayo nga babala.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="guide-section">
+    <div class="guide-section-title eng">How the Two Sensors Work Together</div>
+    <div class="guide-section-title ceb">Unsaon Pagtinabangay sa Duha ka Sensor</div>
+    <div class="explainer-card">
+      <div class="explainer-icon">🔗</div>
+      <div class="explainer-title eng">A Complete Picture of Risk</div>
+      <div class="explainer-title ceb">Kompletong Hulagway sa Peligro</div>
+      <div class="explainer-text eng">
+        Neither sensor alone tells the full story. Tilt without moisture could mean the ground shifted long ago and is stable now. Moisture without tilt could mean the soil is wet but still holding. But when <strong>both sensors show elevated readings at the same time</strong>, wet soil that is also starting to tilt, that combination is a strong signal that a slope is actively failing.<br><br>
+        This is why LandsITrack uses both together to calculate an alert level. The system checks both readings on every update and takes the worse of the two as the basis for the alert.
+      </div>
+      <div class="explainer-text ceb">
+        Ang matag sensor dili makahatag sa tibuok nga hulagway kung mag-inusara lang. Ang tilt nga walay taas nga moisture mahimong nagpasabot nga nalihok na ang yuta kaniadto pero stable na karon. Ang moisture nga walay tilt mahimong nagpasabot nga basa ang yuta pero nagkupot gihapon ug lig-on. Apan kung parehong taas ang reading sa duha ka sensor sa parehas nga oras, basa ang yuta ug nagsugod usab og kiling, kana nga kombinasyon kusog nga timailhan nga ang bakilid nagsugod na og kapakyasan o mahimong mag-landslide.<br><br>
+        Mao kini ang rason ngano nga gigamit sa LandsITrack ang duha ka sensor aron makalkula ang alert level. Ang sistema motan-aw sa duha ka readings sa matag update ug gamiton ang pinakataas o pinakadelikado nga reading isip basehan sa alerto.
+      </div>
+      <div class="explainer-highlight eng">🧠 Two sensors watching the same slope, day and night, rain or shine, that's the core of why LandsITrack works as an early warning system.</div>
+      <div class="explainer-highlight ceb">🧠 Duha ka sensor ang nagbantay sa mao rang daplin sa bukid — adlaw ug gabii, ulan man o adlaw — mao kana ang kasing-kasing sa rason ngano nga ang LandsITrack naglihok isip sistema sa sayo nga babala.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="guide-section">
+    <div class="guide-section-title eng">Alert Levels &amp; Response Actions</div>
+    <div class="guide-section-title ceb">Mga Antas sa Alerto &amp; Aksyon sa Pagtubag</div>
+    <div class="level-cards">
+      <div class="level-card l1">
+        <div class="level-card-num">1</div>
+        <div class="level-card-body">
+          <div class="level-card-name eng">Low Risk — Movement Detected</div>
+          <div class="level-card-name ceb">Ubos nga Peligro — Namatikdan ang Paglihok</div>
+          <div class="level-card-threshold">Tilt ≥ 5° &nbsp;|&nbsp; Moisture ≥ 60%</div>
+          <div class="level-card-desc eng">The sensors are picking up early signs of ground movement or elevated soil moisture. Not yet dangerous, but the situation needs to be watched closely.</div>
+          <div class="level-card-desc ceb">Ang mga sensor nagkuha sa sayo nga mga timailhan sa paglihok sa yuta o taas nga kahumok sa yuta. Dili pa delikado, apan kinahanglan bantayan pag-ayo ang sitwasyon.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation. No evacuation yet, just awareness.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan ang sitwasyon. Wala pa'y evacuation, pagmata lang.</div>
+        </div>
+        <div class="level-card-icon">👀</div>
+      </div>
+      <div class="level-card l2">
+        <div class="level-card-num">2</div>
+        <div class="level-card-body">
+          <div class="level-card-name eng">Moderate Risk — Elevated Movement</div>
+          <div class="level-card-name ceb">Katamtamang Peligro — Taas nga Paglihok</div>
+          <div class="level-card-threshold">Tilt ≥ 10° &nbsp;|&nbsp; Moisture ≥ 75%</div>
+          <div class="level-card-desc eng">Ground movement or soil saturation has increased to a level that requires active attention. The risk is real, and decisions about preparedness need to be made now.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta o saturation sa yuta mitaas na sa antas nga nagkinahanglan og aktibong atensyon. Tinuod na ang peligro, ug kinahanglan na nga buhaton ang mga desisyon bahin sa pagpangandam.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Officials are alerted again with an escalated warning. BDRRMC begins evaluating whether to prepare for a possible evacuation, gathering resources, identifying routes, and briefing response teams.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation, nagtipon og mga kahinguhaan, nagila sa mga ruta, ug nagbriefing sa mga response team.</div>
+        </div>
+        <div class="level-card-icon">⚠️</div>
+      </div>
+      <div class="level-card l3">
+        <div class="level-card-num">3</div>
+        <div class="level-card-body">
+          <div class="level-card-name eng">High Risk — Targeted Alert</div>
+          <div class="level-card-name ceb">Taas nga Peligro — Targeted nga Alerto</div>
+          <div class="level-card-threshold">Tilt ≥ 15° &nbsp;|&nbsp; Moisture ≥ 85%</div>
+          <div class="level-card-desc eng">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro — aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent directly to residents in the specific purok where the movement is happening. People in safe areas are not alarmed. Evacuation of the affected purok is likely ordered.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala direkta sa mga residente sa partikular nga purok diin nagkahitabo ang paglihok. Ang mga tawo sa luwas nga mga lugar dili alarma. Lagmit na nga mag-order og evacuation ang apektadong purok.</div>
+        </div>
+        <div class="level-card-icon">🔶</div>
+      </div>
+      <div class="level-card l4">
+        <div class="level-card-num">4</div>
+        <div class="level-card-body">
+          <div class="level-card-name eng">Critical — Evacuate Now</div>
+          <div class="level-card-name ceb">Kritikal — Molupad Na Karon</div>
+          <div class="level-card-threshold">Multiple sensors at high severity</div>
+          <div class="level-card-desc eng">Multiple sensors reporting dangerous readings simultaneously. The threat is larger and could affect not just one area but surrounding zones as well.</div>
+          <div class="level-card-desc ceb">Daghang mga sensor ang nag-report og delikadong mga basahan sa samang panahon. Ang hulga mas dako na ug mahimong makaapekto dili lang sa usa ka lugar kondili sa mga kasikbit nga lugar usab.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to residents in the affected purok and all neighboring puroks. Everyone in the danger zone and nearby areas is told to evacuate immediately.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga residente sa apektadong purok ug sa tanan nga kasikbit nga mga purok. Ang tanan sa danger zone ug sa mga duol nga lugar gisugo nga moluwas dayon.</div>
+        </div>
+        <div class="level-card-icon">🚨</div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔒 Admin Panel</div>
+      <button class="modal-close" id="adminCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="pinScreen">
+        <div class="pin-label">Enter admin PIN to continue</div>
+        <div class="pin-dots">
+          <div class="pin-dot" id="dot0"></div>
+          <div class="pin-dot" id="dot1"></div>
+          <div class="pin-dot" id="dot2"></div>
+          <div class="pin-dot" id="dot3"></div>
+        </div>
+        <div class="pin-keypad">
+          <button class="pin-key" data-digit="1">1</button>
+          <button class="pin-key" data-digit="2">2</button>
+          <button class="pin-key" data-digit="3">3</button>
+          <button class="pin-key" data-digit="4">4</button>
+          <button class="pin-key" data-digit="5">5</button>
+          <button class="pin-key" data-digit="6">6</button>
+          <button class="pin-key" data-digit="7">7</button>
+          <button class="pin-key" data-digit="8">8</button>
+          <button class="pin-key" data-digit="9">9</button>
+          <button class="pin-key zero" data-digit="0">0</button>
+          <button class="pin-key del" id="pinDelBtn">⌫ DEL</button>
+        </div>
+        <div class="pin-error" id="pinError"></div>
+      </div>
+      <div class="admin-panel" id="adminPanel">
+        <div class="admin-section-title">Tilt Baseline Calibration</div>
+        <p class="admin-intro">After officials inspect a site and confirm the current tilt is stable, set that reading as the new baseline. The dashboard will then show <strong>change from baseline</strong> instead of absolute degrees. History always records the true absolute values.</p>
+        <div class="calibration-node">
+          <div class="calib-node-name">📍 Node 1 — Sensor Array Alpha</div>
+          <div class="calib-info">
+            <div>Current reading: <strong id="calib-n1-current">—</strong></div>
+            <div>Active baseline: <strong id="calib-n1-baseline">None — showing true angle</strong></div>
+            <div>Set on: <strong id="calib-n1-date">—</strong></div>
+          </div>
+          <div class="calib-btns">
+            <button class="calib-btn" id="calibBtn-node1">Set Current as Baseline</button>
+            <button class="calib-btn clear" id="clearBtn-node1">Clear Baseline</button>
+          </div>
+          <div class="calib-log-title">CALIBRATION LOG</div>
+          <div class="calib-log-entries" id="calib-log-node1"><div class="calib-log-empty">No calibrations recorded yet.</div></div>
+        </div>
+        <div class="calibration-node">
+          <div class="calib-node-name">📍 Node 2 — Sensor Array Beta</div>
+          <div class="calib-info">
+            <div>Current reading: <strong id="calib-n2-current">—</strong></div>
+            <div>Active baseline: <strong id="calib-n2-baseline">None — showing true angle</strong></div>
+            <div>Set on: <strong id="calib-n2-date">—</strong></div>
+          </div>
+          <div class="calib-btns">
+            <button class="calib-btn" id="calibBtn-node2">Set Current as Baseline</button>
+            <button class="calib-btn clear" id="clearBtn-node2">Clear Baseline</button>
+          </div>
+          <div class="calib-log-title">CALIBRATION LOG</div>
+          <div class="calib-log-entries" id="calib-log-node2"><div class="calib-log-empty">No calibrations recorded yet.</div></div>
+        </div>
+        <div class="admin-note">☁️ <strong>Firebase connected.</strong> Calibration syncs in real time across all devices.</div>
+        <button class="admin-signout" id="signOutBtn">Sign Out of Admin</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div>
+
+    <!-- Android instructions -->
+    <div id="guideAndroid" style="display:none;">
+      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Chrome</strong>:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">⋮</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>3-dot menu</strong> at the top right of Chrome</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">➕</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">✅</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Install</strong> — done! Find it on your home screen.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS instructions -->
+    <div id="guideIos" style="display:none;">
+      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Safari</strong>:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">⬆️</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>Share button</strong> at the bottom of Safari</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">➕</div>
+          <div style="font-size:13px;color:#0f2b2a;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
+          <div style="font-size:24px;">✅</div>
+          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Add</strong> — done! Find it on your home screen.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- INSTALL MODAL -->
+<div id="installModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px;">
+
+  <!-- SPLASH SCREEN (shown first) -->
+  <div id="installSplash" style="background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <!-- Header -->
+    <div style="background:#134e4a;padding:28px 24px 22px;text-align:center;">
+      <div style="font-size:56px;margin-bottom:10px;">🏔️</div>
+      <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#fff;">Lands<span style="color:#5eead4;">I</span>Track</div>
+      <div style="font-size:11px;color:#99d6d0;font-family:'Space Mono',monospace;letter-spacing:2px;margin-top:4px;">LANDSLIDE MONITORING</div>
+    </div>
+    <!-- Body -->
+    <div style="padding:22px 24px;">
+      <div style="font-size:14px;color:#0f2b2a;font-weight:600;margin-bottom:6px;">Install this app on your device</div>
+      <div style="font-size:13px;color:#4b7b78;line-height:1.7;margin-bottom:18px;">Get quick access to live landslide monitoring — works like a real app, right from your home screen.</div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Live tilt &amp; moisture sensor alerts</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Real-time Firebase sync</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Works offline</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> No App Store needed</div>
+      </div>
+      <button id="splashInstallBtn" style="width:100%;background:#0d9488;color:#fff;border:none;padding:14px;border-radius:12px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">Install</button>
+      <button id="splashCancelBtn" style="width:100%;background:none;border:1.5px solid #cce9e5;color:#4b7b78;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- GUIDE SCREEN (shown after Install is tapped) -->
+  <div id="installGuide" style="display:none;background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:#134e4a;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#fff;">How to Install</div>
+      <button id="installGuideClose" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:22px 24px;">
+
+      <!-- Android steps -->
+      <div id="guideAndroid" style="display:none;">
+        <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Chrome</strong> and follow these steps:</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong style="font-size:18px;line-height:1;">⋮</strong> menu at the <strong>top right</strong> of Chrome</div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add to Home screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
+          </div>
+        </div>
+        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Chrome</strong> on Android. If you're using a different browser, open this page in Chrome first.</div>
+      </div>
+
+      <!-- iOS steps -->
+      <div id="guideIos" style="display:none;">
+        <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Safari</strong> and follow these steps:</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong>Share button ⬆</strong> at the bottom of Safari</div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
+            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
+          </div>
+        </div>
+        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Safari</strong> on iPhone. If you're using Chrome or another browser, switch to Safari first.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="sync-toast" id="syncToast">🔄 Calibration synced from another device</div>
+<footer>LandsITrack © 2026 &nbsp;·&nbsp; Real-Time Landslide Monitoring System &nbsp;·&nbsp; Auto-refresh every 15s</footer>
+
+<script type="module">
+// ═══════════════════════════════════════
+// CHANGE THE PIN HERE (4 digits)
+const ADMIN_PIN = '1234';
+// ═══════════════════════════════════════
+
+import { initializeApp }                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:            'AIzaSyB3euxv8G2-cshHRi2TSENxea922DOH8To',
+  authDomain:        'landsitrack.firebaseapp.com',
+  projectId:         'landsitrack',
+  storageBucket:     'landsitrack.firebasestorage.app',
+  messagingSenderId: '809470540483',
+  appId:             '1:809470540483:web:39d06926c49bf2b28ec076'
+});
+const db = getFirestore(app);
+
+// ── Config ──
+const nodes = [
+  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:1,moisture:2} },
+  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tilt:1,moisture:2} }
+];
+
+const levelConfig = {
+  0:{ cls:'safe', tag:'tag-safe', tagLabel:'Safe', statusLabel:'Safe', bannerCls:'safe', icon:'✅', action:'', showAction:false },
+  1:{ cls:'l1', tag:'tag-l1', tagLabel:'Level 1', statusLabel:'Level 1 — Low Risk', bannerCls:'l1', icon:'⚠️', action:'Barangay officials and BDRRMC have been notified to monitor the situation closely.', showAction:true },
+  2:{ cls:'l2', tag:'tag-l2', tagLabel:'Level 2', statusLabel:'Level 2 — Moderate Risk', bannerCls:'l2', icon:'⚠️', action:'Officials are on alert. BDRRMC is evaluating whether to begin evacuation preparation.', showAction:true },
+  3:{ cls:'l3', tag:'tag-l3', tagLabel:'Level 3', statusLabel:'Level 3 — High Risk', bannerCls:'l3', icon:'🔶', action:'SMS warnings have been sent to residents in the affected purok. Evacuation may be ordered.', showAction:true },
+  4:{ cls:'l4', tag:'tag-l4', tagLabel:'Level 4 — CRITICAL', statusLabel:'Level 4 — Critical', bannerCls:'l4', icon:'🚨', action:'EVACUATE IMMEDIATELY. SMS warnings sent to the affected purok and all neighboring puroks.', showAction:true }
+};
+
+function classifyLevel(tilt, moisture) {
+  const t = Math.abs(tilt);
+  if (t >= 20 || moisture >= 95) return 4;
+  if (t >= 15 || moisture >= 85) return 3;
+  if (t >= 10 || moisture >= 75) return 2;
+  if (t >= 5  || moisture >= 60) return 1;
+  return 0;
+}
+
+// ── Calibration cache — Firebase loads in background ──
+const calibCache = { node1:{ baseline:null, log:[] }, node2:{ baseline:null, log:[] } };
+function getCalib(nodeId) { return calibCache[nodeId] || { baseline:null, log:[] }; }
+async function saveCalib(nodeId, data) {
+  calibCache[nodeId] = data;
+  try { await setDoc(doc(db, 'calibrations', nodeId), data); }
+  catch(e) { console.warn('Firebase write error:', e); }
+}
+
+function showSyncToast() {
+  const t = document.getElementById('syncToast');
+  if (!t) return;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── State ──
+const latestTrue   = { node1:0, node2:0 };
+const nodeStatuses = { node1:0, node2:0 };
+let adminAuth = false;
+let pinBuffer = '';
+let activeHistoryNode = 'node1';
+const historyCharts = {};
+
+// ════════════════════════════════════════════════
+// ATTACH ALL EVENT LISTENERS FIRST — synchronous
+// Firebase loads in background AFTER this block
+// ════════════════════════════════════════════════
+
+// Nav
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.getAttribute('data-page');
+    if (!page) return;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Node expand/collapse
+document.querySelectorAll('.node-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const body    = header.parentElement.querySelector('.node-body');
+    const chevron = header.querySelector('.chevron');
+    const open    = body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    chevron.classList.toggle('open', !open);
+  });
+});
+
+// History
+document.getElementById('htab-node1').addEventListener('click', () => selectHistoryNode('node1'));
+document.getElementById('htab-node2').addEventListener('click', () => selectHistoryNode('node2'));
+document.getElementById('loadBtn').addEventListener('click', loadHistory);
+
+// History mode toggle
+document.getElementById('modeRecent').addEventListener('click', () => {
+  document.getElementById('modeRecent').classList.add('active');
+  document.getElementById('modeDate').classList.remove('active');
+  document.getElementById('datePicker').style.display = 'none';
+});
+document.getElementById('modeDate').addEventListener('click', () => {
+  document.getElementById('modeDate').classList.add('active');
+  document.getElementById('modeRecent').classList.remove('active');
+  document.getElementById('datePicker').style.display = 'flex';
+  // Default date picker to today
+  if (!document.getElementById('historyDate').value) {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('historyDate').value = today;
+  }
+});
+
+// Admin modal
+document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
+document.getElementById('adminCloseBtn').addEventListener('click', closeAdmin);
+document.getElementById('adminModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdmin(); });
+document.getElementById('pinDelBtn').addEventListener('click', pinDel);
+document.getElementById('signOutBtn').addEventListener('click', signOut);
+document.querySelectorAll('.pin-key[data-digit]').forEach(btn => {
+  btn.addEventListener('click', () => pinKey(btn.getAttribute('data-digit')));
+});
+document.getElementById('calibBtn-node1').addEventListener('click', () => setCalibration('node1'));
+document.getElementById('calibBtn-node2').addEventListener('click', () => setCalibration('node2'));
+document.getElementById('clearBtn-node1').addEventListener('click', () => clearCalibration('node1'));
+document.getElementById('clearBtn-node2').addEventListener('click', () => clearCalibration('node2'));
+
+// ── Start polling immediately — no Firebase needed ──
+fetchAll();
+setInterval(fetchAll, 15000);
+
+// ════════════════════════════════════════════════
+// Firebase loads in background — non-blocking
+// ════════════════════════════════════════════════
+(async () => {
+  try {
+    const [snap1, snap2] = await Promise.all([
+      getDoc(doc(db, 'calibrations', 'node1')),
+      getDoc(doc(db, 'calibrations', 'node2'))
+    ]);
+    if (snap1.exists()) calibCache.node1 = snap1.data();
+    if (snap2.exists()) calibCache.node2 = snap2.data();
+    fetchAll();
+    if (adminAuth) refreshAdminPanel();
+
+    onSnapshot(doc(db, 'calibrations', 'node1'), snap => {
+      if (!snap.exists()) return;
+      calibCache.node1 = snap.data();
+      fetchAll(); if (adminAuth) refreshAdminPanel(); showSyncToast();
+    });
+    onSnapshot(doc(db, 'calibrations', 'node2'), snap => {
+      if (!snap.exists()) return;
+      calibCache.node2 = snap.data();
+      fetchAll(); if (adminAuth) refreshAdminPanel(); showSyncToast();
+    });
+  } catch(e) { console.warn('Firebase unavailable, running without sync:', e); }
+})();
+
+// ── Sensor functions ──
+function setRod(nodeId, angle) {
+  const wrap = document.getElementById(nodeId + '-rodWrap');
+  if (wrap) wrap.style.transform = `rotate(${Math.max(-30, Math.min(30, angle))}deg)`;
+}
+
+function applyNodeStatus(id, level) {
+  const cfg = levelConfig[level];
+  document.getElementById('card-' + id).className = 'node-card ' + cfg.cls;
+  const tag = document.getElementById('tag-' + id);
+  tag.className = 'node-status-tag ' + cfg.tag;
+  tag.textContent = cfg.tagLabel;
+  const st = document.getElementById(id + '-status');
+  if (st) st.textContent = cfg.statusLabel;
+  const ap = document.getElementById(id + '-actionPanel');
+  const at = document.getElementById(id + '-actionText');
+  if (ap && at) {
+    if (cfg.showAction) { ap.className = 'action-panel visible ' + cfg.cls; at.textContent = cfg.action; }
+    else { ap.className = 'action-panel'; }
+  }
+}
+
+function updateBanner() {
+  const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
+  const maxLevel = Math.max(l1, l2);
+  const cfg = levelConfig[maxLevel];
+  document.getElementById('statusBanner').className  = 'status-banner ' + cfg.bannerCls;
+  document.getElementById('bannerIcon').textContent  = cfg.icon;
+  document.getElementById('bannerLevel').textContent = maxLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
+  let msg, action;
+  if      (l1===0 && l2===0) { msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.'; }
+  else if (l1===0)           { msg=`Node 1 is normal — Node 2 has ${levelConfig[l2].tagLabel} readings`; action=levelConfig[l2].action; }
+  else if (l2===0)           { msg=`Node 1 has ${levelConfig[l1].tagLabel} readings — Node 2 is normal`; action=levelConfig[l1].action; }
+  else if (l1===l2)          { msg=`Both nodes are reporting ${levelConfig[maxLevel].tagLabel} conditions`; action=levelConfig[maxLevel].action; }
+  else                       { msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[maxLevel].action; }
+  document.getElementById('bannerMessage').textContent = msg;
+  document.getElementById('bannerAction').textContent  = action;
+}
+
+async function fetchNode(node) {
+  try {
+    const res  = await fetch(`https://api.thingspeak.com/channels/${node.channel}/feeds/last.json?api_key=${node.apiKey}`);
+    const data = await res.json();
+    const trueAngle = parseFloat(data['field' + node.fields.tilt])     || 0;
+    const moisture  = parseFloat(data['field' + node.fields.moisture]) || 0;
+    const timestamp = data.created_at ? new Date(data.created_at) : null;
+
+    latestTrue[node.id] = trueAngle;
+    const calib        = getCalib(node.id);
+    const hasCalib     = calib.baseline !== null;
+    const displayAngle = hasCalib ? trueAngle - calib.baseline : trueAngle;
+
+    setRod(node.id, displayAngle);
+
+    const tiltEl = document.getElementById(node.id + '-tiltValue');
+    if (tiltEl) tiltEl.textContent = (hasCalib && displayAngle > 0 ? '+' : '') + displayAngle.toFixed(1) + '°';
+
+    const lblEl = document.getElementById(node.id + '-tiltLabel');
+    if (lblEl) lblEl.innerHTML = hasCalib ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
+
+    const unitEl = document.getElementById(node.id + '-tiltUnit');
+    if (unitEl) unitEl.textContent = hasCalib ? 'change since calibration' : 'angle of tilt';
+
+    const trueEl = document.getElementById(node.id + '-tiltTrue');
+    if (trueEl) {
+      if (hasCalib) { trueEl.textContent = `True: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`; trueEl.classList.add('visible'); }
+      else { trueEl.classList.remove('visible'); }
+    }
+
+    const pct    = Math.max(0, Math.min(100, moisture));
+    const fillEl = document.getElementById(node.id + '-moistureFill');
+    const numEl  = document.getElementById(node.id + '-moistureNum');
+    const txtEl  = document.getElementById(node.id + '-moistureText');
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (numEl)  numEl.textContent  = pct.toFixed(1) + '%';
+    if (txtEl)  txtEl.textContent  = pct>=95?'Fully Saturated':pct>=85?'Very Wet':pct>=75?'Wet':pct>=60?'Moist':pct>=40?'Slightly Moist':'Dry';
+
+    const timeEl = document.getElementById(node.id + '-time');
+    if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+    nodeStatuses[node.id] = classifyLevel(displayAngle, moisture);
+    applyNodeStatus(node.id, nodeStatuses[node.id]);
+    updateBanner();
+
+    const upd = document.getElementById('lastUpdate');
+    if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { console.error('Fetch error:', e); }
+}
+
+function fetchAll() { nodes.forEach(fetchNode); }
+
+// ── History ──
+function selectHistoryNode(id) {
+  activeHistoryNode = id;
+  document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('htab-' + id).classList.add('active');
+  resetWrap('tiltChartWrap',  '📈');
+  resetWrap('moistChartWrap', '💧');
+  const n = nodes.find(nd => nd.id === id);
+  document.getElementById('tiltChartTitle').textContent  = n.label + ' — True Tilt Angle (last 30 readings)';
+  document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture (last 30 readings)';
+}
+
+function resetWrap(wid, icon) {
+  if (historyCharts[wid]) { historyCharts[wid].destroy(); delete historyCharts[wid]; }
+  const w = document.getElementById(wid);
+  w.className = 'chart-empty';
+  w.innerHTML = `<div class="chart-empty-icon">${icon}</div><div class="chart-empty-text">Press "Load History" to fetch data</div>`;
+}
+
+async function loadHistory() {
+  const btn  = document.getElementById('loadBtn');
+  btn.textContent = '⏳ Loading…'; btn.disabled = true;
+  try {
+    const node     = nodes.find(nd => nd.id === activeHistoryNode);
+    const byDate   = document.getElementById('modeDate').classList.contains('active');
+    const dateVal  = document.getElementById('historyDate').value;
+    const hourVal  = document.getElementById('historyHour').value;
+
+    let fetchURL;
+
+    if (byDate && dateVal) {
+      // Build start/end timestamps for ThingSpeak date query
+      const [yr, mo, dy] = dateVal.split('-').map(Number);
+      let startDt, endDt;
+
+      if (hourVal !== '') {
+        // Specific hour window
+        const h = parseInt(hourVal);
+        startDt = new Date(Date.UTC(yr, mo-1, dy, h, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, h+1, 0, 0));
+      } else {
+        // Full day
+        startDt = new Date(Date.UTC(yr, mo-1, dy, 0, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, 23, 59, 59));
+      }
+
+      const fmt = dt => dt.toISOString().replace('T',' ').replace('.000Z','');
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json`
+               + `?api_key=${node.apiKey}`
+               + `&start=${encodeURIComponent(fmt(startDt))}`
+               + `&end=${encodeURIComponent(fmt(endDt))}`
+               + `&results=100`;
+    } else {
+      // Recent 30 readings
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=30`;
+    }
+
+    const res  = await fetch(fetchURL);
+    const data = await res.json();
+
+    if (!data.feeds || data.feeds.length === 0) {
+      document.getElementById('tiltChartWrap').innerHTML =
+        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      document.getElementById('moistChartWrap').innerHTML =
+        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      btn.textContent = '📊 Load'; btn.disabled = false;
+      return;
+    }
+
+    const labels=[], tiltVals=[], moistVals=[];
+    data.feeds.forEach(f => {
+      const d = new Date(f.created_at);
+      // Show date + time if viewing a specific date, time only for recent
+      if (byDate && dateVal) {
+        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      } else {
+        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      }
+      tiltVals.push(parseFloat(f['field' + node.fields.tilt])     || 0);
+      moistVals.push(parseFloat(f['field' + node.fields.moisture]) || 0);
+    });
+
+    // Update chart titles to show what date/range was loaded
+    const nodeLabel = activeHistoryNode === 'node1' ? 'Node 1' : 'Node 2';
+    const dateLabel = byDate && dateVal
+      ? new Date(dateVal + 'T00:00:00').toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})
+      : 'last 30 readings';
+    const hourLabel = (byDate && dateVal && hourVal !== '')
+      ? ' — ' + document.getElementById('historyHour').options[document.getElementById('historyHour').selectedIndex].text
+      : '';
+    document.getElementById('tiltChartTitle').textContent  = nodeLabel + ' — Tilt Angle (' + dateLabel + hourLabel + ')';
+    document.getElementById('moistChartTitle').textContent = nodeLabel + ' — Soil Moisture (' + dateLabel + hourLabel + ')';
+
+    renderChart('tiltChartWrap', labels, tiltVals, 'True Tilt (°)', '#0d9488',
+      v => { const t=Math.abs(v); return t>=20?'#dc2626':t>=15?'#ea580c':t>=10?'#ca8a04':t>=5?'#16a34a':'#0d9488'; },
+      [{value:5,color:'#16a34a'},{value:10,color:'#ca8a04'},{value:15,color:'#ea580c'},{value:20,color:'#dc2626'}]);
+    renderChart('moistChartWrap', labels, moistVals, 'Moisture (%)', '#3b82f6',
+      v => v>=95?'#dc2626':v>=85?'#ea580c':v>=75?'#ca8a04':v>=60?'#16a34a':'#3b82f6',
+      [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}]);
+
+  } catch(e) {
+    console.error('History load error:', e);
+  }
+  btn.textContent = '📊 Load'; btn.disabled = false;
+}
+
+function renderChart(wid, labels, vals, label, color, pointColorFn, thresholds) {
+  if (historyCharts[wid]) historyCharts[wid].destroy();
+  const wrap = document.getElementById(wid);
+  wrap.innerHTML = '<canvas></canvas>';
+  wrap.className = 'chart-wrap';
+  historyCharts[wid] = new Chart(wrap.querySelector('canvas'), {
+    type:'line',
+    data:{labels,datasets:[{label,data:vals,tension:0.4,borderColor:color,backgroundColor:color+'20',fill:true,pointRadius:4,pointHoverRadius:7,pointBackgroundColor:vals.map(pointColorFn),borderWidth:2}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}},
+      scales:{x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:45},grid:{color:'#e5f7f5'}},y:{ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}}
+    },
+    plugins:[{ id:'threshLines', afterDraw(ch) {
+      const c2=ch.ctx, ya=ch.scales.y;
+      thresholds.forEach(t => {
+        const yp=ya.getPixelForValue(t.value);
+        if(yp<ch.chartArea.top||yp>ch.chartArea.bottom) return;
+        c2.save();c2.setLineDash([6,4]);c2.strokeStyle=t.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
+        c2.beginPath();c2.moveTo(ch.chartArea.left,yp);c2.lineTo(ch.chartArea.right,yp);c2.stroke();c2.restore();
+      });
+    }}]
+  });
+}
+
+// ── Admin / PIN ──
+function openAdmin() {
+  document.getElementById('adminModal').classList.add('open');
+  if (!adminAuth) showPinScreen(); else showAdminPanel();
+}
+function closeAdmin() { document.getElementById('adminModal').classList.remove('open'); }
+function showPinScreen() {
+  document.getElementById('pinScreen').style.display = 'block';
+  document.getElementById('adminPanel').classList.remove('open');
+  pinBuffer = ''; updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+function showAdminPanel() {
+  document.getElementById('pinScreen').style.display = 'none';
+  document.getElementById('adminPanel').classList.add('open');
+  refreshAdminPanel();
+}
+function signOut() { adminAuth = false; pinBuffer = ''; showPinScreen(); }
+
+function pinKey(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit; updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 120);
+}
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0,-1); updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+function updatePinDots() {
+  for (let i=0; i<4; i++) {
+    const dot = document.getElementById('dot'+i);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+function checkPin() {
+  if (pinBuffer === ADMIN_PIN) { adminAuth = true; showAdminPanel(); }
+  else {
+    for (let i=0; i<4; i++) document.getElementById('dot'+i).classList.add('error');
+    document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+    setTimeout(() => { pinBuffer=''; updatePinDots(); }, 900);
+  }
+}
+
+async function setCalibration(nodeId) {
+  const trueAngle = latestTrue[nodeId];
+  const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
+  if (!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? Dashboard will show changes from this point. History always shows true values.`)) return;
+  const btn = document.getElementById('calibBtn-' + nodeId);
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  const calib = getCalib(nodeId);
+  if (!calib.log) calib.log = [];
+  calib.log.unshift({ baseline:trueAngle, setAt:new Date().toISOString() });
+  if (calib.log.length > 20) calib.log = calib.log.slice(0,20);
+  calib.baseline = trueAngle;
+  await saveCalib(nodeId, calib);
+  btn.textContent = 'Set Current as Baseline'; btn.disabled = false;
+  fetchAll(); refreshAdminPanel();
+}
+
+async function clearCalibration(nodeId) {
+  const nodeName = nodeId === 'node1' ? 'Node 1' : 'Node 2';
+  if (!confirm(`Clear calibration for ${nodeName}? Dashboard will return to true absolute tilt angle.`)) return;
+  const calib = getCalib(nodeId);
+  if (!calib.log) calib.log = [];
+  if (calib.baseline !== null) calib.log.unshift({ baseline:null, setAt:new Date().toISOString(), note:'Calibration cleared' });
+  calib.baseline = null;
+  await saveCalib(nodeId, calib);
+  fetchAll(); refreshAdminPanel();
+}
+
+function refreshAdminPanel() {
+  ['node1','node2'].forEach((nodeId, i) => {
+    const n     = i + 1;
+    const calib = getCalib(nodeId);
+    const tv    = latestTrue[nodeId];
+    document.getElementById(`calib-n${n}-current`).textContent  = tv !== undefined ? tv.toFixed(2)+'°' : '—';
+    document.getElementById(`calib-n${n}-baseline`).textContent = calib.baseline !== null ? calib.baseline.toFixed(2)+'°' : 'None — showing true angle';
+    document.getElementById(`calib-n${n}-date`).textContent     = (calib.baseline !== null && calib.log?.length) ? new Date(calib.log[0].setAt).toLocaleString() : '—';
+    const logEl   = document.getElementById('calib-log-' + nodeId);
+    const entries = calib.log || [];
+    logEl.innerHTML = entries.length === 0
+      ? '<div class="calib-log-empty">No calibrations recorded yet.</div>'
+      : entries.map(e => {
+          const d      = new Date(e.setAt).toLocaleString();
+          const detail = e.note || ('Set baseline to ' + (e.baseline !== null ? e.baseline.toFixed(2)+'°' : 'cleared'));
+          return `<div class="calib-log-entry">${d} — ${detail}</div>`;
+        }).join('');
+  });
+}
+
+// ── PWA Install ──
+let deferredPrompt = null;
+const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) &&
+            !window.MSStream; // exclude IE11 false positives
+const isStandalone = window.navigator.standalone === true ||
+                     window.matchMedia('(display-mode: standalone)').matches;
+
+if (isStandalone) {
+  document.getElementById('installHeaderBtn').style.display = 'none';
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+function openModal() {
+  document.getElementById('installModal').style.display = 'flex';
+  document.getElementById('installSplash').style.display = 'block';
+  document.getElementById('installGuide').style.display  = 'none';
+}
+function closeModal() {
+  document.getElementById('installModal').style.display = 'none';
+}
+function showGuide() {
+  document.getElementById('installSplash').style.display = 'none';
+  document.getElementById('installGuide').style.display  = 'block';
+  // Explicitly show the right guide for this device
+  if (isIos) {
+    document.getElementById('guideIos').style.display     = 'block';
+    document.getElementById('guideAndroid').style.display = 'none';
+  } else {
+    document.getElementById('guideIos').style.display     = 'none';
+    document.getElementById('guideAndroid').style.display = 'block';
+  }
+}
+
+document.getElementById('installHeaderBtn').addEventListener('click', openModal);
+document.getElementById('splashCancelBtn').addEventListener('click', closeModal);
+document.getElementById('installGuideClose').addEventListener('click', closeModal);
+document.getElementById('installModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.getElementById('splashInstallBtn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    // Browser is ready — native one-tap install
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === 'accepted') {
+      closeModal();
+      document.getElementById('installHeaderBtn').style.display = 'none';
+    }
+  } else {
+    // Show step-by-step guide
+    showGuide();
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  closeModal();
+  document.getElementById('installHeaderBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+// ── Language Toggle ──
+function setLang(lang) {
+  const page = document.getElementById('guidePage');
+  if (lang === 'ceb') {
+    page.classList.add('guide-page-ceb');
+    document.getElementById('langCeb').classList.add('active');
+    document.getElementById('langEng').classList.remove('active');
+  } else {
+    page.classList.remove('guide-page-ceb');
+    document.getElementById('langEng').classList.add('active');
+    document.getElementById('langCeb').classList.remove('active');
+  }
+}
+document.getElementById('langEng').addEventListener('click', () => setLang('eng'));
+document.getElementById('langCeb').addEventListener('click', () => setLang('ceb'));
+
+</script>
+</body>
+</html>
