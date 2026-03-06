@@ -11,7 +11,37 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LandsITrack">
 <link rel="apple-touch-icon" href="icon-192.png">
-<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/LandsITrack-Dashboard/sw.js').catch(()=>{});</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/LandsITrack-Dashboard/sw.js').then(reg => {
+    // Check for updates every 15 minutes
+    setInterval(() => reg.update(), 15 * 60 * 1000);
+    // When a new SW is waiting, show update toast
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateToast();
+        }
+      });
+    });
+  }).catch(() => {});
+  // When new SW takes over, reload to get fresh content
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; window.location.reload(); }
+  });
+}
+function showUpdateToast() {
+  const t = document.getElementById('updateToast');
+  if (t) t.style.display = 'flex';
+}
+function applyUpdate() {
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+  });
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -454,7 +484,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
     <h2 class="eng">How LandsITrack Works</h2>
     <h2 class="ceb">Unsaon Paglihok sa LandsITrack</h2>
     <p class="eng">This system monitors two sensors installed in the ground, a tilt sensor and a soil moisture sensor. Together, they detect early signs of a possible landslide and automatically alert the right people, so communities can react quickly and safely, before disaster strikes.</p>
-    <p class="ceb">Kining sistema nagbantay sa duha ka sensor nga gitanom sa yuta, ang tilt sensor ug ang soil moisture sensor. Magkauban, makamatikod sila sa sayo nga timailhan sa posibleng landslide ug awtomatikong mag-alerto sa angay nga mga tawo, aron ang mga komunidad makareaksyon sa dali ug luwas, sa dili pa moabot ang katalagman.</p>
+    <p class="ceb">Kining sistema nagbantay sa duha ka sensor nga gitanom sa yuta — ang tilt sensor ug ang soil moisture sensor. Magkauban, makamatikod sila sa sayo nga timailhan sa posibleng landslide ug awtomatikong mag-alerto sa angay nga mga tawo, aron ang mga komunidad makareaksyon sa dali ug luwas, sa dili pa moabot ang katalagman.</p>
   </div>
 
   <!-- SECTION 1 -->
@@ -473,7 +503,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       <div class="explainer-text ceb">
         Ang mga landslide usa sa pinaka-delikado nga natural nga kalamidad sa mga komunidad sa kabukiran, ug usa sa labing hilom. Dili sama sa mga bagyo o baha, kasagaran diyutay ra kaayo ang makita nga babala sa dili pa kini mahitabo. Ang yuta mahimong hingpit nga normal ang hitsura sa usa ka gutlo ug molutaw sa sunod.<br><br>
         Sa daghang mga barangay, ang mga komunidad nagpuyo sa o duol sa mga daplin sa bukid. Human sa kusog nga ulan, ang yuta hinay-hinay nga nagluya ug nagbalhin, usahay sulod sa mga oras o adlaw sa wala pa makita ang bisan unsa sa ibabaw. Sa panahon nga ang mga lusad makita na o ang yuta nagsugod na sa pagbalhin, mahimong ulahi na ang pagluwas.<br><br>
-        <strong>Kini mismo ang problema nga gitukod ang LandsITrack aron masulbad.</strong> Pinaagi sa pagbutang sa mga sensor direkta sa yuta, ang sistema makamatikod sa dili makita nga sayo nga paglihok, ang matang nga mahitabo sa ilalum sa yuta sa wala pa makita sa ibabaw, ug mag-alerto sa angay nga mga tawo nga adunay saktong panahon aron molihok.
+        <strong>Kini mismo ang problema nga gitukod ang LandsITrack aron masulbad.</strong> Pinaagi sa pagbutang sa mga sensor direkta sa yuta, ang sistema makamatikod sa dili makita nga sayo nga paglihok — ang matang nga mahitabo sa ilalum sa yuta sa wala pa makita sa ibabaw — ug mag-alerto sa angay nga mga tawo nga adunay saktong panahon aron molihok.
       </div>
       <div class="explainer-highlight eng">⏱️ Early warning is the difference between a safe evacuation and a tragedy. LandsITrack gives communities that extra time.</div>
       <div class="explainer-highlight ceb">⏱️ Ang sayo nga babala mao ang pagkalahi sa luwas nga pag-evacuation ug trahedya. Ang LandsITrack naghatag sa mga komunidad nianang dugang nga panahon.</div>
@@ -494,14 +524,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           Even a small tilt, like 5°, can be a significant early warning sign that the soil is beginning to move underground. The larger the angle, the further the ground has shifted.
         </div>
         <div class="explainer-text ceb">
-          Kung ang yuta lig-on, ang sensor nga baras nagtindog nga tul-id sa 0°. Kung ang yuta sa ilalum niini nagsugod sa pagbalhin o paglabay, ang sensor mohilid uban niini, ug ang hilid gisukod sa mga degree.<br><br>
+          Kung ang yuta lig-on, ang sensor nga baras nagtindog nga tul-id sa 0°. Kung ang yuta sa ilalum niini nagsugod sa pagbalhin o paglabay, ang sensor mohilid uban niini — ug ang hilid gisukod sa mga degree.<br><br>
           Bisan ang gamay nga tilt, sama sa 5°, mahimong usa ka hinungdanon nga sayo nga babala nga ang yuta nagsugod na sa paglihok sa ilalum sa yuta. Ang mas dako ang anggulo, mas layo na ang paglihok sa yuta.
         </div>
         <div class="explainer-highlight eng">🪨 Think of it like planting a stick straight into a hillside. If the ground moves, the stick leans. LandsITrack measures exactly how far it leans, automatically and in real time.</div>
-        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid. Sukdon sa LandsITrack kung unsa ka layo ang paghilid, awtomatiko ug sa tinuod nga panahon.</div>
+        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid. Sukdon sa LandsITrack kung unsa ka layo ang paghilid — awtomatiko ug sa tinuod nga panahon.</div>
         <br>
         <div class="explainer-text eng"><strong>Why we measure tilt:</strong> Ground movement is the most direct sign of a slope becoming unstable. The tilt sensor captures movement at the source, deep in the ground, before it becomes visible at the surface. It is the clearest, most direct evidence that a landslide may be forming.</div>
-        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang tilt:</strong> Ang paglihok sa yuta mao ang labing direkta nga timailhan nga ang daplin sa bukid nagsugod sa pagkadili lig-on. Ang tilt sensor nagkuha sa paglihok sa tinubdan niini, lawom sa yuta, sa wala pa kini makita sa ibabaw. Kini ang labing klaro ug direkta nga ebidensya nga ang landslide mahimong nagporma na.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang tilt:</strong> Ang paglihok sa yuta mao ang labing direkta nga timailhan nga ang daplin sa bukid nagsugod sa pagkadili-lig-on. Ang tilt sensor nagkuha sa paglihok sa tinubdan niini — lawom sa yuta — sa wala pa kini makita sa ibabaw. Kini ang labing klaro ug direkta nga ebidensya nga ang landslide mahimong nagporma na.</div>
       </div>
       <div class="explainer-card">
         <div class="explainer-icon">💧</div>
@@ -512,14 +542,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           Wet, heavy, slippery soil is far more likely to slide than dry, firm soil.
         </div>
         <div class="explainer-text ceb">
-          Ang soil moisture sensor nagsukat kung pila ka tubig ang nalusad sa yuta, isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga basa). Kung ang yuta moinom og sobra nga tubig sa ulan, kini mohimong mas bug-at ug mawad-an sa internal nga friction niini, ang agos nga naghiusa sa mga particle sa yuta sa daplin sa bukid.<br><br>
+          Ang soil moisture sensor nagsukat kung pila ka tubig ang nalusad sa yuta — isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga basa). Kung ang yuta moinom og sobra nga tubig sa ulan, kini mohimong mas bug-at ug mawad-an sa internal nga friction niini — ang agos nga naghiusa sa mga particle sa yuta sa daplin sa bukid.<br><br>
           Ang basa, bug-at, ug danlog nga yuta labi pang posible nga molusad kaysa uga ug lig-on nga yuta.
         </div>
         <div class="explainer-highlight eng">🌧️ Think of dry sand vs. wet sand. Dry sand holds. Wet sand flows. The same principle applies to hillside soil after heavy rain, at a certain point, water overwhelms the soil's ability to stay in place.</div>
-        <div class="explainer-highlight ceb">🌧️ Hunahunaa ang uga nga balas kontra basa nga balas. Ang uga nga balas naghawid. Ang basa nga balas nagdagayday. Ang mao rang prinsipyo ang magamit sa yuta sa bukid human sa kusog nga ulan, sa usa ka punto, ang tubig molapas sa kakayahan sa yuta nga magpabilin sa lugar.</div>
+        <div class="explainer-highlight ceb">🌧️ Hunahunaa ang uga nga balas kontra basa nga balas. Ang uga nga balas naghawid. Ang basa nga balas nagdagayday. Ang mao rang prinsipyo ang magamit sa yuta sa bukid human sa kusog nga ulan — sa usa ka punto, ang tubig molapas sa kakayahan sa yuta nga magpabilin sa lugar.</div>
         <br>
         <div class="explainer-text eng"><strong>Why we measure moisture:</strong> Most landslides in tropical regions are triggered by rainfall. Water accumulates in the soil over hours, slowly weakening it. By monitoring moisture continuously, LandsITrack can catch this weakening process early, even before the ground starts moving, giving even more advance warning.</div>
-        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang moisture:</strong> Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan. Ang tubig nagtipun-og sa yuta sulod sa mga oras, hinay-hinay nga nagpaluya niini. Pinaagi sa padayon nga pagmonitor sa moisture, makuha sa LandsITrack kining proseso sa pagluya sa sayo pa, bisan sa wala pa magsugod ang yuta sa paglihok, naghatag og dugang pang sayo nga babala.</div>
+        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang moisture:</strong> Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan. Ang tubig nagtipun-og sa yuta sulod sa mga oras, hinay-hinay nga nagpaluya niini. Pinaagi sa padayon nga pagmonitor sa moisture, makuha sa LandsITrack kining proseso sa pagluya sa sayo pa — bisan sa wala pa magsugod ang yuta sa paglihok — naghatag og dugang pang sayo nga babala.</div>
       </div>
     </div>
   </div>
@@ -537,11 +567,11 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         This is why LandsITrack uses both together to calculate an alert level. The system checks both readings on every update and takes the worse of the two as the basis for the alert.
       </div>
       <div class="explainer-text ceb">
-        Wala'y usa ka sensor nga makasugilon sa tibuok câu-an. Ang tilt nga walay moisture mahimong nagpasabot nga ang yuta naglihok dugay na ug lig-on na kini karon. Ang moisture nga walay tilt mahimong nagpasabot nga basa ang yuta apan naghawid pa. Apan kung <strong>ang duha ka sensor nagpakita og taas nga basahan sa samang panahon</strong>, basa nga yuta nga nagsugod usab sa pagtilad, kana nga kombinasyon usa ka kusog nga signal nga ang daplin sa bukid aktibo na nga nagpalya.<br><br>
+        Wala'y usa ka sensor nga makasugilon sa tibuok câu-an. Ang tilt nga walay moisture mahimong nagpasabot nga ang yuta naglihok dugay na ug lig-on na kini karon. Ang moisture nga walay tilt mahimong nagpasabot nga basa ang yuta apan naghawid pa. Apan kung <strong>ang duha ka sensor nagpakita og taas nga basahan sa samang panahon</strong> — basa nga yuta nga nagsugod usab sa pagtilad — kana nga kombinasyon usa ka kusog nga signal nga ang daplin sa bukid aktibo na nga nagpalya.<br><br>
         Mao kini ang rason ngano nga gigamit sa LandsITrack ang duha magkauban aron makalkula ang antas sa alerto. Gisusi sa sistema ang duha ka basahan sa matag update ug gikuha ang mas peligroso sa duha isip basehan sa alerto.
       </div>
       <div class="explainer-highlight eng">🧠 Two sensors watching the same slope, day and night, rain or shine, that's the core of why LandsITrack works as an early warning system.</div>
-      <div class="explainer-highlight ceb">🧠 Duha ka sensor ang nagbantay sa mao rang daplin sa bukid, adlaw ug gabii, ulan man o adlaw, mao kana ang kasing-kasing sa rason ngano nga ang LandsITrack naglihok isip sistema sa sayo nga babala.</div>
+      <div class="explainer-highlight ceb">🧠 Duha ka sensor ang nagbantay sa mao rang daplin sa bukid — adlaw ug gabii, ulan man o adlaw — mao kana ang kasing-kasing sa rason ngano nga ang LandsITrack naglihok isip sistema sa sayo nga babala.</div>
     </div>
   </div>
 
@@ -559,7 +589,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="level-card-desc eng">The sensors are picking up early signs of ground movement or elevated soil moisture. Not yet dangerous, but the situation needs to be watched closely.</div>
           <div class="level-card-desc ceb">Ang mga sensor nagkuha sa sayo nga mga timailhan sa paglihok sa yuta o taas nga kahumok sa yuta. Dili pa delikado, apan kinahanglan bantayan pag-ayo ang sitwasyon.</div>
           <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation. No evacuation yet, just awareness.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan ang sitwasyon. Wala pa'y evacuation, pagmata lang.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan ang sitwasyon. Wala pa'y evacuation — pagmata lang.</div>
         </div>
         <div class="level-card-icon">👀</div>
       </div>
@@ -572,7 +602,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="level-card-desc eng">Ground movement or soil saturation has increased to a level that requires active attention. The risk is real, and decisions about preparedness need to be made now.</div>
           <div class="level-card-desc ceb">Ang paglihok sa yuta o saturation sa yuta mitaas na sa antas nga nagkinahanglan og aktibong atensyon. Tinuod na ang peligro, ug kinahanglan na nga buhaton ang mga desisyon bahin sa pagpangandam.</div>
           <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Officials are alerted again with an escalated warning. BDRRMC begins evaluating whether to prepare for a possible evacuation, gathering resources, identifying routes, and briefing response teams.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation, nagtipon og mga kahinguhaan, nagila sa mga ruta, ug nagbriefing sa mga response team.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation — nagtipon og mga kahinguhaan, nagila sa mga ruta, ug nagbriefing sa mga response team.</div>
         </div>
         <div class="level-card-icon">⚠️</div>
       </div>
@@ -583,7 +613,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="level-card-name ceb">Taas nga Peligro — Targeted nga Alerto</div>
           <div class="level-card-threshold">Tilt ≥ 15° &nbsp;|&nbsp; Moisture ≥ 85%</div>
           <div class="level-card-desc eng">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
-          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro, aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro — aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
           <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent directly to residents in the specific purok where the movement is happening. People in safe areas are not alarmed. Evacuation of the affected purok is likely ordered.</div>
           <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala direkta sa mga residente sa partikular nga purok diin nagkahitabo ang paglihok. Ang mga tawo sa luwas nga mga lugar dili alarma. Lagmit na nga mag-order og evacuation ang apektadong purok.</div>
         </div>
@@ -1358,5 +1388,13 @@ document.getElementById('langEng').addEventListener('click', () => setLang('eng'
 document.getElementById('langCeb').addEventListener('click', () => setLang('ceb'));
 
 </script>
+
+<!-- UPDATE TOAST -->
+<div id="updateToast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#134e4a;color:#fff;font-family:'Space Mono',monospace;font-size:12px;padding:12px 18px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;align-items:center;gap:12px;white-space:nowrap;">
+  <span>🔄 New version available</span>
+  <button onclick="applyUpdate()" style="background:#0d9488;border:none;color:#fff;padding:6px 14px;border-radius:7px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;">Update Now</button>
+  <button onclick="document.getElementById('updateToast').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+</div>
+
 </body>
 </html>
