@@ -138,6 +138,12 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex
 .moisture-bar-wrap{width:100%;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
 .moisture-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#93c5fd,#2563eb);transition:width .8s cubic-bezier(0.34,1.2,0.64,1);}
 .moisture-label-text{font-size:11px;color:var(--text-muted);}
+.vibration-visual{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.vibration-icon{font-size:32px;line-height:1;}
+.vibration-num{font-family:var(--mono);font-size:26px;font-weight:700;color:#7c3aed;line-height:1;}
+.vibration-bar-wrap{width:100%;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
+.vibration-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#c4b5fd,#7c3aed);transition:width .8s cubic-bezier(0.34,1.2,0.64,1);}
+.vibration-label-text{font-size:11px;color:var(--text-muted);}
 .mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .mini-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
 .mini-stat-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal-dark);}
@@ -241,6 +247,18 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex
 .sync-toast{position:fixed;bottom:24px;right:24px;background:var(--teal-deep);color:#fff;font-family:var(--mono);font-size:12px;padding:10px 16px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:none;}
 .sync-toast.show{opacity:1;transform:translateY(0);}
 footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);font-family:var(--mono);border-top:1px solid var(--border);margin-top:20px;}
+.data-table-card{background:var(--surface);border-radius:20px;padding:22px;box-shadow:var(--shadow);border:1.5px solid var(--border);margin-top:20px;overflow-x:auto;}
+.data-table-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:14px;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;padding:8px 12px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;}
+.data-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:#f0fafa;}
+.dt-safe{color:#059669;font-weight:700;}
+.dt-l1{color:#16a34a;font-weight:700;}
+.dt-l2{color:#ca8a04;font-weight:700;}
+.dt-l3{color:#ea580c;font-weight:700;}
+.dt-l4{color:#dc2626;font-weight:700;}
 @media(max-width:640px){
   .nodes-grid,.sensor-grid,.sensor-explainer{grid-template-columns:1fr;}
   .logo-text,.last-update{display:none;}
@@ -335,6 +353,15 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
               <div class="moisture-label-text" id="node1-moistureText">Loading...</div>
             </div>
           </div>
+          <div class="sensor-panel" style="grid-column:1/-1;">
+            <div class="sensor-label">Vibration</div>
+            <div class="vibration-visual">
+              <div class="vibration-icon">📳</div>
+              <div class="vibration-num" id="node1-vibrationNum">—</div>
+              <div class="vibration-bar-wrap"><div class="vibration-bar-fill" id="node1-vibrationFill"></div></div>
+              <div class="vibration-label-text" id="node1-vibrationText">Loading...</div>
+            </div>
+          </div>
         </div>
         <div class="mini-stats">
           <div class="mini-stat"><div class="mini-stat-val" id="node1-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
@@ -382,6 +409,15 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
               <div class="moisture-num" id="node2-moistureNum">—</div>
               <div class="moisture-bar-wrap"><div class="moisture-bar-fill" id="node2-moistureFill"></div></div>
               <div class="moisture-label-text" id="node2-moistureText">Loading...</div>
+            </div>
+          </div>
+          <div class="sensor-panel" style="grid-column:1/-1;">
+            <div class="sensor-label">Vibration</div>
+            <div class="vibration-visual">
+              <div class="vibration-icon">📳</div>
+              <div class="vibration-num" id="node2-vibrationNum">—</div>
+              <div class="vibration-bar-wrap"><div class="vibration-bar-fill" id="node2-vibrationFill"></div></div>
+              <div class="vibration-label-text" id="node2-vibrationText">Loading...</div>
             </div>
           </div>
         </div>
@@ -465,6 +501,16 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       <div id="moistChartWrap" class="chart-empty">
         <div class="chart-empty-icon">💧</div>
         <div class="chart-empty-text">Select a node and press "Load History"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="data-table-card">
+    <div class="data-table-title" id="tableTitle">Node 1 — Data Table</div>
+    <div id="tableWrap">
+      <div class="chart-empty" style="height:80px;">
+        <div class="chart-empty-text">Load history to see data table</div>
       </div>
     </div>
   </div>
@@ -852,8 +898,8 @@ const db = getFirestore(app);
 
 // ── Config ──
 const nodes = [
-  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:5,moisture:1} },
-  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tilt:1,moisture:2} }
+  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:5,moisture:1,vibration:2} },
+  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tilt:5,moisture:1,vibration:2} }
 ];
 
 const levelConfig = {
@@ -1069,6 +1115,16 @@ async function fetchNode(node) {
     if (numEl)  numEl.textContent  = pct.toFixed(1) + '%';
     if (txtEl)  txtEl.textContent  = pct>=95?'Fully Saturated':pct>=85?'Very Wet':pct>=75?'Wet':pct>=60?'Moist':pct>=40?'Slightly Moist':'Dry';
 
+    // Vibration
+    const vibration  = parseFloat(data['field' + node.fields.vibration]) || 0;
+    const vibPct     = Math.max(0, Math.min(100, vibration / 10.23)); // 0-1023 → 0-100%
+    const vibFillEl  = document.getElementById(node.id + '-vibrationFill');
+    const vibNumEl   = document.getElementById(node.id + '-vibrationNum');
+    const vibTxtEl   = document.getElementById(node.id + '-vibrationText');
+    if (vibFillEl) vibFillEl.style.width = vibPct.toFixed(1) + '%';
+    if (vibNumEl)  vibNumEl.textContent  = vibration.toFixed(0);
+    if (vibTxtEl)  vibTxtEl.textContent  = vibration >= 800 ? 'Strong Vibration' : vibration >= 400 ? 'Moderate' : vibration >= 100 ? 'Slight' : 'None Detected';
+
     const timeEl = document.getElementById(node.id + '-time');
     if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
@@ -1118,15 +1174,16 @@ async function loadHistory() {
       const [yr, mo, dy] = dateVal.split('-').map(Number);
       let startDt, endDt;
 
+      // Data uploaded from UTC+8 (Philippines) — ThingSpeak stores in UTC.
+      // Subtract 8h so we query the correct UTC window for local time.
+      const TZ_OFFSET_H = 8;
       if (hourVal !== '') {
-        // Specific hour window
         const h = parseInt(hourVal);
-        startDt = new Date(Date.UTC(yr, mo-1, dy, h, 0, 0));
-        endDt   = new Date(Date.UTC(yr, mo-1, dy, h+1, 0, 0));
+        startDt = new Date(Date.UTC(yr, mo-1, dy, h - TZ_OFFSET_H, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, h - TZ_OFFSET_H + 1, 0, 0));
       } else {
-        // Full day
-        startDt = new Date(Date.UTC(yr, mo-1, dy, 0, 0, 0));
-        endDt   = new Date(Date.UTC(yr, mo-1, dy, 23, 59, 59));
+        startDt = new Date(Date.UTC(yr, mo-1, dy, 0 - TZ_OFFSET_H, 0, 0));
+        endDt   = new Date(Date.UTC(yr, mo-1, dy, 23 - TZ_OFFSET_H, 59, 59));
       }
 
       const fmt = dt => dt.toISOString().replace('T',' ').replace('.000Z','');
@@ -1137,7 +1194,7 @@ async function loadHistory() {
                + `&results=100`;
     } else {
       // Recent 30 readings
-      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=30`;
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=100`;
     }
 
     const res  = await fetch(fetchURL);
@@ -1152,17 +1209,14 @@ async function loadHistory() {
       return;
     }
 
-    const labels=[], tiltVals=[], moistVals=[];
+    const labels=[], tiltVals=[], moistVals=[], vibVals=[], timestamps=[];
     data.feeds.forEach(f => {
       const d = new Date(f.created_at);
-      // Show date + time if viewing a specific date, time only for recent
-      if (byDate && dateVal) {
-        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-      } else {
-        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-      }
-      tiltVals.push(parseFloat(f['field' + node.fields.tilt])     || 0);
+      labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      timestamps.push(d);
+      tiltVals.push(parseFloat(f['field' + node.fields.tilt])      || 0);
       moistVals.push(parseFloat(f['field' + node.fields.moisture]) || 0);
+      vibVals.push(parseFloat(f['field' + node.fields.vibration])  || 0);
     });
 
     // Update chart titles to show what date/range was loaded
@@ -1182,6 +1236,7 @@ async function loadHistory() {
     renderChart('moistChartWrap', labels, moistVals, 'Moisture (%)', '#3b82f6',
       v => v>=95?'#dc2626':v>=85?'#ea580c':v>=75?'#ca8a04':v>=60?'#16a34a':'#3b82f6',
       [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}]);
+    renderTable(nodeLabel, timestamps, tiltVals, moistVals, vibVals);
 
   } catch(e) {
     console.error('History load error:', e);
@@ -1213,6 +1268,51 @@ function renderChart(wid, labels, vals, label, color, pointColorFn, thresholds) 
       });
     }}]
   });
+}
+
+// ── Data Table ──
+function renderTable(nodeLabel, timestamps, tiltVals, moistVals, vibVals) {
+  document.getElementById('tableTitle').textContent = nodeLabel + ' — Data Table (' + tiltVals.length + ' readings)';
+  const wrap = document.getElementById('tableWrap');
+  if (!tiltVals.length) { wrap.innerHTML = '<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
+
+  function tiltClass(v) {
+    const t = Math.abs(v);
+    return t>=20?'dt-l4':t>=15?'dt-l3':t>=10?'dt-l2':t>=5?'dt-l1':'dt-safe';
+  }
+  function moistClass(v) {
+    return v>=95?'dt-l4':v>=85?'dt-l3':v>=75?'dt-l2':v>=60?'dt-l1':'dt-safe';
+  }
+  function vibLabel(v) {
+    return v>=800?'Strong':v>=400?'Moderate':v>=100?'Slight':'None';
+  }
+  function vibClass(v) {
+    return v>=800?'dt-l4':v>=400?'dt-l3':v>=100?'dt-l2':'dt-safe';
+  }
+
+  const rows = tiltVals.map((t, i) => {
+    const ts   = timestamps[i];
+    const time = ts.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
+                 ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const m = moistVals[i], v = vibVals[i];
+    return `<tr>
+      <td>${time}</td>
+      <td class="${tiltClass(t)}">${t.toFixed(1)}°</td>
+      <td class="${moistClass(m)}">${m.toFixed(1)}%</td>
+      <td class="${vibClass(v)}">${v.toFixed(0)} <span style="font-size:10px;opacity:.7">(${vibLabel(v)})</span></td>
+    </tr>`;
+  }).reverse().join(''); // newest first
+
+  wrap.innerHTML = `
+    <table class="data-table">
+      <thead><tr>
+        <th>Time</th>
+        <th>Tilt (°)</th>
+        <th>Moisture (%)</th>
+        <th>Vibration</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 
 // ── Admin / PIN ──
