@@ -144,6 +144,16 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex
 .vibration-bar-wrap{width:100%;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
 .vibration-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#c4b5fd,#7c3aed);transition:width .8s cubic-bezier(0.34,1.2,0.64,1);}
 .vibration-label-text{font-size:11px;color:var(--text-muted);}
+.tilt-depth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+.tilt-depth-panel{background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border);text-align:center;}
+.tilt-depth-label{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;}
+.tilt-depth-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--teal-dark);}
+.tilt-depth-sub{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.tilt-avg-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:8px 12px;border:1px solid var(--border);margin-bottom:4px;}
+.tilt-avg-label{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;}
+.tilt-avg-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--teal-dark);}
+.deep-warning{display:none;background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:6px 10px;font-size:11px;color:#7f1d1d;margin-top:6px;font-weight:600;}
+.deep-warning.visible{display:block;}
 .mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .mini-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
 .mini-stat-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal-dark);}
@@ -334,15 +344,31 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="sensor-grid">
           <div class="sensor-panel">
             <div class="sensor-label" id="node1-tiltLabel">Tilt Angle</div>
-            <div class="tilt-scene">
+            <div class="tilt-depth-grid">
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🌱 Shallow</div>
+                <div class="tilt-depth-val" id="node1-tiltShallow">—</div>
+                <div class="tilt-depth-sub">surface layer</div>
+              </div>
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🪨 Deep</div>
+                <div class="tilt-depth-val" id="node1-tiltDeep">—</div>
+                <div class="tilt-depth-sub">subsoil layer</div>
+              </div>
+            </div>
+            <div class="tilt-avg-row">
+              <span class="tilt-avg-label">AVG TILT</span>
+              <span class="tilt-avg-val" id="node1-tiltValue">0.0°</span>
+            </div>
+            <div class="tilt-scene" style="height:120px;">
               <div class="tilt-rod-wrap" id="node1-rodWrap"><div class="tilt-rod"></div></div>
               <div class="tilt-ground"></div>
             </div>
             <div class="tilt-readout">
-              <div class="tilt-number" id="node1-tiltValue">0.0°</div>
-              <div class="tilt-unit" id="node1-tiltUnit">angle of tilt</div>
+              <div class="tilt-unit" id="node1-tiltUnit">average tilt angle</div>
               <div class="tilt-true" id="node1-tiltTrue"></div>
             </div>
+            <div class="deep-warning" id="node1-deepWarning">⚠️ Deep sensor exceeds shallow — subsurface slip detected</div>
           </div>
           <div class="sensor-panel">
             <div class="sensor-label">Soil Moisture</div>
@@ -392,15 +418,31 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="sensor-grid">
           <div class="sensor-panel">
             <div class="sensor-label" id="node2-tiltLabel">Tilt Angle</div>
-            <div class="tilt-scene">
+            <div class="tilt-depth-grid">
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🌱 Shallow</div>
+                <div class="tilt-depth-val" id="node2-tiltShallow">—</div>
+                <div class="tilt-depth-sub">surface layer</div>
+              </div>
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🪨 Deep</div>
+                <div class="tilt-depth-val" id="node2-tiltDeep">—</div>
+                <div class="tilt-depth-sub">subsoil layer</div>
+              </div>
+            </div>
+            <div class="tilt-avg-row">
+              <span class="tilt-avg-label">AVG TILT</span>
+              <span class="tilt-avg-val" id="node2-tiltValue">0.0°</span>
+            </div>
+            <div class="tilt-scene" style="height:120px;">
               <div class="tilt-rod-wrap" id="node2-rodWrap"><div class="tilt-rod"></div></div>
               <div class="tilt-ground"></div>
             </div>
             <div class="tilt-readout">
-              <div class="tilt-number" id="node2-tiltValue">0.0°</div>
-              <div class="tilt-unit" id="node2-tiltUnit">angle of tilt</div>
+              <div class="tilt-unit" id="node2-tiltUnit">average tilt angle</div>
               <div class="tilt-true" id="node2-tiltTrue"></div>
             </div>
+            <div class="deep-warning" id="node2-deepWarning">⚠️ Deep sensor exceeds shallow — subsurface slip detected</div>
           </div>
           <div class="sensor-panel">
             <div class="sensor-label">Soil Moisture</div>
@@ -898,8 +940,8 @@ const db = getFirestore(app);
 
 // ── Config ──
 const nodes = [
-  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tilt:5,moisture:1,vibration:2} },
-  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tilt:5,moisture:1,vibration:2} }
+  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moisture:1, vibration:2} },
+  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moisture:1, vibration:2} }
 ];
 
 const levelConfig = {
@@ -1081,14 +1123,26 @@ async function fetchNode(node) {
   try {
     const res  = await fetch(`https://api.thingspeak.com/channels/${node.channel}/feeds/last.json?api_key=${node.apiKey}`);
     const data = await res.json();
-    const trueAngle = parseFloat(data['field' + node.fields.tilt])     || 0;
-    const moisture  = parseFloat(data['field' + node.fields.moisture]) || 0;
-    const timestamp = data.created_at ? new Date(data.created_at) : null;
+    const tiltShallow = parseFloat(data['field' + node.fields.tiltShallow]) || 0;
+    const tiltDeep    = parseFloat(data['field' + node.fields.tiltDeep])    || 0;
+    const trueAngle   = parseFloat(data['field' + node.fields.tiltAvg])     || 0;
+    const moisture    = parseFloat(data['field' + node.fields.moisture])    || 0;
+    const timestamp   = data.created_at ? new Date(data.created_at) : null;
 
     latestTrue[node.id] = trueAngle;
     const calib        = getCalib(node.id);
     const hasCalib     = calib.baseline !== null;
     const displayAngle = hasCalib ? trueAngle - calib.baseline : trueAngle;
+
+    // Shallow / Deep individual displays
+    const shallowEl = document.getElementById(node.id + '-tiltShallow');
+    const deepEl    = document.getElementById(node.id + '-tiltDeep');
+    if (shallowEl) shallowEl.textContent = tiltShallow.toFixed(1) + '°';
+    if (deepEl)    deepEl.textContent    = tiltDeep.toFixed(1) + '°';
+
+    // Deep > Shallow warning — subsurface slip signal
+    const deepWarnEl = document.getElementById(node.id + '-deepWarning');
+    if (deepWarnEl) deepWarnEl.classList.toggle('visible', tiltDeep > tiltShallow && tiltDeep >= 3);
 
     setRod(node.id, displayAngle);
 
@@ -1099,11 +1153,11 @@ async function fetchNode(node) {
     if (lblEl) lblEl.innerHTML = hasCalib ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
 
     const unitEl = document.getElementById(node.id + '-tiltUnit');
-    if (unitEl) unitEl.textContent = hasCalib ? 'change since calibration' : 'angle of tilt';
+    if (unitEl) unitEl.textContent = hasCalib ? 'change since calibration' : 'average tilt angle';
 
     const trueEl = document.getElementById(node.id + '-tiltTrue');
     if (trueEl) {
-      if (hasCalib) { trueEl.textContent = `True: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`; trueEl.classList.add('visible'); }
+      if (hasCalib) { trueEl.textContent = `True avg: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`; trueEl.classList.add('visible'); }
       else { trueEl.classList.remove('visible'); }
     }
 
@@ -1115,15 +1169,16 @@ async function fetchNode(node) {
     if (numEl)  numEl.textContent  = pct.toFixed(1) + '%';
     if (txtEl)  txtEl.textContent  = pct>=95?'Fully Saturated':pct>=85?'Very Wet':pct>=75?'Wet':pct>=60?'Moist':pct>=40?'Slightly Moist':'Dry';
 
-    // Vibration
+    // Vibration — pulse count scale: 0=none, 2=weak, 8=light, 20=moderate, 40+=strong
     const vibration  = parseFloat(data['field' + node.fields.vibration]) || 0;
-    const vibPct     = Math.max(0, Math.min(100, vibration / 10.23)); // 0-1023 → 0-100%
+    const vibPct     = Math.max(0, Math.min(100, (Math.min(vibration, 40) / 40) * 100));
     const vibFillEl  = document.getElementById(node.id + '-vibrationFill');
     const vibNumEl   = document.getElementById(node.id + '-vibrationNum');
     const vibTxtEl   = document.getElementById(node.id + '-vibrationText');
+    const vibLabel = vibration >= 41 ? 'Strong' : vibration >= 21 ? 'Moderate' : vibration >= 9 ? 'Light' : vibration >= 3 ? 'Weak' : 'Not Felt';
     if (vibFillEl) vibFillEl.style.width = vibPct.toFixed(1) + '%';
-    if (vibNumEl)  vibNumEl.textContent  = vibration.toFixed(0);
-    if (vibTxtEl)  vibTxtEl.textContent  = vibration >= 800 ? 'Strong Vibration' : vibration >= 400 ? 'Moderate' : vibration >= 100 ? 'Slight' : 'None Detected';
+    if (vibNumEl)  vibNumEl.textContent  = vibLabel;
+    if (vibTxtEl)  vibTxtEl.textContent  = vibration >= 41 ? 'Evacuate immediately' : vibration >= 21 ? 'Strong ground motion' : vibration >= 9 ? 'Noticeable shaking' : vibration >= 3 ? 'Slight movement' : 'No vibration detected';
 
     const timeEl = document.getElementById(node.id + '-time');
     if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -1209,14 +1264,16 @@ async function loadHistory() {
       return;
     }
 
-    const labels=[], tiltVals=[], moistVals=[], vibVals=[], timestamps=[];
+    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], vibVals=[], timestamps=[];
     data.feeds.forEach(f => {
       const d = new Date(f.created_at);
       labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
       timestamps.push(d);
-      tiltVals.push(parseFloat(f['field' + node.fields.tilt])      || 0);
-      moistVals.push(parseFloat(f['field' + node.fields.moisture]) || 0);
-      vibVals.push(parseFloat(f['field' + node.fields.vibration])  || 0);
+      tiltShallowVals.push(parseFloat(f['field' + node.fields.tiltShallow]) || 0);
+      tiltDeepVals.push(parseFloat(f['field' + node.fields.tiltDeep])       || 0);
+      tiltVals.push(parseFloat(f['field' + node.fields.tiltAvg])            || 0);
+      moistVals.push(parseFloat(f['field' + node.fields.moisture])          || 0);
+      vibVals.push(parseFloat(f['field' + node.fields.vibration])           || 0);
     });
 
     // Update chart titles to show what date/range was loaded
@@ -1227,16 +1284,14 @@ async function loadHistory() {
     const hourLabel = (byDate && dateVal && hourVal !== '')
       ? ' — ' + document.getElementById('historyHour').options[document.getElementById('historyHour').selectedIndex].text
       : '';
-    document.getElementById('tiltChartTitle').textContent  = nodeLabel + ' — Tilt Angle (' + dateLabel + hourLabel + ')';
+    document.getElementById('tiltChartTitle').textContent  = nodeLabel + ' — Tilt: Shallow vs Deep (' + dateLabel + hourLabel + ')';
     document.getElementById('moistChartTitle').textContent = nodeLabel + ' — Soil Moisture (' + dateLabel + hourLabel + ')';
 
-    renderChart('tiltChartWrap', labels, tiltVals, 'True Tilt (°)', '#0d9488',
-      v => { const t=Math.abs(v); return t>=20?'#dc2626':t>=15?'#ea580c':t>=10?'#ca8a04':t>=5?'#16a34a':'#0d9488'; },
-      [{value:5,color:'#16a34a'},{value:10,color:'#ca8a04'},{value:15,color:'#ea580c'},{value:20,color:'#dc2626'}]);
+    renderDualTiltChart('tiltChartWrap', labels, tiltShallowVals, tiltDeepVals, tiltVals);
     renderChart('moistChartWrap', labels, moistVals, 'Moisture (%)', '#3b82f6',
       v => v>=95?'#dc2626':v>=85?'#ea580c':v>=75?'#ca8a04':v>=60?'#16a34a':'#3b82f6',
       [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}]);
-    renderTable(nodeLabel, timestamps, tiltVals, moistVals, vibVals);
+    renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, vibVals);
 
   } catch(e) {
     console.error('History load error:', e);
@@ -1270,8 +1325,48 @@ function renderChart(wid, labels, vals, label, color, pointColorFn, thresholds) 
   });
 }
 
+// ── Dual Tilt Chart (Shallow vs Deep) ──
+function renderDualTiltChart(wid, labels, shallowVals, deepVals, avgVals) {
+  if (historyCharts[wid]) historyCharts[wid].destroy();
+  const wrap = document.getElementById(wid);
+  wrap.innerHTML = '<canvas></canvas>';
+  wrap.className = 'chart-wrap';
+  historyCharts[wid] = new Chart(wrap.querySelector('canvas'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'🌱 Shallow Tilt (°)', data:shallowVals, tension:0.4, borderColor:'#0d9488', backgroundColor:'#0d948820', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2 },
+        { label:'🪨 Deep Tilt (°)',    data:deepVals,   tension:0.4, borderColor:'#7c3aed', backgroundColor:'#7c3aed20', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2, borderDash:[4,3] },
+        { label:'Avg Tilt (°)',        data:avgVals,    tension:0.4, borderColor:'#94a3b8', backgroundColor:'transparent', fill:false, pointRadius:0, borderWidth:1.5, borderDash:[2,4] }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:true, position:'top', labels:{font:{family:'Space Mono', size:10}, boxWidth:20}},
+        tooltip:{backgroundColor:'#0f2b2a', titleFont:{family:'Space Mono',size:11}, bodyFont:{family:'DM Sans',size:12}, padding:10, cornerRadius:8}
+      },
+      scales:{
+        x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:45},grid:{color:'#e5f7f5'}},
+        y:{ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}
+      }
+    },
+    plugins:[{ id:'threshLines', afterDraw(ch) {
+      const c2=ch.ctx, ya=ch.scales.y;
+      [{value:5,color:'#16a34a'},{value:10,color:'#ca8a04'},{value:15,color:'#ea580c'},{value:20,color:'#dc2626'}].forEach(t => {
+        const yp=ya.getPixelForValue(t.value);
+        if(yp<ch.chartArea.top||yp>ch.chartArea.bottom) return;
+        c2.save();c2.setLineDash([6,4]);c2.strokeStyle=t.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
+        c2.beginPath();c2.moveTo(ch.chartArea.left,yp);c2.lineTo(ch.chartArea.right,yp);c2.stroke();c2.restore();
+      });
+    }}]
+  });
+}
+
 // ── Data Table ──
-function renderTable(nodeLabel, timestamps, tiltVals, moistVals, vibVals) {
+function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, vibVals) {
   document.getElementById('tableTitle').textContent = nodeLabel + ' — Data Table (' + tiltVals.length + ' readings)';
   const wrap = document.getElementById('tableWrap');
   if (!tiltVals.length) { wrap.innerHTML = '<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
@@ -1284,31 +1379,37 @@ function renderTable(nodeLabel, timestamps, tiltVals, moistVals, vibVals) {
     return v>=95?'dt-l4':v>=85?'dt-l3':v>=75?'dt-l2':v>=60?'dt-l1':'dt-safe';
   }
   function vibLabel(v) {
-    return v>=800?'Strong':v>=400?'Moderate':v>=100?'Slight':'None';
+    return v>=41?'Strong':v>=21?'Moderate':v>=9?'Light':v>=3?'Weak':'Not Felt';
   }
   function vibClass(v) {
-    return v>=800?'dt-l4':v>=400?'dt-l3':v>=100?'dt-l2':'dt-safe';
+    return v>=41?'dt-l4':v>=21?'dt-l3':v>=9?'dt-l2':v>=3?'dt-l1':'dt-safe';
   }
 
   const rows = tiltVals.map((t, i) => {
     const ts   = timestamps[i];
     const time = ts.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
                  ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const shallow = tiltShallowVals[i], deep = tiltDeepVals[i];
     const m = moistVals[i], v = vibVals[i];
+    const deepFlag = deep > shallow && deep >= 3;
     return `<tr>
       <td>${time}</td>
+      <td class="${tiltClass(shallow)}">${shallow.toFixed(1)}°</td>
+      <td class="${tiltClass(deep)}">${deep.toFixed(1)}°${deepFlag ? ' ⚠️' : ''}</td>
       <td class="${tiltClass(t)}">${t.toFixed(1)}°</td>
       <td class="${moistClass(m)}">${m.toFixed(1)}%</td>
-      <td class="${vibClass(v)}">${v.toFixed(0)} <span style="font-size:10px;opacity:.7">(${vibLabel(v)})</span></td>
+      <td class="${vibClass(v)}">${vibLabel(v)}</td>
     </tr>`;
-  }).reverse().join(''); // newest first
+  }).reverse().join('');
 
   wrap.innerHTML = `
     <table class="data-table">
       <thead><tr>
         <th>Time</th>
-        <th>Tilt (°)</th>
-        <th>Moisture (%)</th>
+        <th>🌱 Shallow Tilt</th>
+        <th>🪨 Deep Tilt</th>
+        <th>Avg Tilt</th>
+        <th>Moisture</th>
         <th>Vibration</th>
       </tr></thead>
       <tbody>${rows}</tbody>
