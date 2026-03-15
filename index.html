@@ -1297,7 +1297,9 @@ function groupByInterval(feeds, intervalMinutes, node) {
   const buckets = {};
   feeds.forEach(f => {
     const d = new Date(f.created_at);
-    const bucketMs = Math.floor(d.getTime() / (intervalMinutes * 60000)) * (intervalMinutes * 60000);
+    // Offset by UTC+8 so buckets align to Philippine local time
+    const TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+    const bucketMs = Math.floor((d.getTime() + TZ_OFFSET_MS) / (intervalMinutes * 60000)) * (intervalMinutes * 60000) - TZ_OFFSET_MS;
     if (!buckets[bucketMs]) buckets[bucketMs] = { sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs) };
     const b = buckets[bucketMs];
     b.sum.tS += parseFloat(f['field' + node.fields.tiltShallow])     || 0;
@@ -1358,8 +1360,10 @@ async function loadHistory() {
                + `&end=${encodeURIComponent(fmt(endDt))}`
                + `&results=100`;
     } else {
-      // Recent 30 readings
-      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=100`;
+      // For Recent mode, fetch enough readings to fill the selected interval window
+      // At ~15s per reading: 1hr=240, 2hr=480, 6hr=1440 — cap at 800 (ThingSpeak max)
+      const recentCount = Math.min(800, Math.max(100, intervalMinutes * 4));
+      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=${recentCount}`;
     }
 
     const res  = await fetch(fetchURL);
