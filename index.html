@@ -987,8 +987,8 @@ const db = getFirestore(app);
 
 // ── Config ──
 const nodes = [
-  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} },
-  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} }
+  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', writeApiKey:'3KE1TKOFWYU90GYU', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} },
+  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', writeApiKey:'ZOZZQ8TH8XGRY03D', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} }
 ];
 
 const levelConfig = {
@@ -1176,7 +1176,7 @@ async function fetchNode(node) {
     latestTrue[node.id] = trueAngle;
     const calib        = getCalib(node.id);
     const hasCalib     = calib.baseline !== null;
-    const displayAngle = hasCalib ? trueAngle - calib.baseline : trueAngle;
+    const displayAngle = hasCalib ? Math.abs(trueAngle - calib.baseline) : Math.abs(trueAngle);
 
     // Shallow / Deep individual displays
     const shallowEl = document.getElementById(node.id + '-tiltShallow');
@@ -1191,7 +1191,7 @@ async function fetchNode(node) {
     setRod(node.id, displayAngle);
 
     const tiltEl = document.getElementById(node.id + '-tiltValue');
-    if (tiltEl) tiltEl.textContent = (hasCalib && displayAngle > 0 ? '+' : '') + displayAngle.toFixed(1) + '°';
+    if (tiltEl) tiltEl.textContent = displayAngle.toFixed(1) + '°';
 
     const lblEl = document.getElementById(node.id + '-tiltLabel');
     if (lblEl) lblEl.innerHTML = hasCalib ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
@@ -1272,13 +1272,15 @@ async function fetchNode(node) {
 function fetchAll() { nodes.forEach(fetchNode); }
 
 // ── Push Notifications ──
-// Requests permission once on load, then fires on every 15s refresh
-// if any node is at Level 1 or higher.
+// Uses Service Worker showNotification for Android PWA support.
+// Basic new Notification() does not work on Android — SW is required.
 
 function requestNotificationPermission() {
   if (!('Notification' in window)) return;
   if (Notification.permission === 'default') {
-    Notification.requestPermission();
+    Notification.requestPermission().then(permission => {
+      console.log('Notification permission:', permission);
+    });
   }
 }
 
@@ -1294,14 +1296,27 @@ function sendLevelNotification(maxLevel, msg) {
     4: 'LandsITrack — CRITICAL Level 4'
   };
 
-  new Notification(titles[maxLevel], {
+  const options = {
     body: msg,
     icon: 'icon-192.png',
     badge: 'icon-192.png',
     tag: 'landsitrack-alert',
     renotify: true,
     vibrate: maxLevel >= 3 ? [200,100,200,100,200] : [200,100,200]
-  });
+  };
+
+  // Use Service Worker for Android — falls back to basic Notification for desktop
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(titles[maxLevel], options);
+    }).catch(err => {
+      console.warn('SW notification failed, trying basic:', err);
+      new Notification(titles[maxLevel], options);
+    });
+  } else {
+    // Desktop fallback
+    new Notification(titles[maxLevel], options);
+  }
 }
 
 // Request permission immediately on page load
@@ -1726,7 +1741,7 @@ async function setCalibration(nodeId) {
   // Arduino saves new EEPROM baseline and responds with CALIB:DONE
   const node = nodes.find(n => n.id === nodeId);
   try {
-    await fetch(`https://api.thingspeak.com/update?api_key=${node.apiKey}&field8=99`);
+    await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
   } catch(e) {
     console.warn('Failed to send calibration command to hardware:', e);
   }

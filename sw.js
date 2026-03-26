@@ -159,3 +159,20 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', event => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
+
+// ── Notification click: open or focus the app ──
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes('LandsITrack-Dashboard') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/LandsITrack-Dashboard/');
+      }
+    })
+  );
+});
