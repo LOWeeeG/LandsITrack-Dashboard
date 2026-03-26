@@ -987,8 +987,8 @@ const db = getFirestore(app);
 
 // ── Config ──
 const nodes = [
-  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2} },
-  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2} }
+  { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} },
+  { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} }
 ];
 
 const levelConfig = {
@@ -999,14 +999,9 @@ const levelConfig = {
   4:{ cls:'l4', tag:'tag-l4', tagLabel:'Level 4 — CRITICAL', statusLabel:'Level 4 — Critical', bannerCls:'l4', icon:'🚨', action:'EVACUATE IMMEDIATELY. SMS warnings sent to the affected purok and all neighboring puroks.', showAction:true }
 };
 
-function classifyLevel(tilt, moisture) {
-  const t = Math.abs(tilt);
-  if (t >= 20 || moisture >= 95) return 4;
-  if (t >= 15 || moisture >= 85) return 3;
-  if (t >= 10 || moisture >= 75) return 2;
-  if (t >= 5  || moisture >= 60) return 1;
-  return 0;
-}
+// Alert level is computed by Arduino firmware and uploaded to ThingSpeak field8.
+// Dashboard reads it directly — no threshold logic here.
+// To change thresholds, update classifyLevel() in arduino_node.ino only.
 
 // ── Calibration cache — Firebase loads in background ──
 const calibCache = { node1:{ baseline:null, log:[] }, node2:{ baseline:null, log:[] } };
@@ -1164,6 +1159,9 @@ function updateBanner() {
   else                       { msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[maxLevel].action; }
   document.getElementById('bannerMessage').textContent = msg;
   document.getElementById('bannerAction').textContent  = action;
+
+  // Fire notification on every refresh if level is elevated
+  sendLevelNotification(maxLevel, msg);
 }
 
 async function fetchNode(node) {
@@ -1261,7 +1259,8 @@ async function fetchNode(node) {
     const timeEl = document.getElementById(node.id + '-time');
     if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
-    nodeStatuses[node.id] = classifyLevel(displayAngle, moisture);
+    const firmwareLevel = parseInt(data['field' + node.fields.alertLevel]) || 0;
+    nodeStatuses[node.id] = firmwareLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
     updateBanner();
 
@@ -1271,6 +1270,42 @@ async function fetchNode(node) {
 }
 
 function fetchAll() { nodes.forEach(fetchNode); }
+
+// ── Push Notifications ──
+// Requests permission once on load, then fires on every 15s refresh
+// if any node is at Level 1 or higher.
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function sendLevelNotification(maxLevel, msg) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  if (maxLevel === 0) return;
+
+  const titles = {
+    1: 'LandsITrack — Level 1 Warning',
+    2: 'LandsITrack — Level 2 Alert',
+    3: 'LandsITrack — Level 3 High Risk',
+    4: 'LandsITrack — CRITICAL Level 4'
+  };
+
+  new Notification(titles[maxLevel], {
+    body: msg,
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
+    tag: 'landsitrack-alert',
+    renotify: true,
+    vibrate: maxLevel >= 3 ? [200,100,200,100,200] : [200,100,200]
+  });
+}
+
+// Request permission immediately on page load
+requestNotificationPermission();
 
 // ── History ──
 function selectHistoryNode(id) {
@@ -1683,9 +1718,20 @@ function checkPin() {
 async function setCalibration(nodeId) {
   const trueAngle = latestTrue[nodeId];
   const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
-  if (!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? Dashboard will show changes from this point. History always shows true values.`)) return;
+  if (!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? This sends a calibration command to the hardware. Keep the sensor still.`)) return;
   const btn = document.getElementById('calibBtn-' + nodeId);
-  btn.textContent = 'Saving…'; btn.disabled = true;
+  btn.textContent = 'Sending…'; btn.disabled = true;
+
+  // Write 99 to field8 — ESP32 polls this and forwards CMD:CALIBRATE to Arduino
+  // Arduino saves new EEPROM baseline and responds with CALIB:DONE
+  const node = nodes.find(n => n.id === nodeId);
+  try {
+    await fetch(`https://api.thingspeak.com/update?api_key=${node.apiKey}&field8=99`);
+  } catch(e) {
+    console.warn('Failed to send calibration command to hardware:', e);
+  }
+
+  // Also save display baseline to Firebase for dashboard tilt display
   const calib = getCalib(nodeId);
   if (!calib.log) calib.log = [];
   calib.log.unshift({ baseline:trueAngle, setAt:new Date().toISOString() });
