@@ -1735,15 +1735,44 @@ async function setCalibration(nodeId) {
   const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
   if (!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? This sends a calibration command to the hardware. Keep the sensor still.`)) return;
   const btn = document.getElementById('calibBtn-' + nodeId);
-  btn.textContent = 'Sending…'; btn.disabled = true;
+  btn.disabled = true;
 
-  // Write 99 to field8 — ESP32 polls this and forwards CMD:CALIBRATE to Arduino
-  // Arduino saves new EEPROM baseline and responds with CALIB:DONE
+  // Write 99 to field8 — retry every 16 seconds until ThingSpeak confirms
+  // ThingSpeak returns 0 if rate limited, returns entry number (>0) if accepted
   const node = nodes.find(n => n.id === nodeId);
-  try {
-    await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
-  } catch(e) {
-    console.warn('Failed to send calibration command to hardware:', e);
+  let accepted = false;
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (!accepted && attempts < maxAttempts) {
+    attempts++;
+    btn.textContent = `Sending command… (attempt ${attempts}/${maxAttempts})`;
+    try {
+      const res  = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
+      const text = await res.text();
+      const entry = parseInt(text.trim());
+      if (entry > 0) {
+        accepted = true;
+        btn.textContent = 'Command sent — waiting for hardware…';
+        console.log('Calibration command accepted, entry:', entry);
+      } else {
+        // Rate limited — wait 16 seconds then retry
+        console.log('ThingSpeak rate limited, retrying in 16s...');
+        btn.textContent = `Rate limited — retrying in 16s… (${attempts}/${maxAttempts})`;
+        await new Promise(r => setTimeout(r, 16000));
+      }
+    } catch(e) {
+      console.warn('Failed to send calibration command:', e);
+      btn.textContent = `Network error — retrying… (${attempts}/${maxAttempts})`;
+      await new Promise(r => setTimeout(r, 16000));
+    }
+  }
+
+  if (!accepted) {
+    btn.textContent = 'Set Current as Baseline';
+    btn.disabled = false;
+    alert('Could not send calibration command to ThingSpeak after ' + maxAttempts + ' attempts. Please try again.');
+    return;
   }
 
   // Also save display baseline to Firebase for dashboard tilt display
