@@ -1865,7 +1865,35 @@ async function setJudgement(nodeId, type) {
   }
 
   if (type === 'safe') {
-    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE? This will be logged in history.`)) return;
+    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE?\n\nThis will:\n- Set the current state as the new baseline\n- Log "Confirmed Safe" in history`)) return;
+
+    // Same as Set Baseline — write 99 to ThingSpeak field8 with retry
+    const node = nodes.find(n => n.id === nodeId);
+    const btnSafe = document.getElementById(nodeId + '-btnSafe');
+    btnSafe.textContent = 'Sending...'; btnSafe.disabled = true;
+    let accepted = false;
+    let attempts = 0;
+    while (!accepted && attempts < 5) {
+      attempts++;
+      try {
+        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
+        const entry = parseInt((await res.text()).trim());
+        if (entry > 0) { accepted = true; }
+        else { await new Promise(r => setTimeout(r, 16000)); }
+      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
+    }
+    btnSafe.textContent = 'Confirm Safe'; btnSafe.disabled = false;
+    if (!accepted) { alert('Could not send calibration command. Please try again.'); return; }
+
+    // Clear Firebase baseline — Arduino EEPROM is now source of truth
+    const calib = getCalib(nodeId);
+    if (!calib.log) calib.log = [];
+    calib.log.unshift({ baseline: latestTrue[nodeId], setAt: new Date().toISOString(), note: 'Confirmed Safe — hardware calibrated' });
+    if (calib.log.length > 20) calib.log = calib.log.slice(0, 20);
+    calib.baseline = null;
+    await saveCalib(nodeId, calib);
+
+    // Save judgement log
     await saveJudgement(nodeId, 'safe');
 
   } else if (type === 'unsafe') {
