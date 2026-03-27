@@ -1869,7 +1869,7 @@ async function setJudgement(nodeId, type) {
   }
 
   if (type === 'safe') {
-    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE?\n\nThis will:\n- Set the current state as the new baseline\n- Log "Confirmed Safe" in history`)) return;
+    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE? This will set the current state as the new baseline and log Confirmed Safe in history.`)) return;
 
     // Same as Set Baseline — write 99 to ThingSpeak field8 with retry
     const node = nodes.find(n => n.id === nodeId);
