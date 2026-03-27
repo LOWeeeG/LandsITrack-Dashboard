@@ -435,8 +435,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="judgement-panel" id="node1-judgementPanel">
           <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
           <div class="judgement-btns">
-            <button class="j-btn safe" id="node1-btnSafe" onclick="setJudgement('node1','safe')">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node1-btnUnsafe" onclick="setJudgement('node1','unsafe')">🚨 Confirm Not Safe</button>
+            <button class="j-btn safe" id="node1-btnSafe">✅ Confirm Safe</button>
+            <button class="j-btn unsafe" id="node1-btnUnsafe">🚨 Confirm Not Safe</button>
           </div>
           <div class="judgement-note" id="node1-judgementNote"></div>
         </div>
@@ -532,8 +532,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="judgement-panel" id="node2-judgementPanel">
           <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
           <div class="judgement-btns">
-            <button class="j-btn safe" id="node2-btnSafe" onclick="setJudgement('node2','safe')">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node2-btnUnsafe" onclick="setJudgement('node2','unsafe')">🚨 Confirm Not Safe</button>
+            <button class="j-btn safe" id="node2-btnSafe">✅ Confirm Safe</button>
+            <button class="j-btn unsafe" id="node2-btnUnsafe">🚨 Confirm Not Safe</button>
           </div>
           <div class="judgement-note" id="node2-judgementNote"></div>
         </div>
@@ -1132,6 +1132,10 @@ document.getElementById('calibBtn-node1').addEventListener('click', () => setCal
 document.getElementById('calibBtn-node2').addEventListener('click', () => setCalibration('node2'));
 document.getElementById('clearBtn-node1').addEventListener('click', () => clearCalibration('node1'));
 document.getElementById('clearBtn-node2').addEventListener('click', () => clearCalibration('node2'));
+document.getElementById('node1-btnSafe').addEventListener('click', () => setJudgement('node1','safe'));
+document.getElementById('node1-btnUnsafe').addEventListener('click', () => setJudgement('node1','unsafe'));
+document.getElementById('node2-btnSafe').addEventListener('click', () => setJudgement('node2','safe'));
+document.getElementById('node2-btnUnsafe').addEventListener('click', () => setJudgement('node2','unsafe'));
 
 // ── Start polling immediately — no Firebase needed ──
 fetchAll();
