@@ -174,6 +174,19 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex
 .action-panel.l3{background:var(--l3-bg);border-color:var(--l3);color:#7c2d12;}
 .action-panel.l4{background:var(--l4-bg);border-color:var(--l4);color:#7f1d1d;}
 .action-panel-title{font-weight:700;font-family:var(--mono);font-size:11px;letter-spacing:1px;margin-bottom:4px;}
+.judgement-panel{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.04);border:1px solid var(--border);}
+.judgement-panel.visible{display:block;}
+.judgement-title{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;}
+.judgement-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.j-btn{border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.j-btn.safe{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;}
+.j-btn.safe:hover{background:#a7f3d0;}
+.j-btn.unsafe{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5;}
+.j-btn.unsafe:hover{background:#fecaca;}
+.j-btn.active-safe{background:#059669;color:#fff;border:1px solid #059669;}
+.j-btn.active-unsafe{background:#dc2626;color:#fff;border:1px solid #dc2626;}
+.j-btn:disabled{opacity:.6;cursor:not-allowed;}
+.judgement-note{font-size:11px;margin-top:6px;color:var(--text-muted);font-family:var(--mono);}
 .history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
 .page-title{font-size:22px;font-weight:700;font-family:var(--mono);}
 .history-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
@@ -419,6 +432,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
           <div id="node1-actionText"></div>
         </div>
+        <div class="judgement-panel" id="node1-judgementPanel">
+          <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
+          <div class="judgement-btns">
+            <button class="j-btn safe" id="node1-btnSafe" onclick="setJudgement('node1','safe')">✅ Confirm Safe</button>
+            <button class="j-btn unsafe" id="node1-btnUnsafe" onclick="setJudgement('node1','unsafe')">🚨 Confirm Not Safe</button>
+          </div>
+          <div class="judgement-note" id="node1-judgementNote"></div>
+        </div>
       </div>
     </div>
     <!-- NODE 2 -->
@@ -507,6 +528,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="action-panel" id="node2-actionPanel">
           <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
           <div id="node2-actionText"></div>
+        </div>
+        <div class="judgement-panel" id="node2-judgementPanel">
+          <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
+          <div class="judgement-btns">
+            <button class="j-btn safe" id="node2-btnSafe" onclick="setJudgement('node2','safe')">✅ Confirm Safe</button>
+            <button class="j-btn unsafe" id="node2-btnUnsafe" onclick="setJudgement('node2','unsafe')">🚨 Confirm Not Safe</button>
+          </div>
+          <div class="judgement-note" id="node2-judgementNote"></div>
         </div>
       </div>
     </div>
@@ -1012,6 +1041,19 @@ async function saveCalib(nodeId, data) {
   catch(e) { console.warn('Firebase write error:', e); }
 }
 
+// ── Judgement cache ──
+const judgementCache = { node1: null, node2: null };
+
+async function saveJudgement(nodeId, type) {
+  // type: 'safe' | 'unsafe' | null
+  const entry = type ? { type, setAt: new Date().toISOString() } : null;
+  judgementCache[nodeId] = entry;
+  try { await setDoc(doc(db, 'judgements', nodeId), entry || { type: null, setAt: null }); }
+  catch(e) { console.warn('Firebase judgement write error:', e); }
+}
+
+function getJudgement(nodeId) { return judgementCache[nodeId]; }
+
 function showSyncToast() {
   const t = document.getElementById('syncToast');
   if (!t) return;
@@ -1119,6 +1161,25 @@ setInterval(fetchAll, 15000);
       calibCache.node2 = snap.data();
       fetchAll(); if (adminAuth) refreshAdminPanel(); showSyncToast();
     });
+
+    // Load judgements
+    const [jSnap1, jSnap2] = await Promise.all([
+      getDoc(doc(db, 'judgements', 'node1')),
+      getDoc(doc(db, 'judgements', 'node2'))
+    ]);
+    if (jSnap1.exists() && jSnap1.data().type) judgementCache.node1 = jSnap1.data();
+    if (jSnap2.exists() && jSnap2.data().type) judgementCache.node2 = jSnap2.data();
+
+    // Listen for judgement changes in real time
+    onSnapshot(doc(db, 'judgements', 'node1'), snap => {
+      judgementCache.node1 = (snap.exists() && snap.data().type) ? snap.data() : null;
+      updateJudgementUI('node1');
+    });
+    onSnapshot(doc(db, 'judgements', 'node2'), snap => {
+      judgementCache.node2 = (snap.exists() && snap.data().type) ? snap.data() : null;
+      updateJudgementUI('node2');
+    });
+
   } catch(e) { console.warn('Firebase unavailable, running without sync:', e); }
 })();
 
@@ -1141,6 +1202,39 @@ function applyNodeStatus(id, level) {
   if (ap && at) {
     if (cfg.showAction) { ap.className = 'action-panel visible ' + cfg.cls; at.textContent = cfg.action; }
     else { ap.className = 'action-panel'; }
+  }
+  // Show judgement panel only to admin when level is 1 or 2
+  updateJudgementUI(id);
+}
+
+function updateJudgementUI(nodeId) {
+  const level = nodeStatuses[nodeId] || 0;
+  const jp    = document.getElementById(nodeId + '-judgementPanel');
+  if (!jp) return;
+  // Only show to admin at level 1 or 2
+  if (adminAuth && (level === 1 || level === 2)) {
+    jp.classList.add('visible');
+  } else {
+    jp.classList.remove('visible');
+    return;
+  }
+  const j          = getJudgement(nodeId);
+  const btnSafe    = document.getElementById(nodeId + '-btnSafe');
+  const btnUnsafe  = document.getElementById(nodeId + '-btnUnsafe');
+  const noteEl     = document.getElementById(nodeId + '-judgementNote');
+  // Reset button styles
+  btnSafe.className   = 'j-btn safe';
+  btnUnsafe.className = 'j-btn unsafe';
+  btnSafe.disabled    = false;
+  btnUnsafe.disabled  = false;
+  if (j && j.type === 'safe') {
+    btnSafe.className = 'j-btn active-safe';
+    noteEl.textContent = '✓ Confirmed Safe by official on ' + new Date(j.setAt).toLocaleString();
+  } else if (j && j.type === 'unsafe') {
+    btnUnsafe.className = 'j-btn active-unsafe';
+    noteEl.textContent = '⚠ Escalated to Level 3 on ' + new Date(j.setAt).toLocaleString();
+  } else {
+    noteEl.textContent = 'No official judgement yet.';
   }
 }
 
@@ -1178,11 +1272,18 @@ async function fetchNode(node) {
     const hasCalib     = calib.baseline !== null;
     const displayAngle = hasCalib ? Math.abs(trueAngle - calib.baseline) : Math.abs(trueAngle);
 
+    // Compute relative shallow/deep if calibrated
+    // We don't have per-sensor baselines so we apply the same proportional offset
+    // using the ratio of the avg baseline to show relative values to normal users
+    const baselineOffset = hasCalib ? calib.baseline : 0;
+    const tiltShallowDisplay = hasCalib ? Math.max(0, tiltShallow - (baselineOffset * (tiltShallow / (trueAngle || 1)))) : tiltShallow;
+    const tiltDeepDisplay    = hasCalib ? Math.max(0, tiltDeep    - (baselineOffset * (tiltDeep    / (trueAngle || 1)))) : tiltDeep;
+
     // Shallow / Deep individual displays
     const shallowEl = document.getElementById(node.id + '-tiltShallow');
     const deepEl    = document.getElementById(node.id + '-tiltDeep');
-    if (shallowEl) shallowEl.textContent = tiltShallow.toFixed(1) + '°';
-    if (deepEl)    deepEl.textContent    = tiltDeep.toFixed(1) + '°';
+    if (shallowEl) shallowEl.textContent = (adminAuth ? tiltShallow.toFixed(1) : tiltShallowDisplay.toFixed(1)) + '°';
+    if (deepEl)    deepEl.textContent    = (adminAuth ? tiltDeep.toFixed(1)    : tiltDeepDisplay.toFixed(1))    + '°';
 
     // Deep > Shallow warning — subsurface slip signal
     const deepWarnEl = document.getElementById(node.id + '-deepWarning');
@@ -1191,18 +1292,25 @@ async function fetchNode(node) {
     setRod(node.id, displayAngle);
 
     const tiltEl = document.getElementById(node.id + '-tiltValue');
-    if (tiltEl) tiltEl.textContent = displayAngle.toFixed(1) + '°';
+    if (tiltEl) tiltEl.textContent = (adminAuth && hasCalib ? '+' : '') + displayAngle.toFixed(1) + '°';
 
     const lblEl = document.getElementById(node.id + '-tiltLabel');
-    if (lblEl) lblEl.innerHTML = hasCalib ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
+    // Only show CALIBRATED badge to admin
+    if (lblEl) lblEl.innerHTML = (adminAuth && hasCalib) ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
 
     const unitEl = document.getElementById(node.id + '-tiltUnit');
-    if (unitEl) unitEl.textContent = hasCalib ? 'change since calibration' : 'average tilt angle';
+    // Only show calibration context to admin
+    if (unitEl) unitEl.textContent = (adminAuth && hasCalib) ? 'change since calibration' : 'tilt angle';
 
     const trueEl = document.getElementById(node.id + '-tiltTrue');
     if (trueEl) {
-      if (hasCalib) { trueEl.textContent = `True avg: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`; trueEl.classList.add('visible'); }
-      else { trueEl.classList.remove('visible'); }
+      // Only show true/baseline info to admin
+      if (adminAuth && hasCalib) {
+        trueEl.textContent = `True avg: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`;
+        trueEl.classList.add('visible');
+      } else {
+        trueEl.classList.remove('visible');
+      }
     }
 
     // Moisture — Shallow, Deep, Average
@@ -1622,7 +1730,16 @@ function renderMoistureChart(wid, labels, shallowVals, deepVals, avgVals, interv
 
 // ── Data Table ──
 function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals) {
-  document.getElementById('tableTitle').textContent = nodeLabel + ' — Data Table (' + tiltVals.length + ' readings)';
+  // Get calibration baseline for this node to apply relative display for normal users
+  const nodeId   = activeHistoryNode;
+  const calib    = getCalib(nodeId);
+  const hasCalib = calib.baseline !== null;
+  const baseline = hasCalib ? calib.baseline : 0;
+
+  const tableLabel = adminAuth
+    ? nodeLabel + ' — Data Table (' + tiltVals.length + ' readings) [TRUE VALUES]'
+    : nodeLabel + ' — Data Table (' + tiltVals.length + ' readings)';
+  document.getElementById('tableTitle').textContent = tableLabel;
   const wrap = document.getElementById('tableWrap');
   if (!tiltVals.length) { wrap.innerHTML = '<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
 
@@ -1640,12 +1757,24 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     return v>=41?'dt-l4':v>=21?'dt-l3':v>=9?'dt-l2':v>=3?'dt-l1':'dt-safe';
   }
 
-  function alertLabel(tilt, moist) {
+  function alertLabel(tilt, moist, rowTime) {
     const t = Math.abs(tilt);
     const lv = (t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
     const labels = ['Normal','Level 1','Level 2','Level 3','Level 4'];
     const cls    = ['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
-    return `<span class="${cls[lv]}">${labels[lv]}</span>`;
+    let label = labels[lv];
+    // Check if a judgement was set around this time
+    const j = getJudgement(nodeId);
+    if (j && j.setAt && (lv === 1 || lv === 2)) {
+      const jTime = new Date(j.setAt).getTime();
+      const rTime = rowTime ? rowTime.getTime() : 0;
+      // Show judgement note on rows after the judgement was set
+      if (rTime >= jTime) {
+        if (j.type === 'safe')   label += ' — <span style="color:#059669;font-weight:700;">Confirmed Safe</span>';
+        if (j.type === 'unsafe') label += ' — <span style="color:#dc2626;font-weight:700;">Escalated L3</span>';
+      }
+    }
+    return `<span class="${cls[lv]}">${label}</span>`;
   }
 
   const rows = tiltVals.map((t, i) => {
@@ -1656,16 +1785,23 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     const mA = moistVals[i], mB = moistDeepVals[i], mAvg = moistAvgVals[i], v = vibVals[i];
     const tiltDeepFlag  = deep > shallow && deep >= 3;
     const moistDeepFlag = mB > mA && mB >= 60;
+
+    // For normal users apply relative display using baseline offset
+    const ratio      = t > 0 ? t : 1;
+    const dispShallow = adminAuth ? shallow : (hasCalib ? Math.max(0, shallow - (baseline * (shallow / ratio))) : shallow);
+    const dispDeep    = adminAuth ? deep    : (hasCalib ? Math.max(0, deep    - (baseline * (deep    / ratio))) : deep);
+    const dispAvg     = adminAuth ? t       : (hasCalib ? Math.max(0, t - baseline) : t);
+
     return `<tr>
       <td>${time}</td>
-      <td class="${tiltClass(shallow)}">${shallow.toFixed(1)}°</td>
-      <td class="${tiltClass(deep)}">${deep.toFixed(1)}°${tiltDeepFlag ? ' ⚠️' : ''}</td>
-      <td class="${tiltClass(t)}">${t.toFixed(1)}°</td>
+      <td class="${tiltClass(dispShallow)}">${dispShallow.toFixed(1)}°</td>
+      <td class="${tiltClass(dispDeep)}">${dispDeep.toFixed(1)}°${tiltDeepFlag ? ' ⚠️' : ''}</td>
+      <td class="${tiltClass(dispAvg)}">${dispAvg.toFixed(1)}°</td>
       <td class="${moistClass(mA)}">${mA.toFixed(1)}%</td>
       <td class="${moistClass(mB)}">${mB.toFixed(1)}%${moistDeepFlag ? ' ⚠️' : ''}</td>
       <td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td>
       <td class="${vibClass(v)}">${vibLabel(v)}</td>
-      <td>${alertLabel(t, mAvg || Math.max(mA, mB))}</td>
+      <td>${alertLabel(dispAvg, mAvg || Math.max(mA, mB), ts)}</td>
     </tr>`;
   }).reverse().join('');
 
@@ -1703,7 +1839,60 @@ function showAdminPanel() {
   document.getElementById('adminPanel').classList.add('open');
   refreshAdminPanel();
 }
-function signOut() { adminAuth = false; pinBuffer = ''; showPinScreen(); }
+function signOut() {
+  adminAuth = false;
+  pinBuffer = '';
+  // Hide all judgement panels on sign out
+  ['node1','node2'].forEach(id => {
+    const jp = document.getElementById(id + '-judgementPanel');
+    if (jp) jp.classList.remove('visible');
+  });
+  showPinScreen();
+}
+
+// ── Judgement handler ──
+async function setJudgement(nodeId, type) {
+  const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
+  const level     = nodeStatuses[nodeId] || 0;
+  const existing  = getJudgement(nodeId);
+
+  // If clicking the same button again, toggle off (clear judgement)
+  if (existing && existing.type === type) {
+    if (!confirm(`Clear the current judgement for ${nodeName}?`)) return;
+    await saveJudgement(nodeId, null);
+    updateJudgementUI(nodeId);
+    return;
+  }
+
+  if (type === 'safe') {
+    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE? This will be logged in history.`)) return;
+    await saveJudgement(nodeId, 'safe');
+
+  } else if (type === 'unsafe') {
+    if (!confirm(`Confirm ${nodeName} is NOT SAFE? This will send an evacuation SMS to purok residents (Level 3 alert).`)) return;
+    // Write 98 to ThingSpeak field8 — ESP32 reads and tells Arduino to send Level 3 SMS
+    // (99 = calibrate, 98 = manual Level 3 SMS, 0-4 = alert level)
+    const node = nodes.find(n => n.id === nodeId);
+    let accepted = false;
+    let attempts = 0;
+    const btn = document.getElementById(nodeId + '-btnUnsafe');
+    btn.textContent = 'Sending...'; btn.disabled = true;
+    while (!accepted && attempts < 5) {
+      attempts++;
+      try {
+        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=98`);
+        const entry = parseInt((await res.text()).trim());
+        if (entry > 0) { accepted = true; }
+        else { await new Promise(r => setTimeout(r, 16000)); }
+      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
+    }
+    btn.textContent = 'Confirm Not Safe'; btn.disabled = false;
+    if (!accepted) { alert('Could not send SMS command. Please try again.'); return; }
+    await saveJudgement(nodeId, 'unsafe');
+  }
+
+  updateJudgementUI(nodeId);
+}
 
 function pinKey(digit) {
   if (pinBuffer.length >= 4) return;
