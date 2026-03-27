@@ -1964,12 +1964,13 @@ async function setCalibration(nodeId) {
     return;
   }
 
-  // Also save display baseline to Firebase for dashboard tilt display
+  // Clear Firebase display baseline — Arduino now handles baseline in EEPROM
+  // Arduino uploads tiltAvg relative to its own baseline, so dashboard shows 0 directly
   const calib = getCalib(nodeId);
   if (!calib.log) calib.log = [];
-  calib.log.unshift({ baseline:trueAngle, setAt:new Date().toISOString() });
+  calib.log.unshift({ baseline: trueAngle, setAt: new Date().toISOString(), note: 'Hardware calibration triggered' });
   if (calib.log.length > 20) calib.log = calib.log.slice(0,20);
-  calib.baseline = trueAngle;
+  calib.baseline = null; // clear Firebase baseline — Arduino EEPROM is source of truth
   await saveCalib(nodeId, calib);
   btn.textContent = 'Set Current as Baseline'; btn.disabled = false;
   fetchAll(); refreshAdminPanel();
