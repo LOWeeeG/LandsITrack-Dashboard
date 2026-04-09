@@ -1141,8 +1141,9 @@ document.getElementById('node2-btnSafe').addEventListener('click', () => setJudg
 document.getElementById('node2-btnCaution').addEventListener('click', () => setJudgement('node2','caution'));
 document.getElementById('node2-btnEvacuate').addEventListener('click', () => setJudgement('node2','evacuate'));
 
-// ── Start polling immediately — no Firebase needed ──
-fetchAll();
+// ── Start polling — slight delay to allow Firebase judgements to load first ──
+// This prevents the brief "Safe" flash before manual override is applied
+setTimeout(fetchAll, 1500);
 setInterval(fetchAll, 15000);
 
 // ════════════════════════════════════════════════
@@ -1177,6 +1178,8 @@ setInterval(fetchAll, 15000);
     ]);
     if (jSnap1.exists() && jSnap1.data().type) judgementCache.node1 = jSnap1.data();
     if (jSnap2.exists() && jSnap2.data().type) judgementCache.node2 = jSnap2.data();
+    // Apply override immediately after loading — fixes banner reset on refresh
+    applyJudgementOverride();
 
     // Listen for judgement changes in real time
     // Also re-apply banner override whenever judgement changes
@@ -1722,7 +1725,7 @@ async function loadHistory() {
       : data.feeds;
     const feeds = groupByInterval(rawFeeds, intervalMinutes, node);
 
-    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], moistDeepVals=[], moistAvgVals=[], vibVals=[], timestamps=[];
+    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], moistDeepVals=[], moistAvgVals=[], vibVals=[], timestamps=[], alertLevelVals=[];
     feeds.forEach(f => {
       const d = new Date(f.created_at);
       if (intervalMinutes >= 1440) {
@@ -1743,6 +1746,7 @@ async function loadHistory() {
       moistDeepVals.push(parseFloat(f['field' + node.fields.moistureDeep]) || 0);
       moistAvgVals.push(parseFloat(f['field' + node.fields.moistureAvg])   || 0);
       vibVals.push(parseFloat(f['field' + node.fields.vibration])           || 0);
+      alertLevelVals.push(parseInt(f['field' + node.fields.alertLevel])     || 0);
     });
 
     // Update chart titles to show what date/range was loaded
@@ -1917,9 +1921,11 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     return v>=41?'dt-l4':v>=21?'dt-l3':v>=9?'dt-l2':v>=3?'dt-l1':'dt-safe';
   }
 
-  function alertLabel(tilt, moist, rowTime) {
+  function alertLabel(tilt, moist, rowTime, firmwareLv) {
     const t = Math.abs(tilt);
-    const lv = (t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
+    // Use firmware level from field8 if available, otherwise calculate from sensors
+    const sensorLv = (t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
+    const lv = (firmwareLv !== undefined && firmwareLv !== null && firmwareLv >= 0) ? Math.min(firmwareLv, 3) : sensorLv;
     const labels = ['Normal','Level 1','Level 2','Level 3','Level 4'];
     const cls    = ['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
     let label = labels[lv];
@@ -1973,7 +1979,7 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
       <td class="${moistClass(mB)}">${mB.toFixed(1)}%${moistDeepFlag ? ' ⚠️' : ''}</td>
       <td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td>
       <td class="${vibClass(v)}">${vibLabel(v)}</td>
-      <td>${alertLabel(dispAvg, mAvg || Math.max(mA, mB), ts)}</td>
+      <td>${alertLabel(dispAvg, mAvg || Math.max(mA, mB), ts, alertLevelVals[i])}</td>
     </tr>`;
   }).reverse().join('');
 
