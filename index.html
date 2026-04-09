@@ -993,7 +993,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 </div>
 
 <div class="sync-toast" id="syncToast">🔄 Calibration synced from another device</div>
-<footer>LandsITrack © 2026 &nbsp;·&nbsp; Real-Time Landslide Monitoring System &nbsp;·&nbsp; Auto-refresh every 15s</footer>
+<footer>LandsITrack © 2026 &nbsp;·&nbsp; Real-Time Landslide Monitoring System</footer>
 
 <script type="module">
 // ═══════════════════════════════════════
@@ -1244,22 +1244,41 @@ function updateJudgementUI(nodeId) {
 
 function updateBanner() {
   const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
-  const maxLevel = Math.max(l1, l2);
-  const cfg = levelConfig[maxLevel];
+
+  // Level 4 (EVACUATE) only triggers when BOTH nodes are at Level 3 simultaneously
+  // A single node cannot reach Level 4 alone — dual confirmation required
+  let displayLevel;
+  if (l1 >= 3 && l2 >= 3) {
+    displayLevel = 4; // both nodes at danger — EVACUATE
+  } else {
+    displayLevel = Math.min(Math.max(l1, l2), 3); // cap at 3 if only one node elevated
+  }
+
+  const cfg = levelConfig[displayLevel];
   document.getElementById('statusBanner').className  = 'status-banner ' + cfg.bannerCls;
   document.getElementById('bannerIcon').textContent  = cfg.icon;
-  document.getElementById('bannerLevel').textContent = maxLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
+  document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
+
   let msg, action;
-  if      (l1===0 && l2===0) { msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.'; }
-  else if (l1===0)           { msg=`Node 1 is normal — Node 2 has ${levelConfig[l2].tagLabel} readings`; action=levelConfig[l2].action; }
-  else if (l2===0)           { msg=`Node 1 has ${levelConfig[l1].tagLabel} readings — Node 2 is normal`; action=levelConfig[l1].action; }
-  else if (l1===l2)          { msg=`Both nodes are reporting ${levelConfig[maxLevel].tagLabel} conditions`; action=levelConfig[maxLevel].action; }
-  else                       { msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[maxLevel].action; }
+  if (l1 >= 3 && l2 >= 3) {
+    msg    = 'BOTH nodes detected danger simultaneously — Level 4 escalation triggered';
+    action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger. Inform all residents now.';
+  } else if (l1===0 && l2===0) {
+    msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
+  } else if (l1===0) {
+    msg=`Node 1 is normal — Node 2 has ${levelConfig[l2].tagLabel} readings`; action=levelConfig[l2].action;
+  } else if (l2===0) {
+    msg=`Node 1 has ${levelConfig[l1].tagLabel} readings — Node 2 is normal`; action=levelConfig[l1].action;
+  } else if (l1===l2) {
+    msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
+  } else {
+    msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action;
+  }
   document.getElementById('bannerMessage').textContent = msg;
   document.getElementById('bannerAction').textContent  = action;
 
   // Fire notification on every refresh if level is elevated
-  sendLevelNotification(maxLevel, msg);
+  sendLevelNotification(displayLevel, msg);
 }
 
 async function fetchNode(node) {
@@ -1274,20 +1293,19 @@ async function fetchNode(node) {
     latestTrue[node.id] = trueAngle;
     const calib        = getCalib(node.id);
     const hasCalib     = calib.baseline !== null;
-    const displayAngle = hasCalib ? Math.abs(trueAngle - calib.baseline) : Math.abs(trueAngle);
 
-    // Compute relative shallow/deep if calibrated
-    // We don't have per-sensor baselines so we apply the same proportional offset
-    // using the ratio of the avg baseline to show relative values to normal users
-    const baselineOffset = hasCalib ? calib.baseline : 0;
-    const tiltShallowDisplay = hasCalib ? Math.max(0, tiltShallow - (baselineOffset * (tiltShallow / (trueAngle || 1)))) : tiltShallow;
-    const tiltDeepDisplay    = hasCalib ? Math.max(0, tiltDeep    - (baselineOffset * (tiltDeep    / (trueAngle || 1)))) : tiltDeep;
+    // Arduino already applies EEPROM baseline — values from ThingSpeak are already relative
+    // Dashboard should display them directly without any additional software offset
+    // calib.baseline in Firebase is kept only for logging/history, not for display math
+    const displayAngle       = Math.abs(trueAngle);
+    const tiltShallowDisplay = Math.abs(tiltShallow);
+    const tiltDeepDisplay    = Math.abs(tiltDeep);
 
     // Shallow / Deep individual displays
     const shallowEl = document.getElementById(node.id + '-tiltShallow');
     const deepEl    = document.getElementById(node.id + '-tiltDeep');
-    if (shallowEl) shallowEl.textContent = (adminAuth ? tiltShallow.toFixed(1) : tiltShallowDisplay.toFixed(1)) + '°';
-    if (deepEl)    deepEl.textContent    = (adminAuth ? tiltDeep.toFixed(1)    : tiltDeepDisplay.toFixed(1))    + '°';
+    if (shallowEl) shallowEl.textContent = tiltShallowDisplay.toFixed(1) + '°';
+    if (deepEl)    deepEl.textContent    = tiltDeepDisplay.toFixed(1)    + '°';
 
     // Deep > Shallow warning — subsurface slip signal
     const deepWarnEl = document.getElementById(node.id + '-deepWarning');
@@ -1792,9 +1810,10 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
 
     // For normal users apply relative display using baseline offset
     const ratio      = t > 0 ? t : 1;
-    const dispShallow = adminAuth ? shallow : (hasCalib ? Math.max(0, shallow - (baseline * (shallow / ratio))) : shallow);
-    const dispDeep    = adminAuth ? deep    : (hasCalib ? Math.max(0, deep    - (baseline * (deep    / ratio))) : deep);
-    const dispAvg     = adminAuth ? t       : (hasCalib ? Math.max(0, t - baseline) : t);
+    // Arduino already applies EEPROM baseline — display values directly
+    const dispShallow = Math.abs(shallow);
+    const dispDeep    = Math.abs(deep);
+    const dispAvg     = Math.abs(t);
 
     return `<tr>
       <td>${time}</td>
