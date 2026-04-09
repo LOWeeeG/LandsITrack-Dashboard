@@ -1242,6 +1242,8 @@ function updateJudgementUI(nodeId) {
   }
 }
 
+let lastBannerLevel = -1; // track previous banner level to detect changes
+
 function updateBanner() {
   const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
 
@@ -1390,7 +1392,22 @@ async function fetchNode(node) {
     if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
     const firmwareLevel = parseInt(data['field' + node.fields.alertLevel]) || 0;
-    nodeStatuses[node.id] = firmwareLevel;
+    const moistAvg      = parseFloat(data['field' + node.fields.moistureAvg]) || 0;
+
+    // Sanity check — if field8 says elevated but tilt and moisture are both normal,
+    // field8 is stale. Use 0 (normal) instead to prevent false banner alerts.
+    // Thresholds match Arduino classifyLevel():
+    //   L1: tilt>=5, L2: tilt>=10, L3: tilt>=15 (or moisture>=60 bumps +1)
+    let displayLevel = firmwareLevel;
+    if (firmwareLevel >= 3 && trueAngle < 10 && moistAvg < 60) {
+      console.log(`[${node.id}] field8=${firmwareLevel} but tilt=${trueAngle.toFixed(1)} moist=${moistAvg.toFixed(1)} — treating as stale, using Level 0`);
+      displayLevel = 0;
+    } else if (firmwareLevel >= 2 && trueAngle < 5 && moistAvg < 60) {
+      console.log(`[${node.id}] field8=${firmwareLevel} but tilt=${trueAngle.toFixed(1)} — treating as stale, using Level 0`);
+      displayLevel = 0;
+    }
+
+    nodeStatuses[node.id] = displayLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
     // updateBanner() called by fetchAll after all nodes are fetched
 
