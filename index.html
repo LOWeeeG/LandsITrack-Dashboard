@@ -1141,10 +1141,11 @@ document.getElementById('node2-btnSafe').addEventListener('click', () => setJudg
 document.getElementById('node2-btnCaution').addEventListener('click', () => setJudgement('node2','caution'));
 document.getElementById('node2-btnEvacuate').addEventListener('click', () => setJudgement('node2','evacuate'));
 
-// ── Start polling — slight delay to allow Firebase judgements to load first ──
-// This prevents the brief "Safe" flash before manual override is applied
-setTimeout(fetchAll, 1500);
+// ── Start polling immediately for sensor data ──
+// Judgement override applied separately after Firebase loads
+fetchAll();
 setInterval(fetchAll, 15000);
+window._pollingStarted = true;
 
 // ════════════════════════════════════════════════
 // Firebase loads in background — non-blocking
@@ -1157,7 +1158,6 @@ setInterval(fetchAll, 15000);
     ]);
     if (snap1.exists()) calibCache.node1 = snap1.data();
     if (snap2.exists()) calibCache.node2 = snap2.data();
-    fetchAll();
     if (adminAuth) refreshAdminPanel();
 
     onSnapshot(doc(db, 'calibrations', 'node1'), snap => {
@@ -1181,6 +1181,15 @@ setInterval(fetchAll, 15000);
     // Apply override immediately after loading — fixes banner reset on refresh
     applyJudgementOverride();
 
+    // NOW start polling — judgements are loaded so override will apply correctly
+    if (!window._pollingStarted) {
+      window._pollingStarted = true;
+      fetchAll();
+      setInterval(fetchAll, 15000);
+    } else {
+      fetchAll(); // already polling, just refresh once
+    }
+
     // Listen for judgement changes in real time
     // Also re-apply banner override whenever judgement changes
     onSnapshot(doc(db, 'judgements', 'node1'), snap => {
@@ -1194,7 +1203,15 @@ setInterval(fetchAll, 15000);
       applyJudgementOverride(); // reapply banner override
     });
 
-  } catch(e) { console.warn('Firebase unavailable, running without sync:', e); }
+  } catch(e) {
+    console.warn('Firebase unavailable, running without sync:', e);
+    // Firebase failed — start polling without override
+    if (!window._pollingStarted) {
+      window._pollingStarted = true;
+      fetchAll();
+      setInterval(fetchAll, 15000);
+    }
+  }
 })();
 
 // ── Sensor functions ──
