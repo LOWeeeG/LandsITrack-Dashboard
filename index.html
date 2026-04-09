@@ -1045,11 +1045,23 @@ async function saveCalib(nodeId, data) {
 
 // ── Judgement cache ──
 const judgementCache = { node1: null, node2: null };
+// Restore from localStorage immediately — instant override before Firebase loads
+(function restoreJudgementsFromStorage() {
+  try {
+    const j1 = localStorage.getItem('judgement_node1');
+    const j2 = localStorage.getItem('judgement_node2');
+    if (j1) { const p = JSON.parse(j1); if (p && p.type) judgementCache.node1 = p; }
+    if (j2) { const p = JSON.parse(j2); if (p && p.type) judgementCache.node2 = p; }
+  } catch(e) {}
+})();
 
 async function saveJudgement(nodeId, type) {
-  // type: 'safe' | 'unsafe' | null
   const entry = type ? { type, setAt: new Date().toISOString() } : null;
   judgementCache[nodeId] = entry;
+  // Save to localStorage for instant restore on refresh
+  try {
+    localStorage.setItem('judgement_' + nodeId, JSON.stringify(entry));
+  } catch(e) {}
   try { await setDoc(doc(db, 'judgements', nodeId), entry || { type: null, setAt: null }); }
   catch(e) { console.warn('Firebase judgement write error:', e); }
 }
@@ -1742,7 +1754,7 @@ async function loadHistory() {
       : data.feeds;
     const feeds = groupByInterval(rawFeeds, intervalMinutes, node);
 
-    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], moistDeepVals=[], moistAvgVals=[], vibVals=[], timestamps=[], alertLevelVals=[];
+    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], moistDeepVals=[], moistAvgVals=[], vibVals=[], timestamps=[], alertLvls=[];
     feeds.forEach(f => {
       const d = new Date(f.created_at);
       if (intervalMinutes >= 1440) {
@@ -1763,7 +1775,7 @@ async function loadHistory() {
       moistDeepVals.push(parseFloat(f['field' + node.fields.moistureDeep]) || 0);
       moistAvgVals.push(parseFloat(f['field' + node.fields.moistureAvg])   || 0);
       vibVals.push(parseFloat(f['field' + node.fields.vibration])           || 0);
-      alertLevelVals.push(parseInt(f['field' + node.fields.alertLevel])     || 0);
+      alertLvls.push(parseInt(f['field' + node.fields.alertLevel])     || 0);
     });
 
     // Update chart titles to show what date/range was loaded
@@ -1795,7 +1807,7 @@ async function loadHistory() {
 
     renderDualTiltChart('tiltChartWrap', labels, tiltShallowVals, tiltDeepVals, tiltVals, intervalMinutes);
     renderMoistureChart('moistChartWrap', labels, moistVals, moistDeepVals, moistAvgVals, intervalMinutes);
-    renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals);
+    renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLvls);
 
   } catch(e) {
     console.error('History load error:', e);
@@ -1910,7 +1922,7 @@ function renderMoistureChart(wid, labels, shallowVals, deepVals, avgVals, interv
 }
 
 // ── Data Table ──
-function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals) {
+function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLevelVals) {
   // Get calibration baseline for this node to apply relative display for normal users
   const nodeId   = activeHistoryNode;
   const calib    = getCalib(nodeId);
