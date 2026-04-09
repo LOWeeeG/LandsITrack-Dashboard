@@ -436,7 +436,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
           <div class="judgement-btns">
             <button class="j-btn safe" id="node1-btnSafe">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node1-btnUnsafe">🚨 Confirm Not Safe</button>
+            <button class="j-btn unsafe" id="node1-btnCaution">⚠️ Issue Caution (L3)</button>
+            <button class="j-btn unsafe" id="node1-btnEvacuate">🚨 Order Evacuation (L4)</button>
           </div>
           <div class="judgement-note" id="node1-judgementNote"></div>
         </div>
@@ -533,7 +534,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
           <div class="judgement-btns">
             <button class="j-btn safe" id="node2-btnSafe">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node2-btnUnsafe">🚨 Confirm Not Safe</button>
+            <button class="j-btn unsafe" id="node2-btnCaution">⚠️ Issue Caution (L3)</button>
+            <button class="j-btn unsafe" id="node2-btnEvacuate">🚨 Order Evacuation (L4)</button>
           </div>
           <div class="judgement-note" id="node2-judgementNote"></div>
         </div>
@@ -778,8 +780,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="level-card-threshold">Tilt ≥ 15° &nbsp;|&nbsp; Moisture ≥ 85%</div>
           <div class="level-card-desc eng">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
           <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro, aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent directly to residents in the specific purok where the movement is happening. People in safe areas are not alarmed. Evacuation of the affected purok is likely ordered.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala direkta sa mga residente sa partikular nga purok diin nagkahitabo ang paglihok. Ang mga tawo sa luwas nga mga lugar dili alarma. Lagmit na nga mag-order og evacuation ang apektadong purok.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent to officials, BDRRMC, and residents in the affected purok. Residents are advised to be cautious and await further instructions. No evacuation order yet.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga opisyal, BDRRMC, ug mga residente sa apektadong purok. Ang mga residente giawhag nga mag-amping ug maghulat sa dugang nga mga instruksyon. Wala pa'y order sa evacuation.</div>
         </div>
         <div class="level-card-icon">🔶</div>
       </div>
@@ -791,7 +793,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="level-card-threshold">Multiple sensors at high severity</div>
           <div class="level-card-desc eng">Multiple sensors reporting dangerous readings simultaneously. The threat is larger and could affect not just one area but surrounding zones as well.</div>
           <div class="level-card-desc ceb">Daghang mga sensor ang nag-report og delikadong mga basahan sa samang panahon. Ang hulga mas dako na ug mahimong makaapekto dili lang sa usa ka lugar kondili sa mga kasikbit nga lugar usab.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to residents in the affected purok and all neighboring puroks. Everyone in the danger zone and nearby areas is told to evacuate immediately.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to all officials, BDRRMC, and residents. Both sensor nodes have confirmed extreme danger. Everyone in the affected area is ordered to EVACUATE IMMEDIATELY.</div>
           <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga residente sa apektadong purok ug sa tanan nga kasikbit nga mga purok. Ang tanan sa danger zone ug sa mga duol nga lugar gisugo nga moluwas dayon.</div>
         </div>
         <div class="level-card-icon">🚨</div>
@@ -1024,7 +1026,7 @@ const levelConfig = {
   0:{ cls:'safe', tag:'tag-safe', tagLabel:'Safe', statusLabel:'Safe', bannerCls:'safe', icon:'✅', action:'', showAction:false },
   1:{ cls:'l1', tag:'tag-l1', tagLabel:'Level 1', statusLabel:'Level 1 — Low Risk', bannerCls:'l1', icon:'⚠️', action:'Barangay officials and BDRRMC have been notified to monitor the situation closely.', showAction:true },
   2:{ cls:'l2', tag:'tag-l2', tagLabel:'Level 2', statusLabel:'Level 2 — Moderate Risk', bannerCls:'l2', icon:'⚠️', action:'Officials are on alert. BDRRMC is evaluating whether to begin evacuation preparation.', showAction:true },
-  3:{ cls:'l3', tag:'tag-l3', tagLabel:'Level 3', statusLabel:'Level 3 — High Risk', bannerCls:'l3', icon:'🔶', action:'SMS warnings have been sent to residents in the affected purok. Evacuation may be ordered.', showAction:true },
+  3:{ cls:'l3', tag:'tag-l3', tagLabel:'Level 3', statusLabel:'Level 3 — High Risk', bannerCls:'l3', icon:'🔶', action:'SMS warnings have been sent to officials, BDRRMC, and residents. Residents are advised to be cautious and await further instructions.', showAction:true },
   4:{ cls:'l4', tag:'tag-l4', tagLabel:'Level 4 — CRITICAL', statusLabel:'Level 4 — Critical', bannerCls:'l4', icon:'🚨', action:'EVACUATE IMMEDIATELY. SMS warnings sent to the affected purok and all neighboring puroks.', showAction:true }
 };
 
@@ -1133,9 +1135,11 @@ document.getElementById('calibBtn-node2').addEventListener('click', () => setCal
 document.getElementById('clearBtn-node1').addEventListener('click', () => clearCalibration('node1'));
 document.getElementById('clearBtn-node2').addEventListener('click', () => clearCalibration('node2'));
 document.getElementById('node1-btnSafe').addEventListener('click', () => setJudgement('node1','safe'));
-document.getElementById('node1-btnUnsafe').addEventListener('click', () => setJudgement('node1','unsafe'));
+document.getElementById('node1-btnCaution').addEventListener('click', () => setJudgement('node1','caution'));
+document.getElementById('node1-btnEvacuate').addEventListener('click', () => setJudgement('node1','evacuate'));
 document.getElementById('node2-btnSafe').addEventListener('click', () => setJudgement('node2','safe'));
-document.getElementById('node2-btnUnsafe').addEventListener('click', () => setJudgement('node2','unsafe'));
+document.getElementById('node2-btnCaution').addEventListener('click', () => setJudgement('node2','caution'));
+document.getElementById('node2-btnEvacuate').addEventListener('click', () => setJudgement('node2','evacuate'));
 
 // ── Start polling immediately — no Firebase needed ──
 fetchAll();
@@ -1224,18 +1228,23 @@ function updateJudgementUI(nodeId) {
   }
   const j          = getJudgement(nodeId);
   const btnSafe    = document.getElementById(nodeId + '-btnSafe');
-  const btnUnsafe  = document.getElementById(nodeId + '-btnUnsafe');
-  const noteEl     = document.getElementById(nodeId + '-judgementNote');
+  const btnCaution  = document.getElementById(nodeId + '-btnCaution');
+  const btnEvacuate = document.getElementById(nodeId + '-btnEvacuate');
+  const noteEl      = document.getElementById(nodeId + '-judgementNote');
   // Reset button styles
-  btnSafe.className   = 'j-btn safe';
-  btnUnsafe.className = 'j-btn unsafe';
-  btnSafe.disabled    = false;
-  btnUnsafe.disabled  = false;
+  btnSafe.className     = 'j-btn safe';
+  btnCaution.className  = 'j-btn unsafe';
+  btnEvacuate.className = 'j-btn unsafe';
+  btnSafe.disabled      = false;
+  btnCaution.disabled   = false;
+  btnEvacuate.disabled  = false;
   if (j && j.type === 'safe') {
     btnSafe.className = 'j-btn active-safe';
     noteEl.textContent = '✓ Confirmed Safe by official on ' + new Date(j.setAt).toLocaleString();
-  } else if (j && j.type === 'unsafe') {
-    btnUnsafe.className = 'j-btn active-unsafe';
+  } else if (j && j.type === 'caution') {
+    btnCaution.className = 'j-btn active-unsafe';
+  } else if (j && j.type === 'evacuate') {
+    btnEvacuate.className = 'j-btn active-unsafe';
     noteEl.textContent = '⚠ Escalated to Level 3 on ' + new Date(j.setAt).toLocaleString();
   } else {
     noteEl.textContent = 'No official judgement yet.';
@@ -1810,7 +1819,8 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
       // Show judgement note on rows after the judgement was set
       if (rTime >= jTime) {
         if (j.type === 'safe')   label += ' — <span style="color:#059669;font-weight:700;">Confirmed Safe</span>';
-        if (j.type === 'unsafe') label += ' — <span style="color:#dc2626;font-weight:700;">Escalated L3</span>';
+        if (j.type === 'caution') label += ' — <span style="color:#ea580c;font-weight:700;">Caution Issued L3</span>';
+      if (j.type === 'evacuate') label += ' — <span style="color:#dc2626;font-weight:700;">Evacuation Ordered L4</span>';
       }
     }
     return `<span class="${cls[lv]}">${label}</span>`;
@@ -1936,15 +1946,13 @@ async function setJudgement(nodeId, type) {
     // Save judgement log
     await saveJudgement(nodeId, 'safe');
 
-  } else if (type === 'unsafe') {
-    if (!confirm(`Confirm ${nodeName} is NOT SAFE? This will send an evacuation SMS to purok residents (Level 3 alert).`)) return;
-    // Write 98 to ThingSpeak field8 — ESP32 reads and tells Arduino to send Level 3 SMS
-    // (99 = calibrate, 98 = manual Level 3 SMS, 0-4 = alert level)
+  } else if (type === 'caution') {
+    // Issue Caution — writes 98 to field8 — ESP32 tells Arduino to send Level 3 caution SMS
+    if (!confirm(`Issue CAUTION for ${nodeName}? This will send a Level 3 caution SMS to all recipients.`)) return;
     const node = nodes.find(n => n.id === nodeId);
-    let accepted = false;
-    let attempts = 0;
-    const btn = document.getElementById(nodeId + '-btnUnsafe');
+    const btn = document.getElementById(nodeId + '-btnCaution');
     btn.textContent = 'Sending...'; btn.disabled = true;
+    let accepted = false; let attempts = 0;
     while (!accepted && attempts < 5) {
       attempts++;
       try {
@@ -1954,9 +1962,29 @@ async function setJudgement(nodeId, type) {
         else { await new Promise(r => setTimeout(r, 16000)); }
       } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
     }
-    btn.textContent = 'Confirm Not Safe'; btn.disabled = false;
-    if (!accepted) { alert('Could not send SMS command. Please try again.'); return; }
-    await saveJudgement(nodeId, 'unsafe');
+    btn.textContent = '⚠️ Issue Caution (L3)'; btn.disabled = false;
+    if (!accepted) { alert('Could not send caution command. Please try again.'); return; }
+    await saveJudgement(nodeId, 'caution');
+
+  } else if (type === 'evacuate') {
+    // Order Evacuation — writes 97 to field8 — ESP32 tells Arduino to send Level 4 EVACUATE SMS
+    if (!confirm(`Order EVACUATION for ${nodeName}? This will send a Level 4 EVACUATE SMS to ALL recipients immediately.`)) return;
+    const node = nodes.find(n => n.id === nodeId);
+    const btn = document.getElementById(nodeId + '-btnEvacuate');
+    btn.textContent = 'Sending...'; btn.disabled = true;
+    let accepted = false; let attempts = 0;
+    while (!accepted && attempts < 5) {
+      attempts++;
+      try {
+        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=97`);
+        const entry = parseInt((await res.text()).trim());
+        if (entry > 0) { accepted = true; }
+        else { await new Promise(r => setTimeout(r, 16000)); }
+      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
+    }
+    btn.textContent = '🚨 Order Evacuation (L4)'; btn.disabled = false;
+    if (!accepted) { alert('Could not send evacuation command. Please try again.'); return; }
+    await saveJudgement(nodeId, 'evacuate');
   }
 
   updateJudgementUI(nodeId);
