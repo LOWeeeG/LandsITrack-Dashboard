@@ -1179,13 +1179,16 @@ setInterval(fetchAll, 15000);
     if (jSnap2.exists() && jSnap2.data().type) judgementCache.node2 = jSnap2.data();
 
     // Listen for judgement changes in real time
+    // Also re-apply banner override whenever judgement changes
     onSnapshot(doc(db, 'judgements', 'node1'), snap => {
       judgementCache.node1 = (snap.exists() && snap.data().type) ? snap.data() : null;
       updateJudgementUI('node1');
+      applyJudgementOverride(); // reapply banner override
     });
     onSnapshot(doc(db, 'judgements', 'node2'), snap => {
       judgementCache.node2 = (snap.exists() && snap.data().type) ? snap.data() : null;
       updateJudgementUI('node2');
+      applyJudgementOverride(); // reapply banner override
     });
 
   } catch(e) { console.warn('Firebase unavailable, running without sync:', e); }
@@ -1257,7 +1260,47 @@ function updateJudgementUI(nodeId) {
   }
 }
 
-let lastBannerLevel = -1; // track previous banner level to detect changes
+let lastBannerLevel = -1;
+
+// Apply judgement override to banner independently of fetchAll
+// Called when Firebase judgement loads after initial fetch
+function applyJudgementOverride() {
+  let manualOverride = null;
+  let manualNode = null;
+  let cautionCount = 0;
+
+  for (const node of nodes) {
+    const j = getJudgement(node.id);
+    if (j && j.type === 'evacuate') {
+      nodeStatuses['node1'] = 4;
+      nodeStatuses['node2'] = 4;
+      applyNodeStatus('node1', 4);
+      applyNodeStatus('node2', 4);
+      manualOverride = 'evacuate';
+      manualNode = node.id;
+      break;
+    } else if (j && j.type === 'caution') {
+      if (nodeStatuses[node.id] < 3) {
+        nodeStatuses[node.id] = 3;
+        applyNodeStatus(node.id, 3);
+      }
+      cautionCount++;
+      manualOverride = 'caution';
+      manualNode = node.id;
+    }
+  }
+
+  if (cautionCount >= 2) {
+    nodeStatuses['node1'] = 4;
+    nodeStatuses['node2'] = 4;
+    applyNodeStatus('node1', 4);
+    applyNodeStatus('node2', 4);
+    manualOverride = 'dual_caution';
+    manualNode = null;
+  }
+
+  updateBanner(manualOverride, manualNode);
+}
 
 function updateBanner(manualOverride = null, manualNode = null) {
   const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
@@ -1880,19 +1923,29 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     const labels = ['Normal','Level 1','Level 2','Level 3','Level 4'];
     const cls    = ['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
     let label = labels[lv];
-    // Check if a judgement was set around this time
+    let displayLv = lv;
+
+    // Check if a manual judgement was active at this row's time
     const j = getJudgement(nodeId);
-    if (j && j.setAt && (lv === 1 || lv === 2)) {
+    if (j && j.setAt) {
       const jTime = new Date(j.setAt).getTime();
       const rTime = rowTime ? rowTime.getTime() : 0;
-      // Show judgement note on rows after the judgement was set
+      // Apply judgement label to all rows AFTER judgement was set
       if (rTime >= jTime) {
-        if (j.type === 'safe')   label += ' — <span style="color:#059669;font-weight:700;">Confirmed Safe</span>';
-        if (j.type === 'caution') label += ' — <span style="color:#ea580c;font-weight:700;">Caution Issued L3</span>';
-      if (j.type === 'evacuate') label += ' — <span style="color:#dc2626;font-weight:700;">Evacuation Ordered L4</span>';
+        if (j.type === 'safe') {
+          label += ' — <span style="color:#059669;font-weight:700;">✓ Confirmed Safe</span>';
+        } else if (j.type === 'caution') {
+          // Show as Level 3 (Manual) even if sensor reads normal
+          displayLv = Math.max(lv, 3);
+          label = labels[displayLv] + ' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';
+        } else if (j.type === 'evacuate') {
+          // Show as Level 4 (Manual) even if sensor reads normal
+          displayLv = 4;
+          label = 'Level 4 <span style="color:#dc2626;font-weight:700;">(Manual Evacuation Order)</span>';
+        }
       }
     }
-    return `<span class="${cls[lv]}">${label}</span>`;
+    return `<span class="${cls[displayLv]}">${label}</span>`;
   }
 
   const rows = tiltVals.map((t, i) => {
