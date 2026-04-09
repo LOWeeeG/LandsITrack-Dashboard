@@ -1219,8 +1219,10 @@ function updateJudgementUI(nodeId) {
   const level = nodeStatuses[nodeId] || 0;
   const jp    = document.getElementById(nodeId + '-judgementPanel');
   if (!jp) return;
-  // Only show to admin at level 1 or 2
-  if (adminAuth && (level === 1 || level === 2)) {
+  // Show to admin at any level
+  // Caution (L3) and Evacuate (L4) buttons available at all levels
+  // Confirm Safe only shown at L1 and L2
+  if (adminAuth) {
     jp.classList.add('visible');
   } else {
     jp.classList.remove('visible');
@@ -1235,8 +1237,11 @@ function updateJudgementUI(nodeId) {
   btnSafe.className     = 'j-btn safe';
   btnCaution.className  = 'j-btn unsafe';
   btnEvacuate.className = 'j-btn unsafe';
-  btnSafe.disabled      = false;
-  btnCaution.disabled   = false;
+  // Confirm Safe only relevant at L1-L2
+  btnSafe.disabled      = (level === 0 || level >= 3);
+  // Caution only relevant at L1-L2 (not needed if already L3+)
+  btnCaution.disabled   = (level >= 3);
+  // Evacuate always available to admin
   btnEvacuate.disabled  = false;
   if (j && j.type === 'safe') {
     btnSafe.className = 'j-btn active-safe';
