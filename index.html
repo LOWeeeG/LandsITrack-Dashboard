@@ -1265,10 +1265,10 @@ function updateBanner() {
     action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger. Inform all residents now.';
   } else if (l1===0 && l2===0) {
     msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
-  } else if (l1===0) {
-    msg=`Node 1 is normal — Node 2 has ${levelConfig[l2].tagLabel} readings`; action=levelConfig[l2].action;
-  } else if (l2===0) {
-    msg=`Node 1 has ${levelConfig[l1].tagLabel} readings — Node 2 is normal`; action=levelConfig[l1].action;
+  } else if (l1===0 && l2>0) {
+    msg=`Node 1 is normal — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[l2].action;
+  } else if (l2===0 && l1>0) {
+    msg=`Node 2 is normal — Node 1 is at ${levelConfig[l1].tagLabel}`; action=levelConfig[l1].action;
   } else if (l1===l2) {
     msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
   } else {
@@ -1392,14 +1392,18 @@ async function fetchNode(node) {
     const firmwareLevel = parseInt(data['field' + node.fields.alertLevel]) || 0;
     nodeStatuses[node.id] = firmwareLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
-    updateBanner();
+    // updateBanner() called by fetchAll after all nodes are fetched
 
     const upd = document.getElementById('lastUpdate');
     if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   } catch(e) { console.error('Fetch error:', e); }
 }
 
-function fetchAll() { nodes.forEach(fetchNode); }
+async function fetchAll() {
+  // Run sequentially so nodeStatuses is fully updated before banner renders
+  for (const node of nodes) { await fetchNode(node); }
+  updateBanner();
+}
 
 // ── Push Notifications ──
 // Uses Service Worker showNotification for Android PWA support.
