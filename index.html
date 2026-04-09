@@ -1965,16 +1965,17 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     if (j && j.setAt) {
       const jTime = new Date(j.setAt).getTime();
       const rTime = rowTime ? rowTime.getTime() : 0;
-      // Apply judgement label to all rows AFTER judgement was set
+      // Only apply manual label to rows AFTER judgement was set
+      // AND only if sensor actually had some reading (not truly Normal/Level 0)
       if (rTime >= jTime) {
+        // Apply manual label to ALL rows after judgement was set
+        // Rows before judgement timestamp are unaffected
         if (j.type === 'safe') {
           label += ' — <span style="color:#059669;font-weight:700;">✓ Confirmed Safe</span>';
         } else if (j.type === 'caution') {
-          // Show as Level 3 (Manual) even if sensor reads normal
           displayLv = Math.max(lv, 3);
           label = labels[displayLv] + ' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';
         } else if (j.type === 'evacuate') {
-          // Show as Level 4 (Manual) even if sensor reads normal
           displayLv = 4;
           label = 'Level 4 <span style="color:#dc2626;font-weight:700;">(Manual Evacuation Order)</span>';
         }
