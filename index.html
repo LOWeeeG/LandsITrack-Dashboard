@@ -1237,9 +1237,9 @@ function updateJudgementUI(nodeId) {
   btnSafe.className     = 'j-btn safe';
   btnCaution.className  = 'j-btn unsafe';
   btnEvacuate.className = 'j-btn unsafe';
-  // Confirm Safe only relevant at L1-L2
-  btnSafe.disabled      = (level === 0 || level >= 3);
-  // Caution only relevant at L1-L2 (not needed if already L3+)
+  // Confirm Safe always available — clears any manual override
+  btnSafe.disabled      = false;
+  // Caution only relevant below Level 3
   btnCaution.disabled   = (level >= 3);
   // Evacuate always available to admin
   btnEvacuate.disabled  = false;
@@ -1282,9 +1282,13 @@ function updateBanner(manualOverride = null, manualNode = null) {
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — EVACUATION';
     msg    = 'A Barangay Official has manually ordered evacuation. This overrides sensor readings.';
     action = 'EVACUATE IMMEDIATELY as ordered by Barangay Officials. This order remains until officially cleared.';
+  } else if (manualOverride === 'dual_caution') {
+    document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — LEVEL 4 CRITICAL';
+    msg    = 'Barangay Officials from BOTH nodes have confirmed danger — Level 4 escalation triggered.';
+    action = 'EVACUATE IMMEDIATELY as confirmed by Barangay Officials. Both nodes have been manually escalated.';
   } else if (manualOverride === 'caution') {
     const nodeName = manualNode === 'node1' ? 'Node 1' : 'Node 2';
-    document.getElementById('bannerLevel').textContent = '🔒 MANUAL CAUTION — ' + cfg.statusLabel.toUpperCase();
+    document.getElementById('bannerLevel').textContent = '🔒 MANUAL CAUTION — LEVEL 3';
     msg    = `A Barangay Official has issued a manual caution for ${nodeName}.`;
     action = 'Residents are advised to be alert and await further instructions from Barangay Officials.';
   } else if (l1 >= 3 && l2 >= 3) {
@@ -1454,8 +1458,9 @@ async function fetchAll() {
 
   // Apply manual judgement overrides AFTER fetching sensor data
   // If an official has ordered evacuation, keep Level 4 until cleared
-  let manualOverride = null; // 'evacuate' | 'caution' | null
+  let manualOverride = null;
   let manualNode = null;
+  let cautionCount = 0;
 
   for (const node of nodes) {
     const j = getJudgement(node.id);
@@ -1472,9 +1477,20 @@ async function fetchAll() {
         nodeStatuses[node.id] = 3;
         applyNodeStatus(node.id, 3);
       }
+      cautionCount++;
       manualOverride = 'caution';
       manualNode = node.id;
     }
+  }
+
+  // If both nodes have manual caution — escalate to Level 4
+  if (cautionCount >= 2) {
+    nodeStatuses['node1'] = 4;
+    nodeStatuses['node2'] = 4;
+    applyNodeStatus('node1', 4);
+    applyNodeStatus('node2', 4);
+    manualOverride = 'dual_caution';
+    manualNode = null;
   }
 
   updateBanner(manualOverride, manualNode);
