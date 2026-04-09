@@ -1248,9 +1248,10 @@ function updateJudgementUI(nodeId) {
     noteEl.textContent = '✓ Confirmed Safe by official on ' + new Date(j.setAt).toLocaleString();
   } else if (j && j.type === 'caution') {
     btnCaution.className = 'j-btn active-unsafe';
+    noteEl.textContent = '⚠️ Caution issued (Level 3) on ' + new Date(j.setAt).toLocaleString();
   } else if (j && j.type === 'evacuate') {
     btnEvacuate.className = 'j-btn active-unsafe';
-    noteEl.textContent = '⚠ Escalated to Level 3 on ' + new Date(j.setAt).toLocaleString();
+    noteEl.textContent = '🚨 Evacuation ordered (Level 4) on ' + new Date(j.setAt).toLocaleString();
   } else {
     noteEl.textContent = 'No official judgement yet.';
   }
@@ -1282,9 +1283,9 @@ function updateBanner() {
   } else if (l1===0 && l2===0) {
     msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
   } else if (l1===0 && l2>0) {
-    msg=`Node 1 is normal — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[l2].action;
+    msg=`Node 1 is normal — Node 2 is at Level ${l2}`; action=levelConfig[l2].action;
   } else if (l2===0 && l1>0) {
-    msg=`Node 2 is normal — Node 1 is at ${levelConfig[l1].tagLabel}`; action=levelConfig[l1].action;
+    msg=`Node 2 is normal — Node 1 is at Level ${l1}`; action=levelConfig[l1].action;
   } else if (l1===l2) {
     msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
   } else {
@@ -1413,8 +1414,15 @@ async function fetchNode(node) {
     // This catches stale field8 values without overriding legitimate readings
     let displayLevel = firmwareLevel;
     if (firmwareLevel >= 1 && trueAngle < 2 && moistAvg < 30) {
-      console.log(`[${node.id}] field8=${firmwareLevel} but tilt=${trueAngle.toFixed(1)} moist=${moistAvg.toFixed(1)} — treating as stale, using Level 0`);
+      console.log(`[${node.id}] field8=${firmwareLevel} stale — using Level 0`);
       displayLevel = 0;
+    }
+
+    // Cap single-node display at Level 3
+    // Level 4 only triggers via dual-node escalation in updateBanner()
+    if (displayLevel >= 4) {
+      console.log(`[${node.id}] Single node capped at Level 3 (was ${displayLevel})`);
+      displayLevel = 3;
     }
 
     nodeStatuses[node.id] = displayLevel;
@@ -1970,6 +1978,10 @@ async function setJudgement(nodeId, type) {
     btn.textContent = '⚠️ Issue Caution (L3)'; btn.disabled = false;
     if (!accepted) { alert('Could not send caution command. Please try again.'); return; }
     await saveJudgement(nodeId, 'caution');
+    // Update banner to reflect manual caution
+    nodeStatuses[nodeId] = Math.max(nodeStatuses[nodeId], 3);
+    applyNodeStatus(nodeId, nodeStatuses[nodeId]);
+    updateBanner();
 
   } else if (type === 'evacuate') {
     // Order Evacuation — writes 97 to field8 — ESP32 tells Arduino to send Level 4 EVACUATE SMS
@@ -1990,6 +2002,12 @@ async function setJudgement(nodeId, type) {
     btn.textContent = '🚨 Order Evacuation (L4)'; btn.disabled = false;
     if (!accepted) { alert('Could not send evacuation command. Please try again.'); return; }
     await saveJudgement(nodeId, 'evacuate');
+    // Update banner to reflect manual evacuation order — force Level 4
+    nodeStatuses['node1'] = 4;
+    nodeStatuses['node2'] = 4;
+    applyNodeStatus('node1', 4);
+    applyNodeStatus('node2', 4);
+    updateBanner();
   }
 
   updateJudgementUI(nodeId);
