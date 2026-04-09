@@ -1394,16 +1394,12 @@ async function fetchNode(node) {
     const firmwareLevel = parseInt(data['field' + node.fields.alertLevel]) || 0;
     const moistAvg      = parseFloat(data['field' + node.fields.moistureAvg]) || 0;
 
-    // Sanity check — if field8 says elevated but tilt and moisture are both normal,
-    // field8 is stale. Use 0 (normal) instead to prevent false banner alerts.
-    // Thresholds match Arduino classifyLevel():
-    //   L1: tilt>=5, L2: tilt>=10, L3: tilt>=15 (or moisture>=60 bumps +1)
+    // Sanity check — only override field8 if readings are clearly inconsistent
+    // e.g. field8 says Level 3+ but tilt is completely flat (< 2°) and moisture is dry
+    // This catches stale field8 values without overriding legitimate readings
     let displayLevel = firmwareLevel;
-    if (firmwareLevel >= 3 && trueAngle < 10 && moistAvg < 60) {
+    if (firmwareLevel >= 1 && trueAngle < 2 && moistAvg < 30) {
       console.log(`[${node.id}] field8=${firmwareLevel} but tilt=${trueAngle.toFixed(1)} moist=${moistAvg.toFixed(1)} — treating as stale, using Level 0`);
-      displayLevel = 0;
-    } else if (firmwareLevel >= 2 && trueAngle < 5 && moistAvg < 60) {
-      console.log(`[${node.id}] field8=${firmwareLevel} but tilt=${trueAngle.toFixed(1)} — treating as stale, using Level 0`);
       displayLevel = 0;
     }
 
