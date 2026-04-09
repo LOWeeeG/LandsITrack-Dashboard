@@ -1259,42 +1259,56 @@ function updateJudgementUI(nodeId) {
 
 let lastBannerLevel = -1; // track previous banner level to detect changes
 
-function updateBanner() {
+function updateBanner(manualOverride = null, manualNode = null) {
   const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
 
   // Level 4 (EVACUATE) only triggers when BOTH nodes are at Level 3 simultaneously
-  // A single node cannot reach Level 4 alone — dual confirmation required
+  // OR when a barangay official manually orders evacuation
   let displayLevel;
   if (l1 >= 3 && l2 >= 3) {
-    displayLevel = 4; // both nodes at danger — EVACUATE
+    displayLevel = 4;
   } else {
-    displayLevel = Math.min(Math.max(l1, l2), 3); // cap at 3 if only one node elevated
+    displayLevel = Math.min(Math.max(l1, l2), 3);
   }
 
   const cfg = levelConfig[displayLevel];
   document.getElementById('statusBanner').className  = 'status-banner ' + cfg.bannerCls;
   document.getElementById('bannerIcon').textContent  = cfg.icon;
-  document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
 
   let msg, action;
-  if (l1 >= 3 && l2 >= 3) {
+
+  // Manual override takes priority in messaging
+  if (manualOverride === 'evacuate') {
+    document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — EVACUATION';
+    msg    = 'A Barangay Official has manually ordered evacuation. This overrides sensor readings.';
+    action = 'EVACUATE IMMEDIATELY as ordered by Barangay Officials. This order remains until officially cleared.';
+  } else if (manualOverride === 'caution') {
+    const nodeName = manualNode === 'node1' ? 'Node 1' : 'Node 2';
+    document.getElementById('bannerLevel').textContent = '🔒 MANUAL CAUTION — ' + cfg.statusLabel.toUpperCase();
+    msg    = `A Barangay Official has issued a manual caution for ${nodeName}.`;
+    action = 'Residents are advised to be alert and await further instructions from Barangay Officials.';
+  } else if (l1 >= 3 && l2 >= 3) {
+    document.getElementById('bannerLevel').textContent = 'ALERT — ' + cfg.statusLabel.toUpperCase();
     msg    = 'BOTH nodes detected danger simultaneously — Level 4 escalation triggered';
     action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger. Inform all residents now.';
-  } else if (l1===0 && l2===0) {
-    msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
-  } else if (l1===0 && l2>0) {
-    msg=`Node 1 is normal — Node 2 is at Level ${l2}`; action=levelConfig[l2].action;
-  } else if (l2===0 && l1>0) {
-    msg=`Node 2 is normal — Node 1 is at Level ${l1}`; action=levelConfig[l1].action;
-  } else if (l1===l2) {
-    msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
   } else {
-    msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action;
+    document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
+    if (l1===0 && l2===0) {
+      msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
+    } else if (l1===0 && l2>0) {
+      msg=`Node 1 is normal — Node 2 is at Level ${l2}`; action=levelConfig[l2].action;
+    } else if (l2===0 && l1>0) {
+      msg=`Node 2 is normal — Node 1 is at Level ${l1}`; action=levelConfig[l1].action;
+    } else if (l1===l2) {
+      msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
+    } else {
+      msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action;
+    }
   }
+
   document.getElementById('bannerMessage').textContent = msg;
   document.getElementById('bannerAction').textContent  = action;
 
-  // Fire notification on every refresh if level is elevated
   sendLevelNotification(displayLevel, msg);
 }
 
@@ -1437,7 +1451,33 @@ async function fetchNode(node) {
 async function fetchAll() {
   // Run sequentially so nodeStatuses is fully updated before banner renders
   for (const node of nodes) { await fetchNode(node); }
-  updateBanner();
+
+  // Apply manual judgement overrides AFTER fetching sensor data
+  // If an official has ordered evacuation, keep Level 4 until cleared
+  let manualOverride = null; // 'evacuate' | 'caution' | null
+  let manualNode = null;
+
+  for (const node of nodes) {
+    const j = getJudgement(node.id);
+    if (j && j.type === 'evacuate') {
+      nodeStatuses['node1'] = 4;
+      nodeStatuses['node2'] = 4;
+      applyNodeStatus('node1', 4);
+      applyNodeStatus('node2', 4);
+      manualOverride = 'evacuate';
+      manualNode = node.id;
+      break;
+    } else if (j && j.type === 'caution') {
+      if (nodeStatuses[node.id] < 3) {
+        nodeStatuses[node.id] = 3;
+        applyNodeStatus(node.id, 3);
+      }
+      manualOverride = 'caution';
+      manualNode = node.id;
+    }
+  }
+
+  updateBanner(manualOverride, manualNode);
 }
 
 // ── Push Notifications ──
@@ -1958,6 +1998,11 @@ async function setJudgement(nodeId, type) {
 
     // Save judgement log
     await saveJudgement(nodeId, 'safe');
+    // Clear evacuation override on both nodes if safe is confirmed
+    await saveJudgement('node1', null);
+    await saveJudgement('node2', null);
+    await saveJudgement(nodeId, 'safe'); // re-save this node as safe
+    fetchAll(); // refresh to clear override
 
   } else if (type === 'caution') {
     // Issue Caution — writes 98 to field8 — ESP32 tells Arduino to send Level 3 caution SMS
@@ -1981,7 +2026,7 @@ async function setJudgement(nodeId, type) {
     // Update banner to reflect manual caution
     nodeStatuses[nodeId] = Math.max(nodeStatuses[nodeId], 3);
     applyNodeStatus(nodeId, nodeStatuses[nodeId]);
-    updateBanner();
+    updateBanner('caution', nodeId);
 
   } else if (type === 'evacuate') {
     // Order Evacuation — writes 97 to field8 — ESP32 tells Arduino to send Level 4 EVACUATE SMS
@@ -2007,7 +2052,7 @@ async function setJudgement(nodeId, type) {
     nodeStatuses['node2'] = 4;
     applyNodeStatus('node1', 4);
     applyNodeStatus('node2', 4);
-    updateBanner();
+    updateBanner('evacuate', nodeId);
   }
 
   updateJudgementUI(nodeId);
