@@ -1034,6 +1034,8 @@ const levelConfig = {
 // Dashboard reads it directly — no threshold logic here.
 // To change thresholds, update classifyLevel() in arduino_node.ino only.
 
+
+
 // ── Calibration cache — Firebase loads in background ──
 const calibCache = { node1:{ baseline:null, log:[] }, node2:{ baseline:null, log:[] } };
 function getCalib(nodeId) { return calibCache[nodeId] || { baseline:null, log:[] }; }
@@ -1205,14 +1207,25 @@ window._pollingStarted = true;
     // Listen for judgement changes in real time
     // Also re-apply banner override whenever judgement changes
     onSnapshot(doc(db, 'judgements', 'node1'), snap => {
-      judgementCache.node1 = (snap.exists() && snap.data().type) ? snap.data() : null;
+      const data = (snap.exists() && snap.data().type) ? snap.data() : null;
+      judgementCache.node1 = data;
+      // Keep localStorage in sync — clear it if Firebase says null
+      try {
+        if (data) localStorage.setItem('judgement_node1', JSON.stringify(data));
+        else localStorage.removeItem('judgement_node1');
+      } catch(e) {}
       updateJudgementUI('node1');
-      applyJudgementOverride(); // reapply banner override
+      applyJudgementOverride();
     });
     onSnapshot(doc(db, 'judgements', 'node2'), snap => {
-      judgementCache.node2 = (snap.exists() && snap.data().type) ? snap.data() : null;
+      const data = (snap.exists() && snap.data().type) ? snap.data() : null;
+      judgementCache.node2 = data;
+      try {
+        if (data) localStorage.setItem('judgement_node2', JSON.stringify(data));
+        else localStorage.removeItem('judgement_node2');
+      } catch(e) {}
       updateJudgementUI('node2');
-      applyJudgementOverride(); // reapply banner override
+      applyJudgementOverride();
     });
 
   } catch(e) {
