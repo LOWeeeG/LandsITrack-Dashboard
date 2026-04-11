@@ -1967,7 +1967,10 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     const t = Math.abs(tilt);
     // Use firmware level from field8 if available, otherwise calculate from sensors
     const sensorLv = (t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
-    const lv = (firmwareLv !== undefined && firmwareLv !== null && firmwareLv >= 0) ? Math.min(firmwareLv, 3) : sensorLv;
+    // If tilt is near 0 but firmware says elevated — likely stale field8 after calibration
+    // Trust sensor calculation in that case
+    const staleAfterCalib = (t < 2 && moist < 10 && firmwareLv >= 1);
+    const lv = staleAfterCalib ? 0 : (firmwareLv !== undefined && firmwareLv !== null && firmwareLv >= 0) ? Math.min(firmwareLv, 3) : sensorLv;
     const labels = ['Normal','Level 1','Level 2','Level 3','Level 4'];
     const cls    = ['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
     let label = labels[lv];
@@ -1983,9 +1986,7 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
       if (rTime >= jTime) {
         // Apply manual label to ALL rows after judgement was set
         // Rows before judgement timestamp are unaffected
-        if (j.type === 'safe') {
-          label += ' — <span style="color:#059669;font-weight:700;">✓ Confirmed Safe</span>';
-        } else if (j.type === 'caution') {
+        if (j.type === 'caution') {
           displayLv = Math.max(lv, 3);
           label = labels[displayLv] + ' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';
         } else if (j.type === 'evacuate') {
@@ -2114,13 +2115,12 @@ async function setJudgement(nodeId, type) {
     calib.baseline = null;
     await saveCalib(nodeId, calib);
 
-    // Save judgement log
-    await saveJudgement(nodeId, 'safe');
-    // Clear evacuation override on both nodes if safe is confirmed
+    // Clear both nodes first, then save safe — order matters for Firebase
     await saveJudgement('node1', null);
     await saveJudgement('node2', null);
-    await saveJudgement(nodeId, 'safe'); // re-save this node as safe
-    fetchAll(); // refresh to clear override
+    // No judgement saved for 'safe' — just clear everything
+    // Confirmed Safe means return to normal sensor-based display
+    fetchAll();
 
   } else if (type === 'caution') {
     // Issue Caution — writes 98 to field8 — ESP32 tells Arduino to send Level 3 caution SMS
