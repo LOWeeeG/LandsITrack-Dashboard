@@ -1418,6 +1418,27 @@ requestNotificationPermission();
 let historyViewMode = 'single'; // 'single' or 'group'
 let activeHistoryGroup = null;  // group name when in group mode
 
+function getGroupNames() {
+  // Try node.groupName first (set by applyAdminConfig)
+  const fromNodes = {};
+  nodes.forEach(node => { if (node.groupName) fromNodes[node.groupName] = true; });
+  if (Object.keys(fromNodes).length > 0) return Object.keys(fromNodes);
+
+  // Fallback: read directly from localStorage admin config
+  try {
+    const raw = localStorage.getItem('litsAdminConfig');
+    if (!raw) return [];
+    const cfg = JSON.parse(raw);
+    if (!cfg.groups || !cfg.nodes) return [];
+    const groupIds = {};
+    cfg.nodes.forEach(n => { if (n.group) groupIds[n.group] = true; });
+    return cfg.groups
+      .filter(g => groupIds[g.id])
+      .map(g => g.name)
+      .filter(Boolean);
+  } catch(e) { return []; }
+}
+
 function populateHistoryDropdown() {
   const sel = document.getElementById('historyNodeSelect');
   if (!sel) return;
@@ -1430,12 +1451,9 @@ function populateHistoryDropdown() {
       if (node.id === activeHistoryNode) opt.selected = true;
       sel.appendChild(opt);
     });
-    // Ensure activeHistoryNode matches what's selected
     if (sel.value) activeHistoryNode = sel.value;
   } else {
-    const groups = {};
-    nodes.forEach(node => { if (node.groupName) groups[node.groupName] = true; });
-    const groupNames = Object.keys(groups);
+    const groupNames = getGroupNames();
     if (groupNames.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
@@ -1455,21 +1473,12 @@ function populateHistoryDropdown() {
       }
     }
   }
-  // Always re-attach onchange after repopulating (innerHTML wipe removes listeners)
+  // Update active selection when dropdown changes
   sel.onchange = () => {
     if (historyViewMode === 'single') {
       activeHistoryNode = sel.value;
-      const n = nodes.find(nd => nd.id === activeHistoryNode);
-      resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
-      if (n) {
-        document.getElementById('tiltChartTitle').textContent  = n.label + ' — Tilt Angle';
-        document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture';
-      }
     } else {
       activeHistoryGroup = sel.value;
-      resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
-      document.getElementById('tiltChartTitle').textContent  = (activeHistoryGroup || 'Group') + ' — Tilt Angle (averaged)';
-      document.getElementById('moistChartTitle').textContent = (activeHistoryGroup || 'Group') + ' — Soil Moisture (averaged)';
     }
   };
 }
@@ -1533,12 +1542,36 @@ function groupByInterval(feeds, intervalMinutes, node) {
 async function loadHistory() {
   const btn=document.getElementById('loadBtn'); btn.textContent='⏳ Loading…'; btn.disabled=true;
   try {
+    // Always read current dropdown value before fetching
+    const selEl = document.getElementById('historyNodeSelect');
+    if (selEl && selEl.value) {
+      if (historyViewMode === 'single') activeHistoryNode = selEl.value;
+      else activeHistoryGroup = selEl.value;
+    }
+
     // Determine which nodes to fetch
     const isGroupMode = historyViewMode === 'group' && activeHistoryGroup;
-    const groupNodes = isGroupMode
-      ? nodes.filter(n => n.groupName === activeHistoryGroup)
-      : null;
-    const node = isGroupMode ? groupNodes[0] : nodes.find(nd=>nd.id===activeHistoryNode);
+    let groupNodes = null;
+    if (isGroupMode) {
+      // Try node.groupName first, fallback to localStorage admin config
+      groupNodes = nodes.filter(n => n.groupName === activeHistoryGroup);
+      if (groupNodes.length === 0) {
+        try {
+          const raw = localStorage.getItem('litsAdminConfig');
+          if (raw) {
+            const cfg = JSON.parse(raw);
+            const grp = cfg.groups && cfg.groups.find(g => g.name === activeHistoryGroup);
+            if (grp) {
+              const nodeIdsInGroup = cfg.nodes
+                .filter(n => n.group === grp.id)
+                .map(n => n.id);
+              groupNodes = nodes.filter(n => nodeIdsInGroup.includes(n.id));
+            }
+          }
+        } catch(e) {}
+      }
+    }
+    const node = isGroupMode ? (groupNodes && groupNodes[0]) : nodes.find(nd=>nd.id===activeHistoryNode);
     if (!node) { btn.textContent='📊 Load'; btn.disabled=false; return; }
 
     const byDate=document.getElementById('modeDate').classList.contains('active');
