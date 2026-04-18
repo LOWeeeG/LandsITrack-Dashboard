@@ -1030,21 +1030,13 @@ function buildNodeCards() {
 
 }
 
-// ── Startup sequence ──
-// If localStorage has config (regular browser): build cards immediately, Firebase updates after.
-// If no localStorage (incognito/new device): wait for Firebase before building cards.
-const _hasLocalConfig = !!localStorage.getItem('litsAdminConfig');
-
-if (_hasLocalConfig) {
-  buildNodeCards();
-  fetchAll();
-  setInterval(fetchAll, 15000);
-  window._pollingStarted = true;
-} else {
-  // No local config — show placeholder while Firebase loads
-  document.getElementById('nodesGrid').innerHTML =
-    '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">⏳ Loading configuration...</div>';
-}
+// ── Startup ──
+// Always build cards immediately with whatever we have (localStorage or defaults).
+// Firebase then updates node names/groups when it loads — cards rebuild automatically.
+buildNodeCards();
+fetchAll();
+setInterval(fetchAll, 15000);
+window._pollingStarted = true;
 
 // ── Firebase (background) ──
 (async () => {
@@ -1053,27 +1045,32 @@ if (_hasLocalConfig) {
     const adminConfigSnap = await getDoc(doc(db, 'adminConfig', 'main'));
     if (adminConfigSnap.exists()) {
       applyAdminConfig(adminConfigSnap.data());
-      buildNodeCards();
-      if (!window._pollingStarted) {
-        fetchAll();
-        setInterval(fetchAll, 15000);
-        window._pollingStarted = true;
-      } else {
-        fetchAll();
-      }
-    } else if (!_hasLocalConfig) {
-      // Firebase also has nothing — just build with defaults
-      buildNodeCards();
-      fetchAll();
-      setInterval(fetchAll, 15000);
-      window._pollingStarted = true;
+      // Update labels on already-built cards without rebuilding them
+      nodes.forEach(node => {
+        const nameEl = document.querySelector('#card-' + node.id + ' .node-name');
+        const locEl  = document.querySelector('#card-' + node.id + ' .node-loc');
+        const tabEl  = document.getElementById('htab-' + node.id);
+        if (nameEl) nameEl.textContent = node.label;
+        if (locEl)  locEl.textContent  = node.groupName ? 'Group: ' + node.groupName : 'Sensor Node';
+        if (tabEl)  tabEl.textContent  = node.label;
+      });
+      updateGuideThresholds(adminConfigSnap.data());
     }
-    // Real-time listener — if admin changes config on another device, dashboard updates
+    // Real-time listener — if admin changes config on another device, update labels only
+    // Don't fully rebuild cards (would reset expanded state and sensor readings)
     onSnapshot(doc(db, 'adminConfig', 'main'), snap => {
       if (!snap.exists()) return;
       applyAdminConfig(snap.data());
-      buildNodeCards();
-      fetchAll();
+      // Update just the name and loc labels on existing cards
+      nodes.forEach(node => {
+        const nameEl = document.querySelector('#card-' + node.id + ' .node-name');
+        const locEl  = document.querySelector('#card-' + node.id + ' .node-loc');
+        const tabEl  = document.getElementById('htab-' + node.id);
+        if (nameEl) nameEl.textContent = node.label;
+        if (locEl)  locEl.textContent  = node.groupName ? 'Group: ' + node.groupName : 'Sensor Node';
+        if (tabEl)  tabEl.textContent  = node.label;
+      });
+      updateGuideThresholds(snap.data());
     });
 
     const [snap1, snap2] = await Promise.all([
@@ -1175,60 +1172,131 @@ function updateJudgementUI(nodeId) {
 }
 
 function applyJudgementOverride() {
-  let manualOverride = null, manualNode = null, cautionCount = 0;
+  let manualOverride = null, manualNode = null;
   for (const node of nodes) {
     const j = getJudgement(node.id);
     if (j && j.type === 'evacuate') {
-      nodeStatuses['node1'] = 4; nodeStatuses['node2'] = 4;
-      applyNodeStatus('node1', 4); applyNodeStatus('node2', 4);
+      nodes.forEach(n => { nodeStatuses[n.id]=4; applyNodeStatus(n.id,4); });
       manualOverride = 'evacuate'; manualNode = node.id; break;
     } else if (j && j.type === 'caution') {
       if (nodeStatuses[node.id] < 3) { nodeStatuses[node.id] = 3; applyNodeStatus(node.id, 3); }
-      cautionCount++; manualOverride = 'caution'; manualNode = node.id;
+      manualOverride = 'caution'; manualNode = node.id;
     }
   }
-  if (cautionCount >= 2) {
-    nodeStatuses['node1'] = 4; nodeStatuses['node2'] = 4;
-    applyNodeStatus('node1', 4); applyNodeStatus('node2', 4);
-    manualOverride = 'dual_caution'; manualNode = null;
+  if (manualOverride === 'caution') {
+    const { escalated } = computeGroupEscalation();
+    if (escalated) manualOverride = 'dual_caution';
   }
   updateBanner(manualOverride, manualNode);
 }
 
+// ── Group-aware Level 4 escalation ──
+// Level 4 triggers when ≥50% of nodes in a group reach Level 3 simultaneously.
+// Ungrouped nodes use the original 2-node rule (both must be Level 3).
+function computeGroupEscalation() {
+  // Build group buckets
+  const groups = {}; // groupId → { nodes: [], atLevel3: [] }
+  const ungrouped = [];
+  nodes.forEach(node => {
+    if (node.groupName) {
+      // Use groupName as key since that's what we have on the node object
+      const key = node.groupName;
+      if (!groups[key]) groups[key] = { nodes: [], atLevel3: [] };
+      groups[key].nodes.push(node);
+      if ((nodeStatuses[node.id] || 0) >= 3) groups[key].atLevel3.push(node);
+    } else {
+      ungrouped.push(node);
+    }
+  });
+
+  let escalated = false;
+  let escalatedGroupName = null;
+  let escalatedNodeNames = [];
+
+  // Check each group: Level 4 if ≥50% at Level 3
+  // For 2 nodes: 1/2 = 50% → needs 1 node (but we use Math.ceil so 2 nodes needs 1... 
+  // Actually for fairness: 2 nodes needs BOTH (ceil(2*0.5)=1 but original rule was both)
+  // Use: count >= ceil(total * 0.5), minimum 2 if group has ≥2 nodes
+  Object.entries(groups).forEach(([groupName, g]) => {
+    const total = g.nodes.length;
+    const needed = total === 2 ? 2 : Math.ceil(total * 0.5);
+    if (g.atLevel3.length >= needed) {
+      escalated = true;
+      escalatedGroupName = groupName;
+      escalatedNodeNames = g.atLevel3.map(n => n.label);
+      // Force all nodes in group to Level 4 display
+      g.nodes.forEach(n => {
+        nodeStatuses[n.id] = 4;
+        applyNodeStatus(n.id, 4);
+      });
+    }
+  });
+
+  // Ungrouped nodes: original rule — ALL ungrouped must be Level 3
+  if (!escalated && ungrouped.length >= 2) {
+    const allAtL3 = ungrouped.every(n => (nodeStatuses[n.id] || 0) >= 3);
+    if (allAtL3) {
+      escalated = true;
+      escalatedNodeNames = ungrouped.map(n => n.label);
+      ungrouped.forEach(n => { nodeStatuses[n.id] = 4; applyNodeStatus(n.id, 4); });
+    }
+  }
+
+  return { escalated, escalatedGroupName, escalatedNodeNames };
+}
+
 function updateBanner(manualOverride = null, manualNode = null) {
-  const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
-  let displayLevel;
-  if (l1 >= 3 && l2 >= 3) { displayLevel = 4; }
-  else { displayLevel = Math.min(Math.max(l1, l2), 3); }
+  // Compute highest node level for display
+  const maxLevel = Math.max(...nodes.map(n => nodeStatuses[n.id] || 0));
+  // Check group escalation to determine if Level 4 should show
+  const { escalated, escalatedGroupName, escalatedNodeNames } = computeGroupEscalation();
+  const displayLevel = escalated ? 4 : Math.min(maxLevel, 3);
+
   const cfg = levelConfig[displayLevel];
   document.getElementById('statusBanner').className  = 'status-banner ' + cfg.bannerCls;
   document.getElementById('bannerIcon').textContent  = cfg.icon;
   let msg, action;
+
   if (manualOverride === 'evacuate') {
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — EVACUATION';
     msg = 'A Barangay Official has manually ordered evacuation. This overrides sensor readings.';
     action = 'EVACUATE IMMEDIATELY as ordered by Barangay Officials.';
   } else if (manualOverride === 'dual_caution') {
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — LEVEL 4 CRITICAL';
-    msg = 'Barangay Officials from BOTH nodes have confirmed danger — Level 4 escalation triggered.';
+    msg = 'Barangay Officials have confirmed danger across multiple nodes — Level 4 escalation triggered.';
     action = 'EVACUATE IMMEDIATELY as confirmed by Barangay Officials.';
   } else if (manualOverride === 'caution') {
-    const nodeName = manualNode === 'node1' ? nodes[0].label : nodes[1].label;
+    const cautionNode = nodes.find(n => n.id === manualNode);
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL CAUTION — LEVEL 3';
-    msg = `A Barangay Official has issued a manual caution for ${nodeName}.`;
+    msg = `A Barangay Official has issued a manual caution for ${cautionNode ? cautionNode.label : manualNode}.`;
     action = 'Residents are advised to be alert and await further instructions from Barangay Officials.';
-  } else if (l1 >= 3 && l2 >= 3) {
-    document.getElementById('bannerLevel').textContent = 'ALERT — ' + cfg.statusLabel.toUpperCase();
-    msg = 'BOTH nodes detected danger simultaneously — Level 4 escalation triggered';
-    action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger.';
+  } else if (escalated) {
+    const groupLabel = escalatedGroupName ? `Group: ${escalatedGroupName}` : 'multiple nodes';
+    document.getElementById('bannerLevel').textContent = 'ALERT — LEVEL 4 CRITICAL';
+    msg = `${escalatedNodeNames.join(' & ')} detected danger simultaneously — Level 4 escalation triggered`;
+    action = 'EVACUATE IMMEDIATELY. Multiple sensor nodes confirm extreme danger.';
   } else {
     document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
-    const n1 = nodes[0].label, n2 = nodes[1].label;
-    if (l1===0 && l2===0) { msg=`${n1} and ${n2} are all normal`; action='All sensors reading within safe limits. No action needed.'; }
-    else if (l1===0 && l2>0) { msg=`${n1} is normal — ${n2} is at Level ${l2}`; action=levelConfig[l2].action; }
-    else if (l2===0 && l1>0) { msg=`${n2} is normal — ${n1} is at Level ${l1}`; action=levelConfig[l1].action; }
-    else if (l1===l2) { msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action; }
-    else { msg=`${n1} is at ${levelConfig[l1].tagLabel} — ${n2} is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action; }
+    if (maxLevel === 0) {
+      const allNames = nodes.map(n => n.label).join(' and ');
+      msg = `${allNames} are all normal`;
+      action = 'All sensors reading within safe limits. No action needed.';
+    } else {
+      const alertNodes = nodes.filter(n => (nodeStatuses[n.id] || 0) > 0);
+      const safeNodes  = nodes.filter(n => (nodeStatuses[n.id] || 0) === 0);
+      if (safeNodes.length === 0) {
+        // All nodes elevated
+        if (nodes.every(n => nodeStatuses[n.id] === nodeStatuses[nodes[0].id])) {
+          msg = `All nodes reporting ${levelConfig[displayLevel].tagLabel} conditions`;
+        } else {
+          msg = alertNodes.map(n => `${n.label} at ${levelConfig[nodeStatuses[n.id]].tagLabel}`).join(' — ');
+        }
+      } else {
+        msg = safeNodes.map(n => `${n.label} is normal`).join(', ') + ' — ' +
+              alertNodes.map(n => `${n.label} is at Level ${nodeStatuses[n.id]}`).join(', ');
+      }
+      action = levelConfig[displayLevel].action;
+    }
   }
   document.getElementById('bannerMessage').textContent = msg;
   document.getElementById('bannerAction').textContent  = action;
@@ -1302,19 +1370,23 @@ async function fetchNode(node) {
 
 async function fetchAll() {
   for (const node of nodes) { await fetchNode(node); }
-  let manualOverride = null, manualNode = null, cautionCount = 0;
+  // Apply manual judgement overrides, then updateBanner handles group escalation
+  let manualOverride = null, manualNode = null;
   for (const node of nodes) {
     const j = getJudgement(node.id);
     if (j && j.type === 'evacuate') {
-      nodeStatuses['node1']=4; nodeStatuses['node2']=4;
-      applyNodeStatus('node1',4); applyNodeStatus('node2',4);
+      nodes.forEach(n => { nodeStatuses[n.id]=4; applyNodeStatus(n.id,4); });
       manualOverride='evacuate'; manualNode=node.id; break;
     } else if (j && j.type === 'caution') {
       if (nodeStatuses[node.id]<3) { nodeStatuses[node.id]=3; applyNodeStatus(node.id,3); }
-      cautionCount++; manualOverride='caution'; manualNode=node.id;
+      manualOverride='caution'; manualNode=node.id;
     }
   }
-  if (cautionCount >= 2) { nodeStatuses['node1']=4; nodeStatuses['node2']=4; applyNodeStatus('node1',4); applyNodeStatus('node2',4); manualOverride='dual_caution'; manualNode=null; }
+  // Check if manual cautions across a group trigger group-level escalation
+  if (manualOverride === 'caution') {
+    const { escalated } = computeGroupEscalation();
+    if (escalated) manualOverride = 'dual_caution';
+  }
   updateBanner(manualOverride, manualNode);
 }
 
