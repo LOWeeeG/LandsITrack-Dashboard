@@ -343,203 +343,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       <div class="banner-action" id="bannerAction">All sensors reading within safe limits. No action needed.</div>
     </div>
   </div>
-  <div class="nodes-grid">
-    <!-- NODE 1 -->
-    <div class="node-card safe" id="card-node1">
-      <div class="node-header">
-        <div class="node-title">
-          <div class="node-num">N1</div>
-          <div>
-            <div class="node-name">Node 1</div>
-            <div class="node-loc">Sensor Array Alpha</div>
-          </div>
-        </div>
-        <div class="node-right">
-          <span id="tag-node1" class="node-status-tag tag-safe">Safe</span>
-          <span class="chevron">▼</span>
-        </div>
-      </div>
-      <div class="node-body">
-        <div class="sensor-grid">
-          <div class="sensor-panel">
-            <div class="sensor-label" id="node1-tiltLabel">Tilt Angle</div>
-            <div class="tilt-depth-grid">
-              <div class="tilt-depth-panel">
-                <div class="tilt-depth-label">🌱 Shallow</div>
-                <div class="tilt-depth-val" id="node1-tiltShallow">—</div>
-                <div class="tilt-depth-sub">surface layer</div>
-              </div>
-              <div class="tilt-depth-panel">
-                <div class="tilt-depth-label">🪨 Deep</div>
-                <div class="tilt-depth-val" id="node1-tiltDeep">—</div>
-                <div class="tilt-depth-sub">subsoil layer</div>
-              </div>
-            </div>
-            <div class="tilt-avg-row">
-              <span class="tilt-avg-label">AVG TILT</span>
-              <span class="tilt-avg-val" id="node1-tiltValue">0.0°</span>
-            </div>
-            <div class="tilt-scene" style="height:120px;">
-              <div class="tilt-rod-wrap" id="node1-rodWrap"><div class="tilt-rod"></div></div>
-              <div class="tilt-ground"></div>
-            </div>
-            <div class="tilt-readout">
-              <div class="tilt-unit" id="node1-tiltUnit">average tilt angle</div>
-              <div class="tilt-true" id="node1-tiltTrue"></div>
-            </div>
-            <div class="deep-warning" id="node1-deepWarning">⚠️ Deep sensor exceeds shallow — subsurface slip detected</div>
-          </div>
-          <div class="sensor-panel">
-            <div class="sensor-label">Soil Moisture</div>
-            <div class="moisture-depth-grid">
-              <div class="moisture-depth-panel">
-                <div class="moisture-depth-label">🌱 Shallow</div>
-                <div class="moisture-depth-val" id="node1-moistureShallowNum">—</div>
-                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="node1-moistureShallowFill"></div></div>
-                <div class="moisture-depth-sub" id="node1-moistureShallowText">—</div>
-              </div>
-              <div class="moisture-depth-panel">
-                <div class="moisture-depth-label">🪨 Deep</div>
-                <div class="moisture-depth-val" id="node1-moistureDeepNum">—</div>
-                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="node1-moistureDeepFill"></div></div>
-                <div class="moisture-depth-sub" id="node1-moistureDeepText">—</div>
-              </div>
-            </div>
-            <div class="tilt-avg-row">
-              <span class="tilt-avg-label">AVG MOISTURE</span>
-              <span class="tilt-avg-val" id="node1-moistureAvgNum">—</span>
-            </div>
-            <div class="moisture-bar-wrap" style="margin-top:4px;"><div class="moisture-bar-fill" id="node1-moistureAvgFill"></div></div>
-            <div class="moisture-label-text" style="text-align:center;margin-top:4px;" id="node1-moistureAvgText">—</div>
-            <div class="moisture-deep-warning" id="node1-moistureDeepWarning">⚠️ Deep moisture exceeds shallow — deep saturation detected</div>
-          </div>
-          <div class="sensor-panel" style="grid-column:1/-1;">
-            <div class="sensor-label">Vibration</div>
-            <div class="vibration-visual">
-              <div class="vibration-icon">📳</div>
-              <div class="vibration-num" id="node1-vibrationNum">—</div>
-              <div class="vibration-bar-wrap"><div class="vibration-bar-fill" id="node1-vibrationFill"></div></div>
-              <div class="vibration-label-text" id="node1-vibrationText">Loading...</div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-stats">
-          <div class="mini-stat"><div class="mini-stat-val" id="node1-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
-          <div class="mini-stat"><div class="mini-stat-val" id="node1-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
-        </div>
-        <div class="action-panel" id="node1-actionPanel">
-          <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
-          <div id="node1-actionText"></div>
-        </div>
-        <div class="judgement-panel" id="node1-judgementPanel">
-          <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
-          <div class="judgement-btns">
-            <button class="j-btn safe" id="node1-btnSafe">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node1-btnCaution">⚠️ Issue Caution (L3)</button>
-            <button class="j-btn unsafe" id="node1-btnEvacuate">🚨 Order Evacuation (L4)</button>
-          </div>
-          <div class="judgement-note" id="node1-judgementNote"></div>
-        </div>
-      </div>
-    </div>
-    <!-- NODE 2 -->
-    <div class="node-card safe" id="card-node2">
-      <div class="node-header">
-        <div class="node-title">
-          <div class="node-num">N2</div>
-          <div>
-            <div class="node-name">Node 2</div>
-            <div class="node-loc">Sensor Array Beta</div>
-          </div>
-        </div>
-        <div class="node-right">
-          <span id="tag-node2" class="node-status-tag tag-safe">Safe</span>
-          <span class="chevron">▼</span>
-        </div>
-      </div>
-      <div class="node-body">
-        <div class="sensor-grid">
-          <div class="sensor-panel">
-            <div class="sensor-label" id="node2-tiltLabel">Tilt Angle</div>
-            <div class="tilt-depth-grid">
-              <div class="tilt-depth-panel">
-                <div class="tilt-depth-label">🌱 Shallow</div>
-                <div class="tilt-depth-val" id="node2-tiltShallow">—</div>
-                <div class="tilt-depth-sub">surface layer</div>
-              </div>
-              <div class="tilt-depth-panel">
-                <div class="tilt-depth-label">🪨 Deep</div>
-                <div class="tilt-depth-val" id="node2-tiltDeep">—</div>
-                <div class="tilt-depth-sub">subsoil layer</div>
-              </div>
-            </div>
-            <div class="tilt-avg-row">
-              <span class="tilt-avg-label">AVG TILT</span>
-              <span class="tilt-avg-val" id="node2-tiltValue">0.0°</span>
-            </div>
-            <div class="tilt-scene" style="height:120px;">
-              <div class="tilt-rod-wrap" id="node2-rodWrap"><div class="tilt-rod"></div></div>
-              <div class="tilt-ground"></div>
-            </div>
-            <div class="tilt-readout">
-              <div class="tilt-unit" id="node2-tiltUnit">average tilt angle</div>
-              <div class="tilt-true" id="node2-tiltTrue"></div>
-            </div>
-            <div class="deep-warning" id="node2-deepWarning">⚠️ Deep sensor exceeds shallow — subsurface slip detected</div>
-          </div>
-          <div class="sensor-panel">
-            <div class="sensor-label">Soil Moisture</div>
-            <div class="moisture-depth-grid">
-              <div class="moisture-depth-panel">
-                <div class="moisture-depth-label">🌱 Shallow</div>
-                <div class="moisture-depth-val" id="node2-moistureShallowNum">—</div>
-                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="node2-moistureShallowFill"></div></div>
-                <div class="moisture-depth-sub" id="node2-moistureShallowText">—</div>
-              </div>
-              <div class="moisture-depth-panel">
-                <div class="moisture-depth-label">🪨 Deep</div>
-                <div class="moisture-depth-val" id="node2-moistureDeepNum">—</div>
-                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="node2-moistureDeepFill"></div></div>
-                <div class="moisture-depth-sub" id="node2-moistureDeepText">—</div>
-              </div>
-            </div>
-            <div class="tilt-avg-row">
-              <span class="tilt-avg-label">AVG MOISTURE</span>
-              <span class="tilt-avg-val" id="node2-moistureAvgNum">—</span>
-            </div>
-            <div class="moisture-bar-wrap" style="margin-top:4px;"><div class="moisture-bar-fill" id="node2-moistureAvgFill"></div></div>
-            <div class="moisture-label-text" style="text-align:center;margin-top:4px;" id="node2-moistureAvgText">—</div>
-            <div class="moisture-deep-warning" id="node2-moistureDeepWarning">⚠️ Deep moisture exceeds shallow — deep saturation detected</div>
-          </div>
-          <div class="sensor-panel" style="grid-column:1/-1;">
-            <div class="sensor-label">Vibration</div>
-            <div class="vibration-visual">
-              <div class="vibration-icon">📳</div>
-              <div class="vibration-num" id="node2-vibrationNum">—</div>
-              <div class="vibration-bar-wrap"><div class="vibration-bar-fill" id="node2-vibrationFill"></div></div>
-              <div class="vibration-label-text" id="node2-vibrationText">Loading...</div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-stats">
-          <div class="mini-stat"><div class="mini-stat-val" id="node2-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
-          <div class="mini-stat"><div class="mini-stat-val" id="node2-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
-        </div>
-        <div class="action-panel" id="node2-actionPanel">
-          <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
-          <div id="node2-actionText"></div>
-        </div>
-        <div class="judgement-panel" id="node2-judgementPanel">
-          <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
-          <div class="judgement-btns">
-            <button class="j-btn safe" id="node2-btnSafe">✅ Confirm Safe</button>
-            <button class="j-btn unsafe" id="node2-btnCaution">⚠️ Issue Caution (L3)</button>
-            <button class="j-btn unsafe" id="node2-btnEvacuate">🚨 Order Evacuation (L4)</button>
-          </div>
-          <div class="judgement-note" id="node2-judgementNote"></div>
-        </div>
-      </div>
-    </div>
+  <div class="nodes-grid" id="nodesGrid">
+    <!-- Node cards are generated dynamically from the nodes array -->
   </div>
 </div>
 
@@ -876,31 +681,33 @@ const nodes = [
     if (!raw) return;
     const cfg = JSON.parse(raw);
     if (!cfg.nodes) return;
+
+    // Merge admin nodes into the nodes array.
+    // For existing nodes: update label/channel/apiKey.
+    // For NEW nodes added via admin.html: push them into nodes array so
+    // buildNodeCards() renders a card for them automatically.
     cfg.nodes.forEach(cfgNode => {
-      const node = nodes.find(n => n.id === cfgNode.id);
-      if (!node) return;
-      // Apply custom display name
-      if (cfgNode.name) node.label = cfgNode.name;
-      // Apply ThingSpeak data channel if admin filled it in
-      if (cfgNode.dataChannel && parseInt(cfgNode.dataChannel)) node.channel = parseInt(cfgNode.dataChannel);
-      if (cfgNode.dataReadKey && cfgNode.dataReadKey.length > 5) node.apiKey = cfgNode.dataReadKey;
-      // Update node card display name
-      const nameEl = document.querySelector('#card-' + cfgNode.id + ' .node-name');
-      if (nameEl && cfgNode.name) nameEl.textContent = cfgNode.name;
-      // Update group/location sub-label
-      const locEl = document.querySelector('#card-' + cfgNode.id + ' .node-loc');
-      if (locEl && cfg.groups && cfgNode.group) {
-        const grp = cfg.groups.find(g => g.id === cfgNode.group);
-        if (grp) locEl.textContent = 'Group: ' + grp.name;
+      let node = nodes.find(n => n.id === cfgNode.id);
+      if (!node) {
+        // Brand new node — add to nodes array
+        node = {
+          id: cfgNode.id,
+          label: cfgNode.name || cfgNode.id,
+          channel: parseInt(cfgNode.dataChannel) || 0,
+          apiKey: cfgNode.dataReadKey || '',
+          writeApiKey: cfgNode.dataWriteKey || '',
+          fields: { tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8 }
+        };
+        nodes.push(node);
+      } else {
+        // Existing node — apply admin overrides
+        if (cfgNode.name) node.label = cfgNode.name;
+        if (cfgNode.dataChannel && parseInt(cfgNode.dataChannel)) node.channel = parseInt(cfgNode.dataChannel);
+        if (cfgNode.dataReadKey && cfgNode.dataReadKey.length > 5) node.apiKey = cfgNode.dataReadKey;
       }
     });
-    // Update history tab labels
-    cfg.nodes.forEach(cfgNode => {
-      const tab = document.getElementById('htab-' + cfgNode.id);
-      if (tab && cfgNode.name) tab.textContent = cfgNode.name;
-    });
+
     // Update How It Works guide threshold numbers
-    // Uses the first node's thresholds as representative (or group thresholds)
     updateGuideThresholds(cfg);
   } catch(e) { console.warn('Admin config load error:', e); }
 })();
@@ -996,18 +803,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-document.querySelectorAll('.node-header').forEach(header => {
-  header.addEventListener('click', () => {
-    const body    = header.parentElement.querySelector('.node-body');
-    const chevron = header.querySelector('.chevron');
-    const open    = body.style.display === 'block';
-    body.style.display = open ? 'none' : 'block';
-    chevron.classList.toggle('open', !open);
-  });
-});
-
-document.getElementById('htab-node1').addEventListener('click', () => selectHistoryNode('node1'));
-document.getElementById('htab-node2').addEventListener('click', () => selectHistoryNode('node2'));
 document.getElementById('loadBtn').addEventListener('click', loadHistory);
 
 document.getElementById('modeRecent').addEventListener('click', () => {
@@ -1036,12 +831,169 @@ document.getElementById('calibBtn-node1').addEventListener('click', () => setCal
 document.getElementById('calibBtn-node2').addEventListener('click', () => setCalibration('node2'));
 document.getElementById('clearBtn-node1').addEventListener('click', () => clearCalibration('node1'));
 document.getElementById('clearBtn-node2').addEventListener('click', () => clearCalibration('node2'));
-document.getElementById('node1-btnSafe').addEventListener('click', () => setJudgement('node1','safe'));
-document.getElementById('node1-btnCaution').addEventListener('click', () => setJudgement('node1','caution'));
-document.getElementById('node1-btnEvacuate').addEventListener('click', () => setJudgement('node1','evacuate'));
-document.getElementById('node2-btnSafe').addEventListener('click', () => setJudgement('node2','safe'));
-document.getElementById('node2-btnCaution').addEventListener('click', () => setJudgement('node2','caution'));
-document.getElementById('node2-btnEvacuate').addEventListener('click', () => setJudgement('node2','evacuate'));
+
+// ── Build node cards dynamically ──
+// Called once on load. Generates one card per node in the nodes array.
+// Adding a node in admin.html automatically creates a card here on next load.
+function buildNodeCards() {
+  const grid = document.getElementById('nodesGrid');
+  if (!grid) return;
+  grid.innerHTML = nodes.map((node, i) => {
+    const num = i + 1;
+    const numLabel = 'N' + num;
+    const id = node.id;
+    return `
+    <div class="node-card safe" id="card-${id}">
+      <div class="node-header">
+        <div class="node-title">
+          <div class="node-num">${numLabel}</div>
+          <div>
+            <div class="node-name">${node.label}</div>
+            <div class="node-loc" id="${id}-loc">Sensor Array</div>
+          </div>
+        </div>
+        <div class="node-right">
+          <span id="tag-${id}" class="node-status-tag tag-safe">Safe</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="node-body">
+        <div class="sensor-grid">
+          <div class="sensor-panel">
+            <div class="sensor-label" id="${id}-tiltLabel">Tilt Angle</div>
+            <div class="tilt-depth-grid">
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🌱 Shallow</div>
+                <div class="tilt-depth-val" id="${id}-tiltShallow">—</div>
+                <div class="tilt-depth-sub">surface layer</div>
+              </div>
+              <div class="tilt-depth-panel">
+                <div class="tilt-depth-label">🪨 Deep</div>
+                <div class="tilt-depth-val" id="${id}-tiltDeep">—</div>
+                <div class="tilt-depth-sub">subsoil layer</div>
+              </div>
+            </div>
+            <div class="tilt-avg-row">
+              <span class="tilt-avg-label">AVG TILT</span>
+              <span class="tilt-avg-val" id="${id}-tiltValue">0.0°</span>
+            </div>
+            <div class="tilt-scene" style="height:120px;">
+              <div class="tilt-rod-wrap" id="${id}-rodWrap"><div class="tilt-rod"></div></div>
+              <div class="tilt-ground"></div>
+            </div>
+            <div class="tilt-readout">
+              <div class="tilt-unit" id="${id}-tiltUnit">average tilt angle</div>
+              <div class="tilt-true" id="${id}-tiltTrue"></div>
+            </div>
+            <div class="deep-warning" id="${id}-deepWarning">⚠️ Deep sensor exceeds shallow — subsurface slip detected</div>
+          </div>
+          <div class="sensor-panel">
+            <div class="sensor-label">Soil Moisture</div>
+            <div class="moisture-depth-grid">
+              <div class="moisture-depth-panel">
+                <div class="moisture-depth-label">🌱 Shallow</div>
+                <div class="moisture-depth-val" id="${id}-moistureShallowNum">—</div>
+                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="${id}-moistureShallowFill"></div></div>
+                <div class="moisture-depth-sub" id="${id}-moistureShallowText">—</div>
+              </div>
+              <div class="moisture-depth-panel">
+                <div class="moisture-depth-label">🪨 Deep</div>
+                <div class="moisture-depth-val" id="${id}-moistureDeepNum">—</div>
+                <div class="moisture-depth-bar"><div class="moisture-depth-fill" id="${id}-moistureDeepFill"></div></div>
+                <div class="moisture-depth-sub" id="${id}-moistureDeepText">—</div>
+              </div>
+            </div>
+            <div class="tilt-avg-row">
+              <span class="tilt-avg-label">AVG MOISTURE</span>
+              <span class="tilt-avg-val" id="${id}-moistureAvgNum">—</span>
+            </div>
+            <div class="moisture-bar-wrap" style="margin-top:4px;"><div class="moisture-bar-fill" id="${id}-moistureAvgFill"></div></div>
+            <div class="moisture-label-text" style="text-align:center;margin-top:4px;" id="${id}-moistureAvgText">—</div>
+            <div class="moisture-deep-warning" id="${id}-moistureDeepWarning">⚠️ Deep moisture exceeds shallow — deep saturation detected</div>
+          </div>
+          <div class="sensor-panel" style="grid-column:1/-1;">
+            <div class="sensor-label">Vibration</div>
+            <div class="vibration-visual">
+              <div class="vibration-icon">📳</div>
+              <div class="vibration-num" id="${id}-vibrationNum">—</div>
+              <div class="vibration-bar-wrap"><div class="vibration-bar-fill" id="${id}-vibrationFill"></div></div>
+              <div class="vibration-label-text" id="${id}-vibrationText">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-val" id="${id}-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
+          <div class="mini-stat"><div class="mini-stat-val" id="${id}-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
+        </div>
+        <div class="action-panel" id="${id}-actionPanel">
+          <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
+          <div id="${id}-actionText"></div>
+        </div>
+        <div class="judgement-panel" id="${id}-judgementPanel">
+          <div class="judgement-title">🔒 OFFICIAL JUDGEMENT</div>
+          <div class="judgement-btns">
+            <button class="j-btn safe" id="${id}-btnSafe">✅ Confirm Safe</button>
+            <button class="j-btn unsafe" id="${id}-btnCaution">⚠️ Issue Caution (L3)</button>
+            <button class="j-btn unsafe" id="${id}-btnEvacuate">🚨 Order Evacuation (L4)</button>
+          </div>
+          <div class="judgement-note" id="${id}-judgementNote"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Attach expand/collapse to all generated headers
+  document.querySelectorAll('.node-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const body    = header.parentElement.querySelector('.node-body');
+      const chevron = header.querySelector('.chevron');
+      const open    = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      chevron.classList.toggle('open', !open);
+    });
+  });
+
+  // Attach judgement buttons for all nodes
+  nodes.forEach(node => {
+    const id = node.id;
+    const s = document.getElementById(id+'-btnSafe');
+    const c = document.getElementById(id+'-btnCaution');
+    const e = document.getElementById(id+'-btnEvacuate');
+    if (s) s.addEventListener('click', () => setJudgement(id,'safe'));
+    if (c) c.addEventListener('click', () => setJudgement(id,'caution'));
+    if (e) e.addEventListener('click', () => setJudgement(id,'evacuate'));
+  });
+
+  // Build history node tabs dynamically
+  const tabsContainer = document.querySelector('.node-tabs');
+  if (tabsContainer) {
+    tabsContainer.innerHTML = nodes.map((node, i) =>
+      `<button class="node-tab${i===0?' active':''}" id="htab-${node.id}">${node.label}</button>`
+    ).join('');
+    nodes.forEach(node => {
+      document.getElementById('htab-'+node.id).addEventListener('click', () => selectHistoryNode(node.id));
+    });
+    activeHistoryNode = nodes[0]?.id || 'node1';
+  }
+
+  // Set loc label from admin config
+  try {
+    const raw = localStorage.getItem('litsAdminConfig');
+    if (raw) {
+      const cfg = JSON.parse(raw);
+      if (cfg.nodes) cfg.nodes.forEach(cfgNode => {
+        const locEl = document.getElementById(cfgNode.id + '-loc');
+        if (locEl && cfg.groups && cfgNode.group) {
+          const grp = cfg.groups.find(g => g.id === cfgNode.group);
+          if (grp) locEl.textContent = 'Group: ' + grp.name;
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+// Build cards first, then start polling
+buildNodeCards();
 
 fetchAll();
 setInterval(fetchAll, 15000);
