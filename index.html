@@ -673,24 +673,19 @@ const nodes = [
   { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', writeApiKey:'ZOZZQ8TH8XGRY03D', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} }
 ];
 
-// ── Apply admin panel config (node names, groups) from localStorage ──
-// If admin.html has been used to rename nodes or assign groups,
-// those settings are reflected here automatically on load.
-(function applyAdminConfig() {
-  try {
-    const raw = localStorage.getItem('litsAdminConfig');
-    if (!raw) return;
-    const cfg = JSON.parse(raw);
-    if (!cfg.nodes) return;
+// ── Apply admin panel config — loaded from Firebase, cached in localStorage ──
+// Changes made in admin.html sync to all devices via Firebase in real time.
 
-    // Merge admin nodes into the nodes array.
-    // For existing nodes: update label/channel/apiKey.
-    // For NEW nodes added via admin.html: push them into nodes array so
-    // buildNodeCards() renders a card for them automatically.
+function applyAdminConfig(cfg) {
+  if (!cfg || !cfg.nodes) return;
+  try {
+    // Cache locally for instant next load
+    localStorage.setItem('litsAdminConfig', JSON.stringify(cfg));
+
     cfg.nodes.forEach(cfgNode => {
       let node = nodes.find(n => n.id === cfgNode.id);
       if (!node) {
-        // Brand new node — add to nodes array
+        // Brand new node added via admin panel — create card for it
         node = {
           id: cfgNode.id,
           label: cfgNode.name || cfgNode.id,
@@ -701,16 +696,22 @@ const nodes = [
         };
         nodes.push(node);
       } else {
-        // Existing node — apply admin overrides
         if (cfgNode.name) node.label = cfgNode.name;
         if (cfgNode.dataChannel && parseInt(cfgNode.dataChannel)) node.channel = parseInt(cfgNode.dataChannel);
         if (cfgNode.dataReadKey && cfgNode.dataReadKey.length > 5) node.apiKey = cfgNode.dataReadKey;
       }
     });
 
-    // Update How It Works guide threshold numbers
     updateGuideThresholds(cfg);
-  } catch(e) { console.warn('Admin config load error:', e); }
+  } catch(e) { console.warn('Admin config apply error:', e); }
+}
+
+// Apply from localStorage immediately (instant, no network wait)
+(function applyLocalAdminConfig() {
+  try {
+    const raw = localStorage.getItem('litsAdminConfig');
+    if (raw) applyAdminConfig(JSON.parse(raw));
+  } catch(e) {}
 })();
 
 function updateGuideThresholds(cfg) {
@@ -1003,6 +1004,22 @@ window._pollingStarted = true;
 // ── Firebase (background) ──
 (async () => {
   try {
+    // Load admin config from Firebase and keep it in sync across devices
+    const adminConfigSnap = await getDoc(doc(db, 'adminConfig', 'main'));
+    if (adminConfigSnap.exists()) {
+      applyAdminConfig(adminConfigSnap.data());
+      // Rebuild cards and tabs with updated node info
+      buildNodeCards();
+      fetchAll();
+    }
+    // Real-time listener — if admin changes config on another device, dashboard updates
+    onSnapshot(doc(db, 'adminConfig', 'main'), snap => {
+      if (!snap.exists()) return;
+      applyAdminConfig(snap.data());
+      buildNodeCards();
+      fetchAll();
+    });
+
     const [snap1, snap2] = await Promise.all([
       getDoc(doc(db, 'calibrations', 'node1')),
       getDoc(doc(db, 'calibrations', 'node2'))
