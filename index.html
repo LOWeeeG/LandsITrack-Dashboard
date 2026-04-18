@@ -1030,12 +1030,21 @@ function buildNodeCards() {
 
 }
 
-// Build cards first, then start polling
-buildNodeCards();
+// ── Startup sequence ──
+// If localStorage has config (regular browser): build cards immediately, Firebase updates after.
+// If no localStorage (incognito/new device): wait for Firebase before building cards.
+const _hasLocalConfig = !!localStorage.getItem('litsAdminConfig');
 
-fetchAll();
-setInterval(fetchAll, 15000);
-window._pollingStarted = true;
+if (_hasLocalConfig) {
+  buildNodeCards();
+  fetchAll();
+  setInterval(fetchAll, 15000);
+  window._pollingStarted = true;
+} else {
+  // No local config — show placeholder while Firebase loads
+  document.getElementById('nodesGrid').innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">⏳ Loading configuration...</div>';
+}
 
 // ── Firebase (background) ──
 (async () => {
@@ -1044,9 +1053,20 @@ window._pollingStarted = true;
     const adminConfigSnap = await getDoc(doc(db, 'adminConfig', 'main'));
     if (adminConfigSnap.exists()) {
       applyAdminConfig(adminConfigSnap.data());
-      // Rebuild cards and tabs with updated node info
+      buildNodeCards();
+      if (!window._pollingStarted) {
+        fetchAll();
+        setInterval(fetchAll, 15000);
+        window._pollingStarted = true;
+      } else {
+        fetchAll();
+      }
+    } else if (!_hasLocalConfig) {
+      // Firebase also has nothing — just build with defaults
       buildNodeCards();
       fetchAll();
+      setInterval(fetchAll, 15000);
+      window._pollingStarted = true;
     }
     // Real-time listener — if admin changes config on another device, dashboard updates
     onSnapshot(doc(db, 'adminConfig', 'main'), snap => {
