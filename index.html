@@ -1745,7 +1745,9 @@ Proceed?`)) return;
   if (calib.log.length > 20) calib.log = calib.log.slice(0, 20);
   await saveCalib(nodeId, calib);
   refreshAdminPanel();
-  alert(`${isDry ? 'Dry' : 'Wet'} calibration command sent. ESP32 will forward to Arduino on next wake cycle (~17s). Check Arduino serial monitor for "[MOIST CAL] ${isDry ? 'Dry' : 'Wet'} value saved".`);
+  alert(`${isDry ? '💧 Dry' : '🌊 Wet'} baseline set for ${nodeName}. Moisture readings will update within 30 seconds.`);
+    `After both dry and wet are calibrated, moisture readings will be accurate.`
+  );
 }
 
 async function clearCalibration(nodeId) {
