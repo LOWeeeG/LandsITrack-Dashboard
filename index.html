@@ -354,9 +354,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   <div class="history-header">
     <div class="page-title">Historical Data</div>
     <div class="history-controls">
-      <div class="node-tabs">
-        <button class="node-tab active" id="htab-node1">Node 1</button>
-        <button class="node-tab" id="htab-node2">Node 2</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="history-mode-toggle" id="historyViewToggle">
+          <button class="mode-btn active" id="viewSingle" onclick="switchHistoryView('single')">Single</button>
+          <button class="mode-btn" id="viewGroup" onclick="switchHistoryView('group')">Group</button>
+        </div>
+        <select class="date-input" id="historyNodeSelect" style="width:auto;min-width:140px;">
+          <!-- populated dynamically -->
+        </select>
       </div>
       <div class="history-date-row">
         <div class="history-mode-toggle">
@@ -1016,19 +1021,30 @@ function buildNodeCards() {
     if (e) e.addEventListener('click', () => setJudgement(id,'evacuate'));
   });
 
-  // Build history node tabs dynamically
-  const tabsContainer = document.querySelector('.node-tabs');
-  if (tabsContainer) {
-    tabsContainer.innerHTML = nodes.map((node, i) =>
-      `<button class="node-tab${i===0?' active':''}" id="htab-${node.id}">${node.label}</button>`
-    ).join('');
-    nodes.forEach(node => {
-      document.getElementById('htab-'+node.id).addEventListener('click', () => selectHistoryNode(node.id));
-    });
-    activeHistoryNode = nodes[0]?.id || 'node1';
+  // Populate history dropdown dynamically
+  activeHistoryNode = nodes[0]?.id || 'node1';
+  activeHistoryGroup = null;
+  populateHistoryDropdown();
+  // Listen for dropdown changes
+  const sel = document.getElementById('historyNodeSelect');
+  if (sel) {
+    sel.onchange = () => {
+      if (historyViewMode === 'single') {
+        activeHistoryNode = sel.value;
+        selectHistoryNode(activeHistoryNode);
+      } else {
+        activeHistoryGroup = sel.value;
+        resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
+        document.getElementById('tiltChartTitle').textContent  = activeHistoryGroup + ' — Tilt Angle (averaged)';
+        document.getElementById('moistChartTitle').textContent = activeHistoryGroup + ' — Soil Moisture (averaged)';
+      }
+    };
   }
 
 }
+
+// Expose switchHistoryView for inline onclick
+window.switchHistoryView = switchHistoryView;
 
 // ── Startup ──
 // Always build cards immediately with whatever we have (localStorage or defaults).
@@ -1071,6 +1087,8 @@ window._pollingStarted = true;
         if (tabEl)  tabEl.textContent  = node.label;
       });
       updateGuideThresholds(snap.data());
+      // Refresh history dropdown in case groups changed
+      populateHistoryDropdown();
     });
 
     const [snap1, snap2] = await Promise.all([
@@ -1408,14 +1426,74 @@ function sendLevelNotification(maxLevel, msg) {
 requestNotificationPermission();
 
 // ── History ──
+// ── History view state ──
+let historyViewMode = 'single'; // 'single' or 'group'
+let activeHistoryGroup = null;  // group name when in group mode
+
+function populateHistoryDropdown() {
+  const sel = document.getElementById('historyNodeSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  if (historyViewMode === 'single') {
+    nodes.forEach(node => {
+      const opt = document.createElement('option');
+      opt.value = node.id;
+      opt.textContent = node.label;
+      if (node.id === activeHistoryNode) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } else {
+    // Get unique groups
+    const groups = {};
+    nodes.forEach(node => { if (node.groupName) groups[node.groupName] = true; });
+    const groupNames = Object.keys(groups);
+    if (groupNames.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No groups configured';
+      sel.appendChild(opt);
+    } else {
+      groupNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === activeHistoryGroup) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      if (!activeHistoryGroup) activeHistoryGroup = groupNames[0];
+    }
+  }
+}
+
+function switchHistoryView(mode) {
+  historyViewMode = mode;
+  document.getElementById('viewSingle').classList.toggle('active', mode === 'single');
+  document.getElementById('viewGroup').classList.toggle('active', mode === 'group');
+  populateHistoryDropdown();
+  resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
+  const sel = document.getElementById('historyNodeSelect');
+  if (mode === 'single') {
+    activeHistoryNode = sel.value || (nodes[0]?.id);
+    const n = nodes.find(nd => nd.id === activeHistoryNode);
+    if (n) {
+      document.getElementById('tiltChartTitle').textContent  = n.label + ' — Tilt Angle';
+      document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture';
+    }
+  } else {
+    activeHistoryGroup = sel.value;
+    document.getElementById('tiltChartTitle').textContent  = (activeHistoryGroup || 'Group') + ' — Tilt Angle (averaged)';
+    document.getElementById('moistChartTitle').textContent = (activeHistoryGroup || 'Group') + ' — Soil Moisture (averaged)';
+  }
+}
+
 function selectHistoryNode(id) {
   activeHistoryNode = id;
-  document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('htab-' + id).classList.add('active');
   resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
   const n = nodes.find(nd => nd.id === id);
-  document.getElementById('tiltChartTitle').textContent  = n.label + ' — True Tilt Angle (last 30 readings)';
-  document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture (last 30 readings)';
+  if (n) {
+    document.getElementById('tiltChartTitle').textContent  = n.label + ' — Tilt Angle';
+    document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture';
+  }
 }
 function resetWrap(wid, icon) {
   if (historyCharts[wid]) { historyCharts[wid].destroy(); delete historyCharts[wid]; }
@@ -1447,7 +1525,14 @@ function groupByInterval(feeds, intervalMinutes, node) {
 async function loadHistory() {
   const btn=document.getElementById('loadBtn'); btn.textContent='⏳ Loading…'; btn.disabled=true;
   try {
-    const node=nodes.find(nd=>nd.id===activeHistoryNode);
+    // Determine which nodes to fetch
+    const isGroupMode = historyViewMode === 'group' && activeHistoryGroup;
+    const groupNodes = isGroupMode
+      ? nodes.filter(n => n.groupName === activeHistoryGroup)
+      : null;
+    const node = isGroupMode ? groupNodes[0] : nodes.find(nd=>nd.id===activeHistoryNode);
+    if (!node) { btn.textContent='📊 Load'; btn.disabled=false; return; }
+
     const byDate=document.getElementById('modeDate').classList.contains('active');
     const byRange=document.getElementById('modeRange').classList.contains('active');
     const dateVal=document.getElementById('historyDate').value;
@@ -1489,7 +1574,28 @@ async function loadHistory() {
       const recentCount=intervalValRecent===0?500:intervalValRecent<=15?720:intervalValRecent<=30?1440:intervalValRecent<=60?2880:intervalValRecent<=120?5760:8000;
       fetchURL=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=${recentCount}`;
     }
+    // For group mode, fetch all nodes and merge+average their feeds
+    let allFeeds = [];
+    if (isGroupMode && groupNodes.length > 1) {
+      // Fetch each node's data and combine
+      const allFetchResults = await Promise.all(groupNodes.map(async gn => {
+        const url = fetchURL.replace(
+          `channels/${node.channel}/feeds.json?api_key=${node.apiKey}`,
+          `channels/${gn.channel}/feeds.json?api_key=${gn.apiKey}`
+        );
+        try {
+          const r = await fetch(url);
+          const d = await r.json();
+          return d.feeds || [];
+        } catch(e) { return []; }
+      }));
+      // Merge all feeds and sort by time
+      allFeeds = allFetchResults.flat().sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    }
+
     const res=await fetch(fetchURL); const data=await res.json();
+    // Use merged feeds for group mode, single node feeds otherwise
+    if (isGroupMode && allFeeds.length > 0) data.feeds = allFeeds;
     if (!data.feeds||data.feeds.length===0) {
       document.getElementById('tiltChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
       document.getElementById('moistChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
@@ -1514,7 +1620,9 @@ async function loadHistory() {
       vibVals.push(parseFloat(f['field'+node.fields.vibration])||0);
       alertLvls.push(parseInt(f['field'+node.fields.alertLevel])||0);
     });
-    const nodeLabel=activeHistoryNode==='node1'?nodes[0].label:nodes[1].label;
+    const nodeLabel = isGroupMode
+      ? (activeHistoryGroup + ' (Group avg)')
+      : (nodes.find(n=>n.id===activeHistoryNode)?.label || activeHistoryNode);
     document.getElementById('tiltChartTitle').textContent=nodeLabel+' — Tilt: Shallow vs Deep';
     document.getElementById('moistChartTitle').textContent=nodeLabel+' — Soil Moisture';
     renderDualTiltChart('tiltChartWrap',labels,tiltShallowVals,tiltDeepVals,tiltVals,intervalMinutes);
