@@ -1194,6 +1194,7 @@ function applyJudgementOverride() {
 // Level 4 triggers when ≥50% of nodes in a group reach Level 3 simultaneously.
 // Ungrouped nodes use the original 2-node rule (both must be Level 3).
 function computeGroupEscalation() {
+  if (!nodes || nodes.length === 0) return { escalated: false, escalatedGroupName: null, escalatedNodeNames: [] };
   // Build group buckets
   const groups = {}; // groupId → { nodes: [], atLevel3: [] }
   const ungrouped = [];
@@ -1247,7 +1248,8 @@ function computeGroupEscalation() {
 
 function updateBanner(manualOverride = null, manualNode = null) {
   // Compute highest node level for display
-  const maxLevel = Math.max(...nodes.map(n => nodeStatuses[n.id] || 0));
+  if (!nodes || nodes.length === 0) return;
+  const maxLevel = nodes.length > 0 ? Math.max(...nodes.map(n => nodeStatuses[n.id] || 0)) : 0;
   // Check group escalation to determine if Level 4 should show
   const { escalated, escalatedGroupName, escalatedNodeNames } = computeGroupEscalation();
   const displayLevel = escalated ? 4 : Math.min(maxLevel, 3);
@@ -1278,7 +1280,7 @@ function updateBanner(manualOverride = null, manualNode = null) {
   } else {
     document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
     if (maxLevel === 0) {
-      const allNames = nodes.map(n => n.label).join(' and ');
+      const allNames = nodes.length > 0 ? nodes.map(n => n.label).join(' and ') : 'All nodes';
       msg = `${allNames} are all normal`;
       action = 'All sensors reading within safe limits. No action needed.';
     } else {
@@ -1746,8 +1748,6 @@ Proceed?`)) return;
   await saveCalib(nodeId, calib);
   refreshAdminPanel();
   alert(`${isDry ? '💧 Dry' : '🌊 Wet'} baseline set for ${nodeName}. Moisture readings will update within 30 seconds.`);
-    `After both dry and wet are calibrated, moisture readings will be accurate.`
-  );
 }
 
 async function clearCalibration(nodeId) {
