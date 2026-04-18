@@ -954,6 +954,23 @@ function showToast(msg, type) {
 }
 
 // Auto-focus first PIN input
+// ── Expose functions to global scope (required for inline onclick handlers with type="module") ──
+window.logout         = logout;
+window.switchTab      = switchTab;
+window.addNode        = addNode;
+window.removeNode     = removeNode;
+window.saveNodes      = saveNodes;
+window.pushThresholds = pushThresholds;
+window.resetThresholds= resetThresholds;
+window.updateThreshold= updateThreshold;
+window.createGroup    = createGroup;
+window.deleteGroup    = deleteGroup;
+window.toggleGroup    = toggleGroup;
+window.addToGroup     = addToGroup;
+window.removeFromGroup= removeFromGroup;
+window.saveApiKeys    = saveApiKeys;
+window.changePin      = changePin;
+
 window.addEventListener('load', () => {
   pinInputs[0].focus();
   // Load config from Firebase, then start real-time sync

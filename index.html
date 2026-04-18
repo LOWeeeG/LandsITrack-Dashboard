@@ -362,8 +362,10 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="history-mode-toggle">
           <button class="mode-btn active" id="modeRecent">Recent</button>
           <button class="mode-btn" id="modeDate">By Date</button>
+          <button class="mode-btn" id="modeRange">Date Range</button>
         </div>
-        <div id="datePicker" style="display:none;align-items:center;gap:8px;">
+        <!-- By Date picker -->
+        <div id="datePicker" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
           <input type="date" id="historyDate" class="date-input">
           <select id="historyHour" class="date-input" style="width:auto;">
             <option value="">All day</option>
@@ -376,6 +378,12 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
             <option value="18">6 PM</option><option value="19">7 PM</option><option value="20">8 PM</option>
             <option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
           </select>
+        </div>
+        <!-- Date Range picker -->
+        <div id="rangePicker" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
+          <input type="date" id="rangeStart" class="date-input" title="From">
+          <span style="color:var(--text-muted);font-family:var(--mono);font-size:12px;">to</span>
+          <input type="date" id="rangeEnd" class="date-input" title="To">
         </div>
         <select id="intervalSelect" class="date-input" style="width:auto;">
           <option value="0">All readings</option>
@@ -830,15 +838,33 @@ document.getElementById('loadBtn').addEventListener('click', loadHistory);
 document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRecent').classList.add('active');
   document.getElementById('modeDate').classList.remove('active');
+  document.getElementById('modeRange').classList.remove('active');
   document.getElementById('datePicker').style.display = 'none';
+  document.getElementById('rangePicker').style.display = 'none';
 });
 document.getElementById('modeDate').addEventListener('click', () => {
   document.getElementById('modeDate').classList.add('active');
   document.getElementById('modeRecent').classList.remove('active');
+  document.getElementById('modeRange').classList.remove('active');
   document.getElementById('datePicker').style.display = 'flex';
+  document.getElementById('rangePicker').style.display = 'none';
   if (!document.getElementById('historyDate').value) {
     document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
   }
+});
+document.getElementById('modeRange').addEventListener('click', () => {
+  document.getElementById('modeRange').classList.add('active');
+  document.getElementById('modeRecent').classList.remove('active');
+  document.getElementById('modeDate').classList.remove('active');
+  document.getElementById('datePicker').style.display = 'none';
+  document.getElementById('rangePicker').style.display = 'flex';
+  // Default: last 7 days
+  const today = new Date();
+  const weekAgo = new Date(today); weekAgo.setDate(today.getDate() - 7);
+  if (!document.getElementById('rangeEnd').value)
+    document.getElementById('rangeEnd').value = today.toISOString().split('T')[0];
+  if (!document.getElementById('rangeStart').value)
+    document.getElementById('rangeStart').value = weekAgo.toISOString().split('T')[0];
 });
 
 document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
@@ -1329,13 +1355,29 @@ async function loadHistory() {
   try {
     const node=nodes.find(nd=>nd.id===activeHistoryNode);
     const byDate=document.getElementById('modeDate').classList.contains('active');
+    const byRange=document.getElementById('modeRange').classList.contains('active');
     const dateVal=document.getElementById('historyDate').value;
     const hourVal=document.getElementById('historyHour').value;
+    const rangeStart=document.getElementById('rangeStart').value;
+    const rangeEnd=document.getElementById('rangeEnd').value;
+    const TZ_OFFSET_H=8;
     let fetchURL;
-    if (byDate && dateVal) {
+
+    if (byRange && rangeStart && rangeEnd) {
+      // Date range mode — from start of rangeStart to end of rangeEnd (PH time)
+      const [sy,sm,sd]=rangeStart.split('-').map(Number);
+      const [ey,em,ed]=rangeEnd.split('-').map(Number);
+      const startDt=new Date(Date.UTC(sy,sm-1,sd,0-TZ_OFFSET_H,0,0));
+      const endDt=new Date(Date.UTC(ey,em-1,ed,23-TZ_OFFSET_H,59,59));
+      if (startDt > endDt) {
+        alert('Start date must be before end date.');
+        btn.textContent='📊 Load'; btn.disabled=false; return;
+      }
+      const fmt=dt=>dt.toISOString().replace('T',' ').replace('.000Z','');
+      fetchURL=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&start=${encodeURIComponent(fmt(startDt))}&end=${encodeURIComponent(fmt(endDt))}&results=8000`;
+    } else if (byDate && dateVal) {
       const [yr,mo,dy]=dateVal.split('-').map(Number);
       let startDt, endDt;
-      const TZ_OFFSET_H=8;
       if (hourVal!=='') {
         const h=parseInt(hourVal);
         const intervalVal=parseInt(document.getElementById('intervalSelect').value)||0;
