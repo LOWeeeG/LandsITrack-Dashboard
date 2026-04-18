@@ -14,9 +14,7 @@
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/LandsITrack-Dashboard/sw.js').then(reg => {
-    // Check for updates every 15 minutes
     setInterval(() => reg.update(), 15 * 60 * 1000);
-    // When a new SW is waiting, show update toast
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
       newSW.addEventListener('statechange', () => {
@@ -26,7 +24,6 @@ if ('serviceWorker' in navigator) {
       });
     });
   }).catch(() => {});
-  // When new SW takes over, reload to get fresh content
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!refreshing) { refreshing = true; window.location.reload(); }
@@ -324,7 +321,9 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   <div class="header-right">
     <div class="last-update" id="lastUpdate">—</div>
     <button class="install-header-btn" id="installHeaderBtn">📲 Install App</button>
-    <button class="admin-btn" id="adminOpenBtn" title="Admin Panel">🔒</button>
+    <button class="admin-btn" id="adminOpenBtn" title="Calibration Panel">🔒</button>
+    <!-- ⚙️ Opens admin.html for threshold & node management -->
+    <a href="admin.html" class="admin-btn" title="Admin Panel — Thresholds &amp; Node Config" style="text-decoration:none;font-size:14px;" target="_blank">⚙️</a>
   </div>
 </header>
 
@@ -562,30 +561,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <input type="date" id="historyDate" class="date-input">
           <select id="historyHour" class="date-input" style="width:auto;">
             <option value="">All day</option>
-            <option value="0">12 AM</option>
-            <option value="1">1 AM</option>
-            <option value="2">2 AM</option>
-            <option value="3">3 AM</option>
-            <option value="4">4 AM</option>
-            <option value="5">5 AM</option>
-            <option value="6">6 AM</option>
-            <option value="7">7 AM</option>
-            <option value="8">8 AM</option>
-            <option value="9">9 AM</option>
-            <option value="10">10 AM</option>
-            <option value="11">11 AM</option>
-            <option value="12">12 PM</option>
-            <option value="13">1 PM</option>
-            <option value="14">2 PM</option>
-            <option value="15">3 PM</option>
-            <option value="16">4 PM</option>
-            <option value="17">5 PM</option>
-            <option value="18">6 PM</option>
-            <option value="19">7 PM</option>
-            <option value="20">8 PM</option>
-            <option value="21">9 PM</option>
-            <option value="22">10 PM</option>
-            <option value="23">11 PM</option>
+            <option value="0">12 AM</option><option value="1">1 AM</option><option value="2">2 AM</option>
+            <option value="3">3 AM</option><option value="4">4 AM</option><option value="5">5 AM</option>
+            <option value="6">6 AM</option><option value="7">7 AM</option><option value="8">8 AM</option>
+            <option value="9">9 AM</option><option value="10">10 AM</option><option value="11">11 AM</option>
+            <option value="12">12 PM</option><option value="13">1 PM</option><option value="14">2 PM</option>
+            <option value="15">3 PM</option><option value="16">4 PM</option><option value="17">5 PM</option>
+            <option value="18">6 PM</option><option value="19">7 PM</option><option value="20">8 PM</option>
+            <option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
           </select>
         </div>
         <select id="intervalSelect" class="date-input" style="width:auto;">
@@ -624,8 +607,6 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       </div>
     </div>
   </div>
-
-  <!-- DATA TABLE -->
   <div class="data-table-card">
     <div class="data-table-title" id="tableTitle">Node 1 — Data Table</div>
     <div id="tableWrap">
@@ -636,24 +617,18 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   </div>
 </div>
 
-<!-- GUIDE — your edited text preserved exactly -->
+<!-- GUIDE -->
 <div class="page" id="guidePage">
-
-  <!-- Language Toggle -->
   <div class="lang-toggle">
-    <button class="lang-btn active" id="langEng" >English</button>
-    <button class="lang-btn" id="langCeb" >Bisaya</button>
+    <button class="lang-btn active" id="langEng">English</button>
+    <button class="lang-btn" id="langCeb">Bisaya</button>
   </div>
-
-  <!-- INTRO -->
   <div class="guide-intro">
     <h2 class="eng">How LandsITrack Works</h2>
     <h2 class="ceb">Unsaon Paglihok sa LandsITrack</h2>
     <p class="eng">This system monitors two sensors installed in the ground, a tilt sensor and a soil moisture sensor. Together, they detect early signs of a possible landslide and automatically alert the right people, so communities can react quickly and safely, before disaster strikes.</p>
     <p class="ceb">Kining sistema nagbantay sa duha ka sensor nga gitanom sa yuta, ang tilt sensor ug ang soil moisture sensor. Magkauban, makamatikod sila sa sayo nga timailhan sa posibleng landslide ug awtomatikong mag-alerto sa angay nga mga tawo, aron ang mga komunidad makareaksyon sa dali ug luwas, sa dili pa moabot ang katalagman.</p>
   </div>
-
-  <!-- SECTION 1 -->
   <div class="guide-section">
     <div class="guide-section-title eng">Why We Monitor Landslides</div>
     <div class="guide-section-title ceb">Ngano nga Gimonitor Nato ang Mga Landslide</div>
@@ -661,22 +636,12 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       <div class="explainer-icon">🏘️</div>
       <div class="explainer-title eng">The Problem with Landslides</div>
       <div class="explainer-title ceb">Ang Problema sa mga Landslide</div>
-      <div class="explainer-text eng">
-        Landslides are one of the most dangerous natural disasters in mountainous communities, and one of the most silent. Unlike typhoons or floods, they often give very little visible warning before they happen. The ground can look completely normal one moment and collapse the next.<br><br>
-        In many barangays, communities live on or near slopes. After heavy rains, the soil slowly weakens and shifts, sometimes for hours or days before anything is visible on the surface. By the time cracks appear or the ground starts moving noticeably, it may already be too late to evacuate safely.<br><br>
-        <strong>This is exactly the problem LandsITrack is built to solve.</strong> By placing sensors directly in the ground, the system can detect invisible early movement, the kind that happens underground before anything shows on the surface, and alert the right people with enough time to act.
-      </div>
-      <div class="explainer-text ceb">
-        Ang mga landslide usa sa pinaka-delikado nga natural nga kalamidad sa mga komunidad sa kabukiran, ug usa sa labing hilom. Dili sama sa mga bagyo o baha, kasagaran diyutay ra kaayo ang makita nga babala sa dili pa kini mahitabo. Ang yuta mahimong hingpit nga normal ang hitsura sa usa ka gutlo ug molutaw sa sunod.<br><br>
-        Sa daghang mga barangay, ang mga komunidad nagpuyo sa o duol sa mga daplin sa bukid. Human sa kusog nga ulan, ang yuta hinay-hinay nga nagluya ug nagbalhin, usahay sulod sa mga oras o adlaw sa wala pa makita ang bisan unsa sa ibabaw. Sa panahon nga ang mga lusad makita na o ang yuta nagsugod na sa pagbalhin, mahimong ulahi na ang pagluwas.<br><br>
-        <strong>Kini mismo ang problema nga gitukod ang LandsITrack aron masulbad.</strong> Pinaagi sa pagbutang sa mga sensor direkta sa yuta, ang sistema makamatikod sa dili makita nga sayo nga paglihok, ang matang nga mahitabo sa ilalum sa yuta sa wala pa makita sa ibabaw, ug mag-alerto sa angay nga mga tawo nga adunay saktong panahon aron molihok.
-      </div>
+      <div class="explainer-text eng">Landslides are one of the most dangerous natural disasters in mountainous communities, and one of the most silent. Unlike typhoons or floods, they often give very little visible warning before they happen. The ground can look completely normal one moment and collapse the next.<br><br>In many barangays, communities live on or near slopes. After heavy rains, the soil slowly weakens and shifts, sometimes for hours or days before anything is visible on the surface. By the time cracks appear or the ground starts moving noticeably, it may already be too late to evacuate safely.<br><br><strong>This is exactly the problem LandsITrack is built to solve.</strong> By placing sensors directly in the ground, the system can detect invisible early movement, the kind that happens underground before anything shows on the surface, and alert the right people with enough time to act.</div>
+      <div class="explainer-text ceb">Ang mga landslide usa sa pinaka-delikado nga natural nga kalamidad sa mga komunidad sa kabukiran, ug usa sa labing hilom. Dili sama sa mga bagyo o baha, kasagaran diyutay ra kaayo ang makita nga babala sa dili pa kini mahitabo. Ang yuta mahimong hingpit nga normal ang hitsura sa usa ka gutlo ug molutaw sa sunod.<br><br>Sa daghang mga barangay, ang mga komunidad nagpuyo sa o duol sa mga daplin sa bukid. Human sa kusog nga ulan, ang yuta hinay-hinay nga nagluya ug nagbalhin, usahay sulod sa mga oras o adlaw sa wala pa makita ang bisan unsa sa ibabaw. Sa panahon nga ang mga lusad makita na o ang yuta nagsugod na sa pagbalhin, mahimong ulahi na ang pagluwas.<br><br><strong>Kini mismo ang problema nga gitukod ang LandsITrack aron masulbad.</strong></div>
       <div class="explainer-highlight eng">⏱️ Early warning is the difference between a safe evacuation and a tragedy. LandsITrack gives communities that extra time.</div>
       <div class="explainer-highlight ceb">⏱️ Ang sayo nga babala mao ang pagkalahi sa luwas nga pag-evacuation ug trahedya. Ang LandsITrack naghatag sa mga komunidad nianang dugang nga panahon.</div>
     </div>
   </div>
-
-  <!-- SECTION 2 -->
   <div class="guide-section">
     <div class="guide-section-title eng">What the Sensors Measure, and Why</div>
     <div class="guide-section-title ceb">Unsa ang Gisukod sa mga Sensor, ug Ngano</div>
@@ -685,77 +650,42 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="explainer-icon">📐</div>
         <div class="explainer-title eng">Tilt Angle</div>
         <div class="explainer-title ceb">Anggulo sa Pagtilad (Tilt)</div>
-        <div class="explainer-text eng">
-          When the ground is stable, the sensor rod stands straight up at 0°. If the ground beneath it starts to shift or slide, the sensor leans with it, and that lean is measured in degrees.<br><br>
-          Even a small tilt, like 5°, can be a significant early warning sign that the soil is beginning to move underground. The larger the angle, the further the ground has shifted.
-        </div>
-        <div class="explainer-text ceb">
-          Kung ang yuta lig-on, ang sensor nga baras nagtindog nga tul-id sa 0°. Kung ang yuta sa ilalum niini nagsugod sa pagbalhin o paglabay, ang sensor mohilid uban niini, ug ang hilid gisukod sa mga degree.<br><br>
-          Bisan ang gamay nga tilt, sama sa 5°, mahimong usa ka hinungdanon nga sayo nga babala nga ang yuta nagsugod na sa paglihok sa ilalum sa yuta. Ang mas dako ang anggulo, mas layo na ang paglihok sa yuta.
-        </div>
+        <div class="explainer-text eng">When the ground is stable, the sensor rod stands straight up at 0°. If the ground beneath it starts to shift or slide, the sensor leans with it, and that lean is measured in degrees.<br><br>Even a small tilt, like 5°, can be a significant early warning sign that the soil is beginning to move underground.</div>
+        <div class="explainer-text ceb">Kung ang yuta lig-on, ang sensor nga baras nagtindog nga tul-id sa 0°. Kung ang yuta sa ilalum niini nagsugod sa pagbalhin o paglabay, ang sensor mohilid uban niini, ug ang hilid gisukod sa mga degree.</div>
         <div class="explainer-highlight eng">🪨 Think of it like planting a stick straight into a hillside. If the ground moves, the stick leans. LandsITrack measures exactly how far it leans, automatically and in real time.</div>
-        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid. Sukdon sa LandsITrack kung unsa ka layo ang paghilid, awtomatiko ug sa tinuod nga panahon.</div>
-        <br>
-        <div class="explainer-text eng"><strong>Why we measure tilt:</strong> Ground movement is the most direct sign of a slope becoming unstable. The tilt sensor captures movement at the source, deep in the ground, before it becomes visible at the surface. It is the clearest, most direct evidence that a landslide may be forming.</div>
-        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang tilt:</strong> Ang paglihok sa yuta mao ang labing direkta nga timailhan nga ang daplin sa bukid nagsugod sa pagkadili lig-on. Ang tilt sensor nagkuha sa paglihok sa tinubdan niini, lawom sa yuta, sa wala pa kini makita sa ibabaw. Kini ang labing klaro ug direkta nga ebidensya nga ang landslide mahimong nagporma na.</div>
+        <div class="explainer-highlight ceb">🪨 Hunahunaa kini sama sa pagtanom og tungkod nga tul-id sa daplin sa bukid. Kung ang yuta molihok, ang tungkod mohilid.</div>
       </div>
       <div class="explainer-card">
         <div class="explainer-icon">💧</div>
         <div class="explainer-title eng">Soil Moisture</div>
         <div class="explainer-title ceb">Kahumok sa Yuta (Soil Moisture)</div>
-        <div class="explainer-text eng">
-          The soil moisture sensor measures how much water has soaked into the soil, as a percentage from 0% (dry) to 100% (completely saturated). When soil absorbs too much rainwater, it becomes heavier and loses its internal friction, the grip that holds soil particles together on a slope.<br><br>
-          Wet, heavy, slippery soil is far more likely to slide than dry, firm soil.
-        </div>
-        <div class="explainer-text ceb">
-          Ang soil moisture sensor nagsukat kung pila ka tubig ang nalusad sa yuta, isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga basa). Kung ang yuta moinom og sobra nga tubig sa ulan, kini mohimong mas bug-at ug mawad-an sa internal nga friction niini, ang agos nga naghiusa sa mga particle sa yuta sa daplin sa bukid.<br><br>
-          Ang basa, bug-at, ug danlog nga yuta labi pang posible nga molusad kaysa uga ug lig-on nga yuta.
-        </div>
-        <div class="explainer-highlight eng">🌧️ Think of dry sand vs. wet sand. Dry sand holds. Wet sand flows. The same principle applies to hillside soil after heavy rain, at a certain point, water overwhelms the soil's ability to stay in place.</div>
-        <div class="explainer-highlight ceb">🌧️ Hunahunaa ang uga nga balas kontra basa nga balas. Ang uga nga balas naghawid. Ang basa nga balas nagdagayday. Ang mao rang prinsipyo ang magamit sa yuta sa bukid human sa kusog nga ulan, sa usa ka punto, ang tubig molapas sa kakayahan sa yuta nga magpabilin sa lugar.</div>
-        <br>
-        <div class="explainer-text eng"><strong>Why we measure moisture:</strong> Most landslides in tropical regions are triggered by rainfall. Water accumulates in the soil over hours, slowly weakening it. By monitoring moisture continuously, LandsITrack can catch this weakening process early, even before the ground starts moving, giving even more advance warning.</div>
-        <div class="explainer-text ceb"><strong>Ngano nga gisukod ang moisture:</strong> Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan. Ang tubig nagtipun-og sa yuta sulod sa mga oras, hinay-hinay nga nagpaluya niini. Pinaagi sa padayon nga pagmonitor sa moisture, makuha sa LandsITrack kining proseso sa pagluya sa sayo pa, bisan sa wala pa magsugod ang yuta sa paglihok, naghatag og dugang pang sayo nga babala.</div>
+        <div class="explainer-text eng">The soil moisture sensor measures how much water has soaked into the soil, as a percentage from 0% (dry) to 100% (completely saturated). When soil absorbs too much rainwater, it becomes heavier and loses its internal friction.</div>
+        <div class="explainer-text ceb">Ang soil moisture sensor nagsukat kung pila ka tubig ang nalusad sa yuta, isip porsyento gikan sa 0% (uga) hangtod 100% (hingpit nga basa).</div>
+        <div class="explainer-highlight eng">🌧️ Most landslides in tropical regions are triggered by rainfall. By monitoring moisture continuously, LandsITrack can catch this weakening process early.</div>
+        <div class="explainer-highlight ceb">🌧️ Kadaghanan sa mga landslide sa tropikal nga mga rehiyon gipahinabo sa ulan.</div>
       </div>
     </div>
   </div>
-
-  <!-- SECTION 3 -->
-  <div class="guide-section">
-    <div class="guide-section-title eng">How the Two Sensors Work Together</div>
-    <div class="guide-section-title ceb">Unsaon Pagtinabangay sa Duha ka Sensor</div>
-    <div class="explainer-card">
-      <div class="explainer-icon">🔗</div>
-      <div class="explainer-title eng">A Complete Picture of Risk</div>
-      <div class="explainer-title ceb">Kompletong Hulagway sa Peligro</div>
-      <div class="explainer-text eng">
-        Neither sensor alone tells the full story. Tilt without moisture could mean the ground shifted long ago and is stable now. Moisture without tilt could mean the soil is wet but still holding. But when <strong>both sensors show elevated readings at the same time</strong>, wet soil that is also starting to tilt, that combination is a strong signal that a slope is actively failing.<br><br>
-        This is why LandsITrack uses both together to calculate an alert level. The system checks both readings on every update and takes the worse of the two as the basis for the alert.
-      </div>
-      <div class="explainer-text ceb">
-        Wala'y usa ka sensor nga makasugilon sa tibuok câu-an. Ang tilt nga walay moisture mahimong nagpasabot nga ang yuta naglihok dugay na ug lig-on na kini karon. Ang moisture nga walay tilt mahimong nagpasabot nga basa ang yuta apan naghawid pa. Apan kung <strong>ang duha ka sensor nagpakita og taas nga basahan sa samang panahon</strong>, basa nga yuta nga nagsugod usab sa pagtilad, kana nga kombinasyon usa ka kusog nga signal nga ang daplin sa bukid aktibo na nga nagpalya.<br><br>
-        Mao kini ang rason ngano nga gigamit sa LandsITrack ang duha magkauban aron makalkula ang antas sa alerto. Gisusi sa sistema ang duha ka basahan sa matag update ug gikuha ang mas peligroso sa duha isip basehan sa alerto.
-      </div>
-      <div class="explainer-highlight eng">🧠 Two sensors watching the same slope, day and night, rain or shine, that's the core of why LandsITrack works as an early warning system.</div>
-      <div class="explainer-highlight ceb">🧠 Duha ka sensor ang nagbantay sa mao rang daplin sa bukid, adlaw ug gabii, ulan man o adlaw, mao kana ang kasing-kasing sa rason ngano nga ang LandsITrack naglihok isip sistema sa sayo nga babala.</div>
-    </div>
-  </div>
-
-  <!-- SECTION 4 -->
   <div class="guide-section">
     <div class="guide-section-title eng">Alert Levels &amp; Response Actions</div>
     <div class="guide-section-title ceb">Mga Antas sa Alerto &amp; Aksyon sa Pagtubag</div>
+    <!-- Threshold note shown above level cards -->
+    <div style="background:#f0fafa;border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--text-muted);line-height:1.7;">
+      <strong style="color:var(--teal-dark);font-family:var(--mono);font-size:11px;letter-spacing:1px;">HOW ALERT LEVELS ARE DETERMINED</strong><br>
+      <span class="eng">Tilt angle is the primary trigger — it sets the base alert level. If soil moisture reaches ≥ 60% <em>and</em> tilt is already elevated, the level increases by one. Vibration that is Light or above also raises the level by one if tilt is already elevated. Moisture and vibration together can only raise the level by a combined maximum of +1. The tilt thresholds below are configurable from the Admin Panel and reflect the current active settings.</span>
+      <span class="ceb">Ang anggulo sa pagtilad ang pangunahing trigger — kini ang nagbutang sa base alert level. Kung ang kahumok sa yuta moabot ≥ 60% <em>ug</em> ang tilt naa na sa taas, ang level motaas og usa. Ang vibration nga Light o taas usab nagpataas sa level og usa kung ang tilt naa na sa taas. Ang moisture ug vibration magkauban makapataas lang og maximum nga +1 sa level.</span>
+    </div>
     <div class="level-cards">
       <div class="level-card l1">
         <div class="level-card-num">1</div>
         <div class="level-card-body">
           <div class="level-card-name eng">Low Risk — Movement Detected</div>
           <div class="level-card-name ceb">Ubos nga Peligro — Namatikdan ang Paglihok</div>
-          <div class="level-card-threshold">Tilt ≥ 5° &nbsp;|&nbsp; Moisture ≥ 60%</div>
-          <div class="level-card-desc eng">The sensors are picking up early signs of ground movement or elevated soil moisture. Not yet dangerous, but the situation needs to be watched closely.</div>
-          <div class="level-card-desc ceb">Ang mga sensor nagkuha sa sayo nga mga timailhan sa paglihok sa yuta o taas nga kahumok sa yuta. Dili pa delikado, apan kinahanglan bantayan pag-ayo ang sitwasyon.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation. No evacuation yet, just awareness.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan ang sitwasyon. Wala pa'y evacuation, pagmata lang.</div>
+          <div class="level-card-threshold">Tilt ≥ <span id="guide-t1">5</span>° &nbsp;|&nbsp; <span class="eng">Moisture ≥ 60% upgrades this to Level 2</span><span class="ceb">Ang moisture ≥ 60% nagpataas niini sa Level 2</span></div>
+          <div class="level-card-desc eng">The tilt sensor has detected early ground movement. The slope is beginning to shift. If soil moisture is also ≥ 60%, the system automatically escalates to Level 2.</div>
+          <div class="level-card-desc ceb">Ang tilt sensor nakamatikod sa sayo nga paglihok sa yuta. Ang daplin sa bukid nagsugod na sa pagbalhin. Kung ang kahumok sa yuta ≥ 60% usab, ang sistema awtomatikong motaas sa Level 2.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Barangay officials and BDRRMC are alerted to monitor the situation closely. No evacuation yet.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal sa barangay ug BDRRMC gi-alerto aron bantayan pag-ayo ang sitwasyon. Wala pa'y evacuation.</div>
         </div>
         <div class="level-card-icon">👀</div>
       </div>
@@ -764,11 +694,11 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="level-card-body">
           <div class="level-card-name eng">Moderate Risk — Elevated Movement</div>
           <div class="level-card-name ceb">Katamtamang Peligro — Taas nga Paglihok</div>
-          <div class="level-card-threshold">Tilt ≥ 10° &nbsp;|&nbsp; Moisture ≥ 75%</div>
-          <div class="level-card-desc eng">Ground movement or soil saturation has increased to a level that requires active attention. The risk is real, and decisions about preparedness need to be made now.</div>
-          <div class="level-card-desc ceb">Ang paglihok sa yuta o saturation sa yuta mitaas na sa antas nga nagkinahanglan og aktibong atensyon. Tinuod na ang peligro, ug kinahanglan na nga buhaton ang mga desisyon bahin sa pagpangandam.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Officials are alerted again with an escalated warning. BDRRMC begins evaluating whether to prepare for a possible evacuation, gathering resources, identifying routes, and briefing response teams.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation, nagtipon og mga kahinguhaan, nagila sa mga ruta, ug nagbriefing sa mga response team.</div>
+          <div class="level-card-threshold">Tilt ≥ <span id="guide-t2">10</span>° &nbsp;|&nbsp; <span class="eng">or Level 1 tilt + moisture/vibration upgrade</span><span class="ceb">o Level 1 tilt + moisture/vibration upgrade</span></div>
+          <div class="level-card-desc eng">Ground movement has increased significantly, or a lower tilt combined with elevated moisture or vibration has raised the risk. Active attention and readiness are required.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta mitaas na pag-ayo, o ang ubos nga tilt kombinado sa taas nga moisture o vibration nagpataas sa peligro. Kinahanglan na ang aktibong atensyon ug pagkaandam.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>Officials are alerted with an escalated warning. BDRRMC begins evaluating whether to prepare for possible evacuation.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga opisyal gi-alerto pag-usab nga adunay mas taas nga babala. Ang BDRRMC nagsugod sa pagsusi kung kinahanglan bang mag-andam alang sa posibleng evacuation.</div>
         </div>
         <div class="level-card-icon">⚠️</div>
       </div>
@@ -777,11 +707,11 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="level-card-body">
           <div class="level-card-name eng">High Risk — Targeted Alert</div>
           <div class="level-card-name ceb">Taas nga Peligro — Targeted nga Alerto</div>
-          <div class="level-card-threshold">Tilt ≥ 15° &nbsp;|&nbsp; Moisture ≥ 85%</div>
-          <div class="level-card-desc eng">Ground movement is significant and poses a direct threat. Immediate action is needed, but only in the at-risk zone, to avoid unnecessary panic elsewhere.</div>
-          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga. Kinahanglan og dayon nga aksyon, apan sa lugar lang nga naa sa peligro, aron malikayan ang dili kinahanglanon nga kagubot sa ubang lugar.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings are sent to officials, BDRRMC, and residents in the affected purok. Residents are advised to be cautious and await further instructions. No evacuation order yet.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga opisyal, BDRRMC, ug mga residente sa apektadong purok. Ang mga residente giawhag nga mag-amping ug maghulat sa dugang nga mga instruksyon. Wala pa'y order sa evacuation.</div>
+          <div class="level-card-threshold">Tilt ≥ <span id="guide-t3">15</span>° &nbsp;|&nbsp; <span class="eng">or Level 2 tilt + moisture/vibration upgrade</span><span class="ceb">o Level 2 tilt + moisture/vibration upgrade</span></div>
+          <div class="level-card-desc eng">Ground movement is significant and poses a direct threat to the slope. Immediate caution is needed in the at-risk zone. No evacuation order yet, but residents must be ready.</div>
+          <div class="level-card-desc ceb">Ang paglihok sa yuta hinungdanon na ug naghatag og direktang hulga sa daplin sa bukid. Kinahanglan na og dayon nga pag-amping sa lugar nga naa sa peligro.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to officials, BDRRMC, and residents in the affected purok. Residents are advised to be cautious and await further instructions.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga opisyal, BDRRMC, ug mga residente sa apektadong purok. Ang mga residente giawhag nga mag-amping ug maghulat sa dugang nga mga instruksyon.</div>
         </div>
         <div class="level-card-icon">🔶</div>
       </div>
@@ -790,24 +720,23 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
         <div class="level-card-body">
           <div class="level-card-name eng">Critical — Evacuate Now</div>
           <div class="level-card-name ceb">Kritikal — Molupad Na Karon</div>
-          <div class="level-card-threshold">Multiple sensors at high severity</div>
-          <div class="level-card-desc eng">Multiple sensors reporting dangerous readings simultaneously. The threat is larger and could affect not just one area but surrounding zones as well.</div>
-          <div class="level-card-desc ceb">Daghang mga sensor ang nag-report og delikadong mga basahan sa samang panahon. Ang hulga mas dako na ug mahimong makaapekto dili lang sa usa ka lugar kondili sa mga kasikbit nga lugar usab.</div>
-          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to all officials, BDRRMC, and residents. Both sensor nodes have confirmed extreme danger. Everyone in the affected area is ordered to EVACUATE IMMEDIATELY.</div>
-          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa mga residente sa apektadong purok ug sa tanan nga kasikbit nga mga purok. Ang tanan sa danger zone ug sa mga duol nga lugar gisugo nga moluwas dayon.</div>
+          <div class="level-card-threshold">Tilt ≥ <span id="guide-t4">20</span>° on both nodes &nbsp;|&nbsp; <span class="eng">or both nodes simultaneously at Level 3</span><span class="ceb">o ang duha ka nodes dunay Level 3 sa samang panahon</span></div>
+          <div class="level-card-desc eng">Both sensor nodes have detected dangerous conditions simultaneously. The threat is large-scale and could affect the entire slope and surrounding areas. Immediate evacuation is the only safe action.</div>
+          <div class="level-card-desc ceb">Ang duha ka sensor nodes nakamatikod og delikadong kondisyon sa samang panahon. Ang hulga dako na ug mahimong makaapekto sa tibuok daplin sa bukid ug sa mga kasikbit nga lugar.</div>
+          <div class="level-card-action eng"><strong>WHO IS NOTIFIED</strong>SMS warnings sent to all officials, BDRRMC, and all purok residents. EVACUATE IMMEDIATELY — do not wait.</div>
+          <div class="level-card-action ceb"><strong>KINSA ANG GIPAHIBALO</strong>Ang mga babala pinaagi sa SMS gipadala sa tanan nga opisyal, BDRRMC, ug tanan nga mga residente sa purok. MOLUWAS DAYON — ayaw paghulat.</div>
         </div>
         <div class="level-card-icon">🚨</div>
       </div>
     </div>
   </div>
-  </div>
 </div>
 
-<!-- ADMIN MODAL -->
+<!-- ADMIN MODAL (Calibration) -->
 <div class="modal-overlay" id="adminModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🔒 Admin Panel</div>
+      <div class="modal-title">🔒 Calibration Panel</div>
       <button class="modal-close" id="adminCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -836,7 +765,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
       </div>
       <div class="admin-panel" id="adminPanel">
         <div class="admin-section-title">Tilt Baseline Calibration</div>
-        <p class="admin-intro">After officials inspect a site and confirm the current tilt is stable, set that reading as the new baseline. The dashboard will then show <strong>change from baseline</strong> instead of absolute degrees. History always records the true absolute values.</p>
+        <p class="admin-intro">After officials inspect a site and confirm the current tilt is stable, set that reading as the new baseline. History always records the true absolute values.</p>
         <div class="calibration-node">
           <div class="calib-node-name">📍 Node 1 — Sensor Array Alpha</div>
           <div class="calib-info">
@@ -865,143 +794,59 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <div class="calib-log-title">CALIBRATION LOG</div>
           <div class="calib-log-entries" id="calib-log-node2"><div class="calib-log-empty">No calibrations recorded yet.</div></div>
         </div>
-        <div class="admin-note">☁️ <strong>Firebase connected.</strong> Calibration syncs in real time across all devices.</div>
+        <div class="admin-note">☁️ <strong>Firebase connected.</strong> Calibration syncs in real time across all devices.<br><br>⚙️ <strong>Threshold &amp; node management</strong> → <a href="admin.html" target="_blank" style="color:#0d9488;font-weight:700;">Open Admin Panel</a></div>
         <button class="admin-signout" id="signOutBtn">Sign Out of Admin</button>
       </div>
     </div>
   </div>
 </div>
 
-    </div>
-
-    <!-- Android instructions -->
-    <div id="guideAndroid" style="display:none;">
-      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Chrome</strong>:</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">⋮</div>
-          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>3-dot menu</strong> at the top right of Chrome</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">➕</div>
-          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">✅</div>
-          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Install</strong> — done! Find it on your home screen.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- iOS instructions -->
-    <div id="guideIos" style="display:none;">
-      <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Follow these steps in <strong>Safari</strong>:</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">⬆️</div>
-          <div style="font-size:13px;color:#0f2b2a;">Tap the <strong>Share button</strong> at the bottom of Safari</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">➕</div>
-          <div style="font-size:13px;color:#0f2b2a;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:#f0fafa;border-radius:12px;padding:14px;">
-          <div style="font-size:24px;">✅</div>
-          <div style="font-size:13px;color:#0f2b2a;">Tap <strong>Add</strong> — done! Find it on your home screen.</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
 <!-- INSTALL MODAL -->
 <div id="installModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px;">
-
-  <!-- SPLASH SCREEN (shown first) -->
   <div id="installSplash" style="background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
-    <!-- Header -->
     <div style="background:#134e4a;padding:28px 24px 22px;text-align:center;">
       <div style="font-size:56px;margin-bottom:10px;">🏔️</div>
       <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#fff;">Lands<span style="color:#5eead4;">I</span>Track</div>
       <div style="font-size:11px;color:#99d6d0;font-family:'Space Mono',monospace;letter-spacing:2px;margin-top:4px;">LANDSLIDE MONITORING</div>
     </div>
-    <!-- Body -->
     <div style="padding:22px 24px;">
-      <div style="font-size:14px;color:#d4ede8;font-weight:600;margin-bottom:6px;">Install this app on your device</div>
+      <div style="font-size:14px;color:#0f2b2a;font-weight:600;margin-bottom:6px;">Install this app on your device</div>
       <div style="font-size:13px;color:#4b7b78;line-height:1.7;margin-bottom:18px;">Get quick access to live landslide monitoring — works like a real app, right from your home screen.</div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Live tilt &amp; moisture sensor alerts</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Real-time Firebase sync</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> Works offline</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#0f2b2a;"><span style="color:#0d9488;">✓</span> No App Store needed</div>
-      </div>
       <button id="splashInstallBtn" style="width:100%;background:#0d9488;color:#fff;border:none;padding:14px;border-radius:12px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">Install</button>
       <button id="splashCancelBtn" style="width:100%;background:none;border:1.5px solid #cce9e5;color:#4b7b78;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>
-
-  <!-- GUIDE SCREEN (shown after Install is tapped) -->
   <div id="installGuide" style="display:none;background:#fff;border-radius:24px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     <div style="background:#134e4a;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#fff;">How to Install</div>
       <button id="installGuideClose" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div style="padding:22px 24px;">
-
-      <!-- Android steps -->
       <div id="guideAndroid" style="display:none;">
         <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Chrome</strong> and follow these steps:</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong style="font-size:18px;line-height:1;">⋮</strong> menu at the <strong>top right</strong> of Chrome</div>
-          </div>
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add to Home screen"</strong></div>
-          </div>
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
-          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong style="font-size:18px;line-height:1;">⋮</strong> menu at the <strong>top right</strong> of Chrome</div></div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add to Home screen"</strong></div></div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div></div>
         </div>
-        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Chrome</strong> on Android. If you're using a different browser, open this page in Chrome first.</div>
       </div>
-
-      <!-- iOS steps -->
       <div id="guideIos" style="display:none;">
         <div style="font-size:13px;color:#4b7b78;margin-bottom:16px;">Open this page in <strong>Safari</strong> and follow these steps:</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong>Share button ⬆</strong> at the bottom of Safari</div>
-          </div>
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
-          </div>
-          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;">
-            <div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
-            <div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div>
-          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap the <strong>Share button ⬆</strong> at the bottom of Safari</div></div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Scroll down and tap <strong>"Add to Home Screen"</strong></div></div>
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#f0fafa;border-radius:12px;padding:14px;"><div style="background:#134e4a;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div><div style="font-size:13px;color:#0f2b2a;line-height:1.6;">Tap <strong>"Add"</strong> — the app will appear on your home screen</div></div>
         </div>
-        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:#713f12;">💡 Only works in <strong>Safari</strong> on iPhone. If you're using Chrome or another browser, switch to Safari first.</div>
       </div>
-
     </div>
   </div>
-
 </div>
 
 <div class="sync-toast" id="syncToast">🔄 Calibration synced from another device</div>
 <footer>LandsITrack © 2026 &nbsp;·&nbsp; Real-Time Landslide Monitoring System</footer>
 
 <script type="module">
-// ═══════════════════════════════════════
-// CHANGE THE PIN HERE (4 digits)
 const ADMIN_PIN = '1234';
-// ═══════════════════════════════════════
 
 import { initializeApp }                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1016,11 +861,74 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-// ── Config ──
+// ── Node config ──
 const nodes = [
   { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', writeApiKey:'3KE1TKOFWYU90GYU', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} },
   { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', writeApiKey:'ZOZZQ8TH8XGRY03D', fields:{tiltShallow:3, tiltDeep:4, tiltAvg:5, moistureShallow:1, moistureDeep:6, moistureAvg:7, vibration:2, alertLevel:8} }
 ];
+
+// ── Apply admin panel config (node names, groups) from localStorage ──
+// If admin.html has been used to rename nodes or assign groups,
+// those settings are reflected here automatically on load.
+(function applyAdminConfig() {
+  try {
+    const raw = localStorage.getItem('litsAdminConfig');
+    if (!raw) return;
+    const cfg = JSON.parse(raw);
+    if (!cfg.nodes) return;
+    cfg.nodes.forEach(cfgNode => {
+      const node = nodes.find(n => n.id === cfgNode.id);
+      if (!node) return;
+      // Apply custom display name
+      if (cfgNode.name) node.label = cfgNode.name;
+      // Apply ThingSpeak data channel if admin filled it in
+      if (cfgNode.dataChannel && parseInt(cfgNode.dataChannel)) node.channel = parseInt(cfgNode.dataChannel);
+      if (cfgNode.dataReadKey && cfgNode.dataReadKey.length > 5) node.apiKey = cfgNode.dataReadKey;
+      // Update node card display name
+      const nameEl = document.querySelector('#card-' + cfgNode.id + ' .node-name');
+      if (nameEl && cfgNode.name) nameEl.textContent = cfgNode.name;
+      // Update group/location sub-label
+      const locEl = document.querySelector('#card-' + cfgNode.id + ' .node-loc');
+      if (locEl && cfg.groups && cfgNode.group) {
+        const grp = cfg.groups.find(g => g.id === cfgNode.group);
+        if (grp) locEl.textContent = 'Group: ' + grp.name;
+      }
+    });
+    // Update history tab labels
+    cfg.nodes.forEach(cfgNode => {
+      const tab = document.getElementById('htab-' + cfgNode.id);
+      if (tab && cfgNode.name) tab.textContent = cfgNode.name;
+    });
+    // Update How It Works guide threshold numbers
+    // Uses the first node's thresholds as representative (or group thresholds)
+    updateGuideThresholds(cfg);
+  } catch(e) { console.warn('Admin config load error:', e); }
+})();
+
+function updateGuideThresholds(cfg) {
+  try {
+    // Find thresholds — prefer first grouped node, fall back to first node
+    let t = { l1:5, l2:10, l3:15, l4:20 };
+    if (cfg && cfg.nodes && cfg.nodes.length) {
+      const firstNode = cfg.nodes[0];
+      if (firstNode.thresholds) {
+        t = firstNode.thresholds;
+      } else if (firstNode.group && cfg.groups) {
+        // Node is in a group — find another node in same group that has thresholds
+        const groupNode = cfg.nodes.find(n => n.group === firstNode.group && n.thresholds);
+        if (groupNode) t = groupNode.thresholds;
+      }
+    }
+    const el1 = document.getElementById('guide-t1');
+    const el2 = document.getElementById('guide-t2');
+    const el3 = document.getElementById('guide-t3');
+    const el4 = document.getElementById('guide-t4');
+    if (el1) el1.textContent = t.l1;
+    if (el2) el2.textContent = t.l2;
+    if (el3) el3.textContent = t.l3;
+    if (el4) el4.textContent = t.l4;
+  } catch(e) {}
+}
 
 const levelConfig = {
   0:{ cls:'safe', tag:'tag-safe', tagLabel:'Safe', statusLabel:'Safe', bannerCls:'safe', icon:'✅', action:'', showAction:false },
@@ -1032,11 +940,8 @@ const levelConfig = {
 
 // Alert level is computed by Arduino firmware and uploaded to ThingSpeak field8.
 // Dashboard reads it directly — no threshold logic here.
-// To change thresholds, update classifyLevel() in arduino_node.ino only.
+// To change thresholds, use the ⚙️ Admin Panel (admin.html).
 
-
-
-// ── Calibration cache — Firebase loads in background ──
 const calibCache = { node1:{ baseline:null, log:[] }, node2:{ baseline:null, log:[] } };
 function getCalib(nodeId) { return calibCache[nodeId] || { baseline:null, log:[] }; }
 async function saveCalib(nodeId, data) {
@@ -1045,9 +950,7 @@ async function saveCalib(nodeId, data) {
   catch(e) { console.warn('Firebase write error:', e); }
 }
 
-// ── Judgement cache ──
 const judgementCache = { node1: null, node2: null };
-// Restore from localStorage immediately — instant override before Firebase loads
 (function restoreJudgementsFromStorage() {
   try {
     const j1 = localStorage.getItem('judgement_node1');
@@ -1060,10 +963,7 @@ const judgementCache = { node1: null, node2: null };
 async function saveJudgement(nodeId, type) {
   const entry = type ? { type, setAt: new Date().toISOString() } : null;
   judgementCache[nodeId] = entry;
-  // Save to localStorage for instant restore on refresh
-  try {
-    localStorage.setItem('judgement_' + nodeId, JSON.stringify(entry));
-  } catch(e) {}
+  try { localStorage.setItem('judgement_' + nodeId, JSON.stringify(entry)); } catch(e) {}
   try { await setDoc(doc(db, 'judgements', nodeId), entry || { type: null, setAt: null }); }
   catch(e) { console.warn('Firebase judgement write error:', e); }
 }
@@ -1077,7 +977,6 @@ function showSyncToast() {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── State ──
 const latestTrue   = { node1:0, node2:0 };
 const nodeStatuses = { node1:0, node2:0 };
 let adminAuth = false;
@@ -1085,12 +984,7 @@ let pinBuffer = '';
 let activeHistoryNode = 'node1';
 const historyCharts = {};
 
-// ════════════════════════════════════════════════
-// ATTACH ALL EVENT LISTENERS FIRST — synchronous
-// Firebase loads in background AFTER this block
-// ════════════════════════════════════════════════
-
-// Nav
+// ── Event Listeners ──
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const page = btn.getAttribute('data-page');
@@ -1102,7 +996,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// Node expand/collapse
 document.querySelectorAll('.node-header').forEach(header => {
   header.addEventListener('click', () => {
     const body    = header.parentElement.querySelector('.node-body');
@@ -1113,12 +1006,10 @@ document.querySelectorAll('.node-header').forEach(header => {
   });
 });
 
-// History
 document.getElementById('htab-node1').addEventListener('click', () => selectHistoryNode('node1'));
 document.getElementById('htab-node2').addEventListener('click', () => selectHistoryNode('node2'));
 document.getElementById('loadBtn').addEventListener('click', loadHistory);
 
-// History mode toggle
 document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRecent').classList.add('active');
   document.getElementById('modeDate').classList.remove('active');
@@ -1128,14 +1019,11 @@ document.getElementById('modeDate').addEventListener('click', () => {
   document.getElementById('modeDate').classList.add('active');
   document.getElementById('modeRecent').classList.remove('active');
   document.getElementById('datePicker').style.display = 'flex';
-  // Default date picker to today
   if (!document.getElementById('historyDate').value) {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('historyDate').value = today;
+    document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
   }
 });
 
-// Admin modal
 document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
 document.getElementById('adminCloseBtn').addEventListener('click', closeAdmin);
 document.getElementById('adminModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdmin(); });
@@ -1155,15 +1043,11 @@ document.getElementById('node2-btnSafe').addEventListener('click', () => setJudg
 document.getElementById('node2-btnCaution').addEventListener('click', () => setJudgement('node2','caution'));
 document.getElementById('node2-btnEvacuate').addEventListener('click', () => setJudgement('node2','evacuate'));
 
-// ── Start polling immediately for sensor data ──
-// Judgement override applied separately after Firebase loads
 fetchAll();
 setInterval(fetchAll, 15000);
 window._pollingStarted = true;
 
-// ════════════════════════════════════════════════
-// Firebase loads in background — non-blocking
-// ════════════════════════════════════════════════
+// ── Firebase (background) ──
 (async () => {
   try {
     const [snap1, snap2] = await Promise.all([
@@ -1185,61 +1069,33 @@ window._pollingStarted = true;
       fetchAll(); if (adminAuth) refreshAdminPanel(); showSyncToast();
     });
 
-    // Load judgements
     const [jSnap1, jSnap2] = await Promise.all([
       getDoc(doc(db, 'judgements', 'node1')),
       getDoc(doc(db, 'judgements', 'node2'))
     ]);
     if (jSnap1.exists() && jSnap1.data().type) judgementCache.node1 = jSnap1.data();
     if (jSnap2.exists() && jSnap2.data().type) judgementCache.node2 = jSnap2.data();
-    // Apply override immediately after loading — fixes banner reset on refresh
     applyJudgementOverride();
+    fetchAll();
 
-    // NOW start polling — judgements are loaded so override will apply correctly
-    if (!window._pollingStarted) {
-      window._pollingStarted = true;
-      fetchAll();
-      setInterval(fetchAll, 15000);
-    } else {
-      fetchAll(); // already polling, just refresh once
-    }
-
-    // Listen for judgement changes in real time
-    // Also re-apply banner override whenever judgement changes
     onSnapshot(doc(db, 'judgements', 'node1'), snap => {
       const data = (snap.exists() && snap.data().type) ? snap.data() : null;
       judgementCache.node1 = data;
-      // Keep localStorage in sync — clear it if Firebase says null
-      try {
-        if (data) localStorage.setItem('judgement_node1', JSON.stringify(data));
-        else localStorage.removeItem('judgement_node1');
-      } catch(e) {}
-      updateJudgementUI('node1');
-      applyJudgementOverride();
+      try { if (data) localStorage.setItem('judgement_node1', JSON.stringify(data)); else localStorage.removeItem('judgement_node1'); } catch(e) {}
+      updateJudgementUI('node1'); applyJudgementOverride();
     });
     onSnapshot(doc(db, 'judgements', 'node2'), snap => {
       const data = (snap.exists() && snap.data().type) ? snap.data() : null;
       judgementCache.node2 = data;
-      try {
-        if (data) localStorage.setItem('judgement_node2', JSON.stringify(data));
-        else localStorage.removeItem('judgement_node2');
-      } catch(e) {}
-      updateJudgementUI('node2');
-      applyJudgementOverride();
+      try { if (data) localStorage.setItem('judgement_node2', JSON.stringify(data)); else localStorage.removeItem('judgement_node2'); } catch(e) {}
+      updateJudgementUI('node2'); applyJudgementOverride();
     });
-
   } catch(e) {
-    console.warn('Firebase unavailable, running without sync:', e);
-    // Firebase failed — start polling without override
-    if (!window._pollingStarted) {
-      window._pollingStarted = true;
-      fetchAll();
-      setInterval(fetchAll, 15000);
-    }
+    console.warn('Firebase unavailable:', e);
   }
 })();
 
-// ── Sensor functions ──
+// ── Sensor display helpers ──
 function setRod(nodeId, angle) {
   const wrap = document.getElementById(nodeId + '-rodWrap');
   if (wrap) wrap.style.transform = `rotate(${Math.max(-30, Math.min(30, angle))}deg)`;
@@ -1259,7 +1115,6 @@ function applyNodeStatus(id, level) {
     if (cfg.showAction) { ap.className = 'action-panel visible ' + cfg.cls; at.textContent = cfg.action; }
     else { ap.className = 'action-panel'; }
   }
-  // Show judgement panel only to admin when level is 1 or 2
   updateJudgementUI(id);
 }
 
@@ -1267,29 +1122,17 @@ function updateJudgementUI(nodeId) {
   const level = nodeStatuses[nodeId] || 0;
   const jp    = document.getElementById(nodeId + '-judgementPanel');
   if (!jp) return;
-  // Show to admin at any level
-  // Caution (L3) and Evacuate (L4) buttons available at all levels
-  // Confirm Safe only shown at L1 and L2
-  if (adminAuth) {
-    jp.classList.add('visible');
-  } else {
-    jp.classList.remove('visible');
-    return;
-  }
-  const j          = getJudgement(nodeId);
-  const btnSafe    = document.getElementById(nodeId + '-btnSafe');
+  if (adminAuth) { jp.classList.add('visible'); } else { jp.classList.remove('visible'); return; }
+  const j           = getJudgement(nodeId);
+  const btnSafe     = document.getElementById(nodeId + '-btnSafe');
   const btnCaution  = document.getElementById(nodeId + '-btnCaution');
   const btnEvacuate = document.getElementById(nodeId + '-btnEvacuate');
   const noteEl      = document.getElementById(nodeId + '-judgementNote');
-  // Reset button styles
   btnSafe.className     = 'j-btn safe';
   btnCaution.className  = 'j-btn unsafe';
   btnEvacuate.className = 'j-btn unsafe';
-  // Confirm Safe always available — clears any manual override
   btnSafe.disabled      = false;
-  // Caution only relevant below Level 3
   btnCaution.disabled   = (level >= 3);
-  // Evacuate always available to admin
   btnEvacuate.disabled  = false;
   if (j && j.type === 'safe') {
     btnSafe.className = 'j-btn active-safe';
@@ -1305,102 +1148,64 @@ function updateJudgementUI(nodeId) {
   }
 }
 
-let lastBannerLevel = -1;
-
-// Apply judgement override to banner independently of fetchAll
-// Called when Firebase judgement loads after initial fetch
 function applyJudgementOverride() {
-  let manualOverride = null;
-  let manualNode = null;
-  let cautionCount = 0;
-
+  let manualOverride = null, manualNode = null, cautionCount = 0;
   for (const node of nodes) {
     const j = getJudgement(node.id);
     if (j && j.type === 'evacuate') {
-      nodeStatuses['node1'] = 4;
-      nodeStatuses['node2'] = 4;
-      applyNodeStatus('node1', 4);
-      applyNodeStatus('node2', 4);
-      manualOverride = 'evacuate';
-      manualNode = node.id;
-      break;
+      nodeStatuses['node1'] = 4; nodeStatuses['node2'] = 4;
+      applyNodeStatus('node1', 4); applyNodeStatus('node2', 4);
+      manualOverride = 'evacuate'; manualNode = node.id; break;
     } else if (j && j.type === 'caution') {
-      if (nodeStatuses[node.id] < 3) {
-        nodeStatuses[node.id] = 3;
-        applyNodeStatus(node.id, 3);
-      }
-      cautionCount++;
-      manualOverride = 'caution';
-      manualNode = node.id;
+      if (nodeStatuses[node.id] < 3) { nodeStatuses[node.id] = 3; applyNodeStatus(node.id, 3); }
+      cautionCount++; manualOverride = 'caution'; manualNode = node.id;
     }
   }
-
   if (cautionCount >= 2) {
-    nodeStatuses['node1'] = 4;
-    nodeStatuses['node2'] = 4;
-    applyNodeStatus('node1', 4);
-    applyNodeStatus('node2', 4);
-    manualOverride = 'dual_caution';
-    manualNode = null;
+    nodeStatuses['node1'] = 4; nodeStatuses['node2'] = 4;
+    applyNodeStatus('node1', 4); applyNodeStatus('node2', 4);
+    manualOverride = 'dual_caution'; manualNode = null;
   }
-
   updateBanner(manualOverride, manualNode);
 }
 
 function updateBanner(manualOverride = null, manualNode = null) {
   const l1 = nodeStatuses.node1, l2 = nodeStatuses.node2;
-
-  // Level 4 (EVACUATE) only triggers when BOTH nodes are at Level 3 simultaneously
-  // OR when a barangay official manually orders evacuation
   let displayLevel;
-  if (l1 >= 3 && l2 >= 3) {
-    displayLevel = 4;
-  } else {
-    displayLevel = Math.min(Math.max(l1, l2), 3);
-  }
-
+  if (l1 >= 3 && l2 >= 3) { displayLevel = 4; }
+  else { displayLevel = Math.min(Math.max(l1, l2), 3); }
   const cfg = levelConfig[displayLevel];
   document.getElementById('statusBanner').className  = 'status-banner ' + cfg.bannerCls;
   document.getElementById('bannerIcon').textContent  = cfg.icon;
-
   let msg, action;
-
-  // Manual override takes priority in messaging
   if (manualOverride === 'evacuate') {
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — EVACUATION';
-    msg    = 'A Barangay Official has manually ordered evacuation. This overrides sensor readings.';
-    action = 'EVACUATE IMMEDIATELY as ordered by Barangay Officials. This order remains until officially cleared.';
+    msg = 'A Barangay Official has manually ordered evacuation. This overrides sensor readings.';
+    action = 'EVACUATE IMMEDIATELY as ordered by Barangay Officials.';
   } else if (manualOverride === 'dual_caution') {
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL ORDER — LEVEL 4 CRITICAL';
-    msg    = 'Barangay Officials from BOTH nodes have confirmed danger — Level 4 escalation triggered.';
-    action = 'EVACUATE IMMEDIATELY as confirmed by Barangay Officials. Both nodes have been manually escalated.';
+    msg = 'Barangay Officials from BOTH nodes have confirmed danger — Level 4 escalation triggered.';
+    action = 'EVACUATE IMMEDIATELY as confirmed by Barangay Officials.';
   } else if (manualOverride === 'caution') {
-    const nodeName = manualNode === 'node1' ? 'Node 1' : 'Node 2';
+    const nodeName = manualNode === 'node1' ? nodes[0].label : nodes[1].label;
     document.getElementById('bannerLevel').textContent = '🔒 MANUAL CAUTION — LEVEL 3';
-    msg    = `A Barangay Official has issued a manual caution for ${nodeName}.`;
+    msg = `A Barangay Official has issued a manual caution for ${nodeName}.`;
     action = 'Residents are advised to be alert and await further instructions from Barangay Officials.';
   } else if (l1 >= 3 && l2 >= 3) {
     document.getElementById('bannerLevel').textContent = 'ALERT — ' + cfg.statusLabel.toUpperCase();
-    msg    = 'BOTH nodes detected danger simultaneously — Level 4 escalation triggered';
-    action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger. Inform all residents now.';
+    msg = 'BOTH nodes detected danger simultaneously — Level 4 escalation triggered';
+    action = 'EVACUATE IMMEDIATELY. Both sensor arrays confirm extreme danger.';
   } else {
     document.getElementById('bannerLevel').textContent = displayLevel === 0 ? 'SYSTEM STATUS' : 'ALERT — ' + cfg.statusLabel.toUpperCase();
-    if (l1===0 && l2===0) {
-      msg='Node 1 and Node 2 are all normal'; action='All sensors reading within safe limits. No action needed.';
-    } else if (l1===0 && l2>0) {
-      msg=`Node 1 is normal — Node 2 is at Level ${l2}`; action=levelConfig[l2].action;
-    } else if (l2===0 && l1>0) {
-      msg=`Node 2 is normal — Node 1 is at Level ${l1}`; action=levelConfig[l1].action;
-    } else if (l1===l2) {
-      msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action;
-    } else {
-      msg=`Node 1 is at ${levelConfig[l1].tagLabel} — Node 2 is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action;
-    }
+    const n1 = nodes[0].label, n2 = nodes[1].label;
+    if (l1===0 && l2===0) { msg=`${n1} and ${n2} are all normal`; action='All sensors reading within safe limits. No action needed.'; }
+    else if (l1===0 && l2>0) { msg=`${n1} is normal — ${n2} is at Level ${l2}`; action=levelConfig[l2].action; }
+    else if (l2===0 && l1>0) { msg=`${n2} is normal — ${n1} is at Level ${l1}`; action=levelConfig[l1].action; }
+    else if (l1===l2) { msg=`Both nodes are reporting ${levelConfig[displayLevel].tagLabel} conditions`; action=levelConfig[displayLevel].action; }
+    else { msg=`${n1} is at ${levelConfig[l1].tagLabel} — ${n2} is at ${levelConfig[l2].tagLabel}`; action=levelConfig[Math.max(l1,l2)].action; }
   }
-
   document.getElementById('bannerMessage').textContent = msg;
   document.getElementById('bannerAction').textContent  = action;
-
   sendLevelNotification(displayLevel, msg);
 }
 
@@ -1412,227 +1217,94 @@ async function fetchNode(node) {
     const tiltDeep    = parseFloat(data['field' + node.fields.tiltDeep])    || 0;
     const trueAngle   = parseFloat(data['field' + node.fields.tiltAvg])     || 0;
     const timestamp   = data.created_at ? new Date(data.created_at) : null;
-
     latestTrue[node.id] = trueAngle;
-    const calib        = getCalib(node.id);
-    const hasCalib     = calib.baseline !== null;
-
-    // Arduino already applies EEPROM baseline — values from ThingSpeak are already relative
-    // Dashboard should display them directly without any additional software offset
-    // calib.baseline in Firebase is kept only for logging/history, not for display math
+    const calib = getCalib(node.id);
+    const hasCalib = calib.baseline !== null;
     const displayAngle       = Math.abs(trueAngle);
     const tiltShallowDisplay = Math.abs(tiltShallow);
     const tiltDeepDisplay    = Math.abs(tiltDeep);
-
-    // Shallow / Deep individual displays
     const shallowEl = document.getElementById(node.id + '-tiltShallow');
     const deepEl    = document.getElementById(node.id + '-tiltDeep');
     if (shallowEl) shallowEl.textContent = tiltShallowDisplay.toFixed(1) + '°';
-    if (deepEl)    deepEl.textContent    = tiltDeepDisplay.toFixed(1)    + '°';
-
-    // Deep > Shallow warning — subsurface slip signal
+    if (deepEl)    deepEl.textContent    = tiltDeepDisplay.toFixed(1) + '°';
     const deepWarnEl = document.getElementById(node.id + '-deepWarning');
     if (deepWarnEl) deepWarnEl.classList.toggle('visible', tiltDeep > tiltShallow && tiltDeep >= 3);
-
     setRod(node.id, displayAngle);
-
     const tiltEl = document.getElementById(node.id + '-tiltValue');
     if (tiltEl) tiltEl.textContent = (adminAuth && hasCalib ? '+' : '') + displayAngle.toFixed(1) + '°';
-
     const lblEl = document.getElementById(node.id + '-tiltLabel');
-    // Only show CALIBRATED badge to admin
     if (lblEl) lblEl.innerHTML = (adminAuth && hasCalib) ? 'Tilt Angle <span class="calibrated-badge">CALIBRATED</span>' : 'Tilt Angle';
-
     const unitEl = document.getElementById(node.id + '-tiltUnit');
-    // Only show calibration context to admin
     if (unitEl) unitEl.textContent = (adminAuth && hasCalib) ? 'change since calibration' : 'tilt angle';
-
     const trueEl = document.getElementById(node.id + '-tiltTrue');
     if (trueEl) {
-      // Only show true/baseline info to admin
-      if (adminAuth && hasCalib) {
-        trueEl.textContent = `True avg: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`;
-        trueEl.classList.add('visible');
-      } else {
-        trueEl.classList.remove('visible');
-      }
+      if (adminAuth && hasCalib) { trueEl.textContent = `True avg: ${trueAngle.toFixed(1)}° (baseline ${calib.baseline.toFixed(1)}°)`; trueEl.classList.add('visible'); }
+      else { trueEl.classList.remove('visible'); }
     }
-
-    // Moisture — Shallow, Deep, Average
     const moistureShallow = parseFloat(data['field' + node.fields.moistureShallow]) || 0;
     const moistureDeep    = parseFloat(data['field' + node.fields.moistureDeep])    || 0;
     const moistureAvg     = parseFloat(data['field' + node.fields.moistureAvg])     || 0;
-
-    function moistureLabel(v) {
-      return v>=95?'Fully Saturated':v>=85?'Very Wet':v>=75?'Wet':v>=60?'Moist':v>=40?'Slightly Moist':'Dry';
-    }
-    const pctA   = Math.max(0, Math.min(100, moistureShallow));
-    const pctB   = Math.max(0, Math.min(100, moistureDeep));
-    const pctAvg = Math.max(0, Math.min(100, moistureAvg));
-
-    const sFillEl = document.getElementById(node.id + '-moistureShallowFill');
-    const sNumEl  = document.getElementById(node.id + '-moistureShallowNum');
-    const sTxtEl  = document.getElementById(node.id + '-moistureShallowText');
-    if (sFillEl) sFillEl.style.width = pctA + '%';
-    if (sNumEl)  sNumEl.textContent  = pctA.toFixed(1) + '%';
-    if (sTxtEl)  sTxtEl.textContent  = moistureLabel(pctA);
-
-    const dFillEl = document.getElementById(node.id + '-moistureDeepFill');
-    const dNumEl  = document.getElementById(node.id + '-moistureDeepNum');
-    const dTxtEl  = document.getElementById(node.id + '-moistureDeepText');
-    if (dFillEl) dFillEl.style.width = pctB + '%';
-    if (dNumEl)  dNumEl.textContent  = pctB.toFixed(1) + '%';
-    if (dTxtEl)  dTxtEl.textContent  = moistureLabel(pctB);
-
-    const aFillEl = document.getElementById(node.id + '-moistureAvgFill');
-    const aNumEl  = document.getElementById(node.id + '-moistureAvgNum');
-    const aTxtEl  = document.getElementById(node.id + '-moistureAvgText');
-    if (aFillEl) aFillEl.style.width = pctAvg + '%';
-    if (aNumEl)  aNumEl.textContent  = pctAvg.toFixed(1) + '%';
-    if (aTxtEl)  aTxtEl.textContent  = moistureLabel(pctAvg);
-
-    // Deep wetter than shallow warning
-    const mDeepWarnEl = document.getElementById(node.id + '-moistureDeepWarning');
-    if (mDeepWarnEl) mDeepWarnEl.classList.toggle('visible', pctB > pctA && pctB >= 60);
-
-    // Use avg for alert classification (matches what Arduino sends)
-    const moisture = moistureAvg || Math.max(moistureShallow, moistureDeep);
-
-    // Vibration — pulse count scale: 0=none, 2=weak, 8=light, 20=moderate, 40+=strong
-    const vibration  = parseFloat(data['field' + node.fields.vibration]) || 0;
-    const vibPct     = Math.max(0, Math.min(100, (Math.min(vibration, 40) / 40) * 100));
-    const vibFillEl  = document.getElementById(node.id + '-vibrationFill');
-    const vibNumEl   = document.getElementById(node.id + '-vibrationNum');
-    const vibTxtEl   = document.getElementById(node.id + '-vibrationText');
-    const vibLabel = vibration >= 41 ? 'Strong' : vibration >= 21 ? 'Moderate' : vibration >= 9 ? 'Light' : vibration >= 3 ? 'Weak' : 'Not Felt';
-    if (vibFillEl) vibFillEl.style.width = vibPct.toFixed(1) + '%';
-    if (vibNumEl)  vibNumEl.textContent  = vibLabel;
-    if (vibTxtEl)  vibTxtEl.textContent  = vibration >= 41 ? 'Evacuate immediately' : vibration >= 21 ? 'Strong ground motion' : vibration >= 9 ? 'Noticeable shaking' : vibration >= 3 ? 'Slight movement' : 'No vibration detected';
-
+    function moistureLabel(v) { return v>=95?'Fully Saturated':v>=85?'Very Wet':v>=75?'Wet':v>=60?'Moist':v>=40?'Slightly Moist':'Dry'; }
+    const pctA = Math.max(0,Math.min(100,moistureShallow)), pctB = Math.max(0,Math.min(100,moistureDeep)), pctAvg = Math.max(0,Math.min(100,moistureAvg));
+    const sFillEl=document.getElementById(node.id+'-moistureShallowFill'), sNumEl=document.getElementById(node.id+'-moistureShallowNum'), sTxtEl=document.getElementById(node.id+'-moistureShallowText');
+    if(sFillEl) sFillEl.style.width=pctA+'%'; if(sNumEl) sNumEl.textContent=pctA.toFixed(1)+'%'; if(sTxtEl) sTxtEl.textContent=moistureLabel(pctA);
+    const dFillEl=document.getElementById(node.id+'-moistureDeepFill'), dNumEl=document.getElementById(node.id+'-moistureDeepNum'), dTxtEl=document.getElementById(node.id+'-moistureDeepText');
+    if(dFillEl) dFillEl.style.width=pctB+'%'; if(dNumEl) dNumEl.textContent=pctB.toFixed(1)+'%'; if(dTxtEl) dTxtEl.textContent=moistureLabel(pctB);
+    const aFillEl=document.getElementById(node.id+'-moistureAvgFill'), aNumEl=document.getElementById(node.id+'-moistureAvgNum'), aTxtEl=document.getElementById(node.id+'-moistureAvgText');
+    if(aFillEl) aFillEl.style.width=pctAvg+'%'; if(aNumEl) aNumEl.textContent=pctAvg.toFixed(1)+'%'; if(aTxtEl) aTxtEl.textContent=moistureLabel(pctAvg);
+    const mDeepWarnEl=document.getElementById(node.id+'-moistureDeepWarning');
+    if(mDeepWarnEl) mDeepWarnEl.classList.toggle('visible', pctB > pctA && pctB >= 60);
+    const vibration = parseFloat(data['field' + node.fields.vibration]) || 0;
+    const vibPct    = Math.max(0,Math.min(100,(Math.min(vibration,40)/40)*100));
+    const vibFillEl=document.getElementById(node.id+'-vibrationFill'), vibNumEl=document.getElementById(node.id+'-vibrationNum'), vibTxtEl=document.getElementById(node.id+'-vibrationText');
+    const vibLabel = vibration>=41?'Strong':vibration>=21?'Moderate':vibration>=9?'Light':vibration>=3?'Weak':'Not Felt';
+    if(vibFillEl) vibFillEl.style.width=vibPct.toFixed(1)+'%'; if(vibNumEl) vibNumEl.textContent=vibLabel;
+    if(vibTxtEl)  vibTxtEl.textContent=vibration>=41?'Evacuate immediately':vibration>=21?'Strong ground motion':vibration>=9?'Noticeable shaking':vibration>=3?'Slight movement':'No vibration detected';
     const timeEl = document.getElementById(node.id + '-time');
     if (timeEl && timestamp) timeEl.textContent = timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-
     const firmwareLevel = parseInt(data['field' + node.fields.alertLevel]) || 0;
     const moistAvg      = parseFloat(data['field' + node.fields.moistureAvg]) || 0;
-
-    // Sanity check — only override field8 if readings are clearly inconsistent
-    // e.g. field8 says Level 3+ but tilt is completely flat (< 2°) and moisture is dry
-    // This catches stale field8 values without overriding legitimate readings
     let displayLevel = firmwareLevel;
-    if (firmwareLevel >= 1 && trueAngle < 2 && moistAvg < 30) {
-      console.log(`[${node.id}] field8=${firmwareLevel} stale — using Level 0`);
-      displayLevel = 0;
-    }
-
-    // Cap single-node display at Level 3
-    // Level 4 only triggers via dual-node escalation in updateBanner()
-    if (displayLevel >= 4) {
-      console.log(`[${node.id}] Single node capped at Level 3 (was ${displayLevel})`);
-      displayLevel = 3;
-    }
-
+    if (firmwareLevel >= 1 && trueAngle < 2 && moistAvg < 30) { displayLevel = 0; }
+    if (displayLevel >= 4) { displayLevel = 3; }
     nodeStatuses[node.id] = displayLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
-    // updateBanner() called by fetchAll after all nodes are fetched
-
     const upd = document.getElementById('lastUpdate');
     if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   } catch(e) { console.error('Fetch error:', e); }
 }
 
 async function fetchAll() {
-  // Run sequentially so nodeStatuses is fully updated before banner renders
   for (const node of nodes) { await fetchNode(node); }
-
-  // Apply manual judgement overrides AFTER fetching sensor data
-  // If an official has ordered evacuation, keep Level 4 until cleared
-  let manualOverride = null;
-  let manualNode = null;
-  let cautionCount = 0;
-
+  let manualOverride = null, manualNode = null, cautionCount = 0;
   for (const node of nodes) {
     const j = getJudgement(node.id);
     if (j && j.type === 'evacuate') {
-      nodeStatuses['node1'] = 4;
-      nodeStatuses['node2'] = 4;
-      applyNodeStatus('node1', 4);
-      applyNodeStatus('node2', 4);
-      manualOverride = 'evacuate';
-      manualNode = node.id;
-      break;
+      nodeStatuses['node1']=4; nodeStatuses['node2']=4;
+      applyNodeStatus('node1',4); applyNodeStatus('node2',4);
+      manualOverride='evacuate'; manualNode=node.id; break;
     } else if (j && j.type === 'caution') {
-      if (nodeStatuses[node.id] < 3) {
-        nodeStatuses[node.id] = 3;
-        applyNodeStatus(node.id, 3);
-      }
-      cautionCount++;
-      manualOverride = 'caution';
-      manualNode = node.id;
+      if (nodeStatuses[node.id]<3) { nodeStatuses[node.id]=3; applyNodeStatus(node.id,3); }
+      cautionCount++; manualOverride='caution'; manualNode=node.id;
     }
   }
-
-  // If both nodes have manual caution — escalate to Level 4
-  if (cautionCount >= 2) {
-    nodeStatuses['node1'] = 4;
-    nodeStatuses['node2'] = 4;
-    applyNodeStatus('node1', 4);
-    applyNodeStatus('node2', 4);
-    manualOverride = 'dual_caution';
-    manualNode = null;
-  }
-
+  if (cautionCount >= 2) { nodeStatuses['node1']=4; nodeStatuses['node2']=4; applyNodeStatus('node1',4); applyNodeStatus('node2',4); manualOverride='dual_caution'; manualNode=null; }
   updateBanner(manualOverride, manualNode);
 }
 
-// ── Push Notifications ──
-// Uses Service Worker showNotification for Android PWA support.
-// Basic new Notification() does not work on Android — SW is required.
-
+// ── Notifications ──
 function requestNotificationPermission() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(permission => {
-      console.log('Notification permission:', permission);
-    });
-  }
+  if (Notification.permission === 'default') Notification.requestPermission();
 }
-
 function sendLevelNotification(maxLevel, msg) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-  if (maxLevel === 0) return;
-
-  const titles = {
-    1: 'LandsITrack — Level 1 Warning',
-    2: 'LandsITrack — Level 2 Alert',
-    3: 'LandsITrack — Level 3 High Risk',
-    4: 'LandsITrack — CRITICAL Level 4'
-  };
-
-  const options = {
-    body: msg,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
-    tag: 'landsitrack-alert',
-    renotify: true,
-    vibrate: maxLevel >= 3 ? [200,100,200,100,200] : [200,100,200]
-  };
-
-  // Use Service Worker for Android — falls back to basic Notification for desktop
+  if (!('Notification' in window) || Notification.permission !== 'granted' || maxLevel === 0) return;
+  const titles = { 1:'LandsITrack — Level 1 Warning', 2:'LandsITrack — Level 2 Alert', 3:'LandsITrack — Level 3 High Risk', 4:'LandsITrack — CRITICAL Level 4' };
+  const options = { body:msg, icon:'icon-192.png', badge:'icon-192.png', tag:'landsitrack-alert', renotify:true, vibrate:maxLevel>=3?[200,100,200,100,200]:[200,100,200] };
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(titles[maxLevel], options);
-    }).catch(err => {
-      console.warn('SW notification failed, trying basic:', err);
-      new Notification(titles[maxLevel], options);
-    });
-  } else {
-    // Desktop fallback
-    new Notification(titles[maxLevel], options);
-  }
+    navigator.serviceWorker.ready.then(reg => reg.showNotification(titles[maxLevel], options)).catch(() => new Notification(titles[maxLevel], options));
+  } else { new Notification(titles[maxLevel], options); }
 }
-
-// Request permission immediately on page load
 requestNotificationPermission();
 
 // ── History ──
@@ -1640,291 +1312,164 @@ function selectHistoryNode(id) {
   activeHistoryNode = id;
   document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('htab-' + id).classList.add('active');
-  resetWrap('tiltChartWrap',  '📈');
-  resetWrap('moistChartWrap', '💧');
+  resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
   const n = nodes.find(nd => nd.id === id);
   document.getElementById('tiltChartTitle').textContent  = n.label + ' — True Tilt Angle (last 30 readings)';
   document.getElementById('moistChartTitle').textContent = n.label + ' — Soil Moisture (last 30 readings)';
 }
-
 function resetWrap(wid, icon) {
   if (historyCharts[wid]) { historyCharts[wid].destroy(); delete historyCharts[wid]; }
   const w = document.getElementById(wid);
   w.className = 'chart-empty';
   w.innerHTML = `<div class="chart-empty-icon">${icon}</div><div class="chart-empty-text">Press "Load History" to fetch data</div>`;
 }
-
-// Groups feeds into time buckets and averages values within each bucket
 function groupByInterval(feeds, intervalMinutes, node) {
   if (intervalMinutes === 0) return feeds;
   const buckets = {};
   feeds.forEach(f => {
     const d = new Date(f.created_at);
-    // Offset by UTC+8 so buckets align to Philippine local time
-    const TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
-    const bucketMs = Math.floor((d.getTime() + TZ_OFFSET_MS) / (intervalMinutes * 60000)) * (intervalMinutes * 60000) - TZ_OFFSET_MS;
-    if (!buckets[bucketMs]) buckets[bucketMs] = { sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs) };
-    const b = buckets[bucketMs];
-    b.sum.tS += parseFloat(f['field' + node.fields.tiltShallow])     || 0;
-    b.sum.tD += parseFloat(f['field' + node.fields.tiltDeep])        || 0;
-    b.sum.tA += parseFloat(f['field' + node.fields.tiltAvg])         || 0;
-    b.sum.mS += parseFloat(f['field' + node.fields.moistureShallow]) || 0;
-    b.sum.mD += parseFloat(f['field' + node.fields.moistureDeep])    || 0;
-    b.sum.mA += parseFloat(f['field' + node.fields.moistureAvg])     || 0;
-    b.sum.v  += parseFloat(f['field' + node.fields.vibration])       || 0;
-    b.count++;
+    const TZ_OFFSET_MS = 8*60*60*1000;
+    const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(intervalMinutes*60000))*(intervalMinutes*60000)-TZ_OFFSET_MS;
+    if (!buckets[bucketMs]) buckets[bucketMs]={sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0},count:0,time:new Date(bucketMs)};
+    const b=buckets[bucketMs];
+    b.sum.tS+=parseFloat(f['field'+node.fields.tiltShallow])||0; b.sum.tD+=parseFloat(f['field'+node.fields.tiltDeep])||0; b.sum.tA+=parseFloat(f['field'+node.fields.tiltAvg])||0;
+    b.sum.mS+=parseFloat(f['field'+node.fields.moistureShallow])||0; b.sum.mD+=parseFloat(f['field'+node.fields.moistureDeep])||0; b.sum.mA+=parseFloat(f['field'+node.fields.moistureAvg])||0;
+    b.sum.v+=parseFloat(f['field'+node.fields.vibration])||0; b.count++;
   });
-  return Object.values(buckets)
-    .sort((a, b) => a.time - b.time)
-    .map(b => ({
-      created_at: b.time.toISOString(),
-      ['field' + node.fields.tiltShallow]:     (b.sum.tS / b.count).toFixed(2),
-      ['field' + node.fields.tiltDeep]:        (b.sum.tD / b.count).toFixed(2),
-      ['field' + node.fields.tiltAvg]:         (b.sum.tA / b.count).toFixed(2),
-      ['field' + node.fields.moistureShallow]: (b.sum.mS / b.count).toFixed(2),
-      ['field' + node.fields.moistureDeep]:    (b.sum.mD / b.count).toFixed(2),
-      ['field' + node.fields.moistureAvg]:     (b.sum.mA / b.count).toFixed(2),
-      ['field' + node.fields.vibration]:       Math.round(b.sum.v / b.count),
-    }));
+  return Object.values(buckets).sort((a,b)=>a.time-b.time).map(b=>({
+    created_at:b.time.toISOString(),
+    ['field'+node.fields.tiltShallow]:(b.sum.tS/b.count).toFixed(2),['field'+node.fields.tiltDeep]:(b.sum.tD/b.count).toFixed(2),['field'+node.fields.tiltAvg]:(b.sum.tA/b.count).toFixed(2),
+    ['field'+node.fields.moistureShallow]:(b.sum.mS/b.count).toFixed(2),['field'+node.fields.moistureDeep]:(b.sum.mD/b.count).toFixed(2),['field'+node.fields.moistureAvg]:(b.sum.mA/b.count).toFixed(2),
+    ['field'+node.fields.vibration]:Math.round(b.sum.v/b.count),
+  }));
 }
 
 async function loadHistory() {
-  const btn  = document.getElementById('loadBtn');
-  btn.textContent = '⏳ Loading…'; btn.disabled = true;
+  const btn=document.getElementById('loadBtn'); btn.textContent='⏳ Loading…'; btn.disabled=true;
   try {
-    const node     = nodes.find(nd => nd.id === activeHistoryNode);
-    const byDate   = document.getElementById('modeDate').classList.contains('active');
-    const dateVal  = document.getElementById('historyDate').value;
-    const hourVal  = document.getElementById('historyHour').value;
-
+    const node=nodes.find(nd=>nd.id===activeHistoryNode);
+    const byDate=document.getElementById('modeDate').classList.contains('active');
+    const dateVal=document.getElementById('historyDate').value;
+    const hourVal=document.getElementById('historyHour').value;
     let fetchURL;
-
     if (byDate && dateVal) {
-      // Build start/end timestamps for ThingSpeak date query
-      const [yr, mo, dy] = dateVal.split('-').map(Number);
+      const [yr,mo,dy]=dateVal.split('-').map(Number);
       let startDt, endDt;
-
-      // Data uploaded from UTC+8 (Philippines) — ThingSpeak stores in UTC.
-      // Subtract 8h so we query the correct UTC window for local time.
-      const TZ_OFFSET_H = 8;
-      if (hourVal !== '') {
-        const h = parseInt(hourVal);
-        // Expand window based on interval so there's enough data points to plot
-        // e.g. "Every 2 hrs" with a 1-hr window would give only 1 bucket — useless
-        const intervalVal = parseInt(document.getElementById('intervalSelect').value) || 0;
-        const windowHrs = intervalVal >= 10080 ? 24*30 : // weekly → 30 days
-                          intervalVal >= 1440  ? 24*7  : // daily  → 7 days
-                          intervalVal >= 120   ? 6     : // 2hr+   → 6hr window
-                          intervalVal >= 60    ? 4     : // 1hr    → 4hr window
-                          intervalVal >= 30    ? 2     : // 30min  → 2hr window
-                          1;                             // 15min/all → 1hr window
-        startDt = new Date(Date.UTC(yr, mo-1, dy, h - TZ_OFFSET_H, 0, 0));
-        endDt   = new Date(Date.UTC(yr, mo-1, dy, h - TZ_OFFSET_H + windowHrs, 0, 0));
+      const TZ_OFFSET_H=8;
+      if (hourVal!=='') {
+        const h=parseInt(hourVal);
+        const intervalVal=parseInt(document.getElementById('intervalSelect').value)||0;
+        const windowHrs=intervalVal>=10080?24*30:intervalVal>=1440?24*7:intervalVal>=120?6:intervalVal>=60?4:intervalVal>=30?2:1;
+        startDt=new Date(Date.UTC(yr,mo-1,dy,h-TZ_OFFSET_H,0,0));
+        endDt=new Date(Date.UTC(yr,mo-1,dy,h-TZ_OFFSET_H+windowHrs,0,0));
       } else {
-        startDt = new Date(Date.UTC(yr, mo-1, dy, 0 - TZ_OFFSET_H, 0, 0));
-        endDt   = new Date(Date.UTC(yr, mo-1, dy, 23 - TZ_OFFSET_H, 59, 59));
+        startDt=new Date(Date.UTC(yr,mo-1,dy,0-TZ_OFFSET_H,0,0));
+        endDt=new Date(Date.UTC(yr,mo-1,dy,23-TZ_OFFSET_H,59,59));
       }
-
-      const fmt = dt => dt.toISOString().replace('T',' ').replace('.000Z','');
-      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json`
-               + `?api_key=${node.apiKey}`
-               + `&start=${encodeURIComponent(fmt(startDt))}`
-               + `&end=${encodeURIComponent(fmt(endDt))}`
-               + `&results=8000`;
+      const fmt=dt=>dt.toISOString().replace('T',' ').replace('.000Z','');
+      fetchURL=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&start=${encodeURIComponent(fmt(startDt))}&end=${encodeURIComponent(fmt(endDt))}&results=8000`;
     } else {
-      // Recent mode: fetch enough for the selected interval to show ~48 buckets
-      // 15min→720, 30min→1440, 1hr→2880, 2hr→5760, 6hr→8000, all→500
-      const intervalValRecent = parseInt(document.getElementById('intervalSelect').value) || 0;
-      // Fetch enough readings to fill ~60 buckets at the selected interval
-      // At ~15s/reading: 1day=5760 readings, 7days=40320 (cap at 8000)
-      const recentCount = intervalValRecent === 0    ? 500   :
-                          intervalValRecent <= 15    ? 720   :
-                          intervalValRecent <= 30    ? 1440  :
-                          intervalValRecent <= 60    ? 2880  :
-                          intervalValRecent <= 120   ? 5760  :
-                          intervalValRecent <= 360   ? 8000  :
-                          intervalValRecent <= 1440  ? 8000  : 8000;
-      fetchURL = `https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=${recentCount}`;
+      const intervalValRecent=parseInt(document.getElementById('intervalSelect').value)||0;
+      const recentCount=intervalValRecent===0?500:intervalValRecent<=15?720:intervalValRecent<=30?1440:intervalValRecent<=60?2880:intervalValRecent<=120?5760:8000;
+      fetchURL=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=${recentCount}`;
     }
-
-    const res  = await fetch(fetchURL);
-    const data = await res.json();
-
-    if (!data.feeds || data.feeds.length === 0) {
-      document.getElementById('tiltChartWrap').innerHTML =
-        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
-      document.getElementById('moistChartWrap').innerHTML =
-        '<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
-      btn.textContent = '📊 Load'; btn.disabled = false;
-      return;
+    const res=await fetch(fetchURL); const data=await res.json();
+    if (!data.feeds||data.feeds.length===0) {
+      document.getElementById('tiltChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      document.getElementById('moistChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
+      btn.textContent='📊 Load'; btn.disabled=false; return;
     }
-
-    // Apply interval grouping
-    const intervalMinutes = parseInt(document.getElementById('intervalSelect').value) || 0;
-    // Cap raw "All readings" to last 200 points to keep chart readable
-    const rawFeeds = (intervalMinutes === 0 && data.feeds.length > 200)
-      ? data.feeds.slice(-200)
-      : data.feeds;
-    const feeds = groupByInterval(rawFeeds, intervalMinutes, node);
-
-    const labels=[], tiltVals=[], tiltShallowVals=[], tiltDeepVals=[], moistVals=[], moistDeepVals=[], moistAvgVals=[], vibVals=[], timestamps=[], alertLvls=[];
-    feeds.forEach(f => {
-      const d = new Date(f.created_at);
-      if (intervalMinutes >= 1440) {
-        // Daily or weekly — show date only e.g. "Mar 7"
-        labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}));
-      } else if (intervalMinutes >= 360) {
-        // 6hr — show date + time e.g. "Mar 7 06:00"
-        labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-      } else {
-        // Short intervals — time only
-        labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-      }
+    const intervalMinutes=parseInt(document.getElementById('intervalSelect').value)||0;
+    const rawFeeds=(intervalMinutes===0&&data.feeds.length>200)?data.feeds.slice(-200):data.feeds;
+    const feeds=groupByInterval(rawFeeds,intervalMinutes,node);
+    const labels=[],tiltVals=[],tiltShallowVals=[],tiltDeepVals=[],moistVals=[],moistDeepVals=[],moistAvgVals=[],vibVals=[],timestamps=[],alertLvls=[];
+    feeds.forEach(f=>{
+      const d=new Date(f.created_at);
+      if(intervalMinutes>=1440) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}));
+      else if(intervalMinutes>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+      else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
       timestamps.push(d);
-      tiltShallowVals.push(parseFloat(f['field' + node.fields.tiltShallow]) || 0);
-      tiltDeepVals.push(parseFloat(f['field' + node.fields.tiltDeep])       || 0);
-      tiltVals.push(parseFloat(f['field' + node.fields.tiltAvg])            || 0);
-      moistVals.push(parseFloat(f['field' + node.fields.moistureShallow])   || 0);
-      moistDeepVals.push(parseFloat(f['field' + node.fields.moistureDeep]) || 0);
-      moistAvgVals.push(parseFloat(f['field' + node.fields.moistureAvg])   || 0);
-      vibVals.push(parseFloat(f['field' + node.fields.vibration])           || 0);
-      alertLvls.push(parseInt(f['field' + node.fields.alertLevel])     || 0);
+      tiltShallowVals.push(parseFloat(f['field'+node.fields.tiltShallow])||0);
+      tiltDeepVals.push(parseFloat(f['field'+node.fields.tiltDeep])||0);
+      tiltVals.push(parseFloat(f['field'+node.fields.tiltAvg])||0);
+      moistVals.push(parseFloat(f['field'+node.fields.moistureShallow])||0);
+      moistDeepVals.push(parseFloat(f['field'+node.fields.moistureDeep])||0);
+      moistAvgVals.push(parseFloat(f['field'+node.fields.moistureAvg])||0);
+      vibVals.push(parseFloat(f['field'+node.fields.vibration])||0);
+      alertLvls.push(parseInt(f['field'+node.fields.alertLevel])||0);
     });
-
-    // Update chart titles to show what date/range was loaded
-    const nodeLabel = activeHistoryNode === 'node1' ? 'Node 1' : 'Node 2';
-    const intervalForLabel = parseInt(document.getElementById('intervalSelect').value) || 0;
-    const recentLabel = intervalForLabel >= 10080 ? 'last 7 weeks'  :
-                        intervalForLabel >= 1440  ? 'last 30 days'  :
-                        intervalForLabel >= 360   ? 'last ~21 days' :
-                        intervalForLabel >= 120   ? 'last ~10 days' :
-                        intervalForLabel >= 60    ? 'last ~5 days'  :
-                        intervalForLabel >= 30    ? 'last ~2 days'  :
-                        intervalForLabel >= 15    ? 'last ~12 hrs'  : 'last 200 readings';
-    const dateLabel = byDate && dateVal
-      ? new Date(dateVal + 'T00:00:00').toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})
-      : recentLabel;
-    const intervalVal2 = parseInt(document.getElementById('intervalSelect').value) || 0;
-    const windowHrs2 = (byDate && dateVal && hourVal !== '')
-      ? (intervalVal2 >= 10080 ? 24*30 : intervalVal2 >= 1440 ? 24*7 : intervalVal2 >= 120 ? 6 : intervalVal2 >= 60 ? 4 : intervalVal2 >= 30 ? 2 : 1)
-      : 0;
-    const hourLabel = (byDate && dateVal && hourVal !== '')
-      ? ' — ' + document.getElementById('historyHour').options[document.getElementById('historyHour').selectedIndex].text
-        + (windowHrs2 > 1 ? '–' + (parseInt(hourVal) + windowHrs2) + ':00' : '')
-      : '';
-    const intervalLabel = intervalMinutes > 0
-      ? ' [avg/' + document.getElementById('intervalSelect').options[document.getElementById('intervalSelect').selectedIndex].text + ']'
-      : ' [all readings]';
-    document.getElementById('tiltChartTitle').textContent  = nodeLabel + ' — Tilt: Shallow vs Deep (' + dateLabel + hourLabel + ')' + intervalLabel;
-    document.getElementById('moistChartTitle').textContent = nodeLabel + ' — Soil Moisture (' + dateLabel + hourLabel + ')' + intervalLabel;
-
-    renderDualTiltChart('tiltChartWrap', labels, tiltShallowVals, tiltDeepVals, tiltVals, intervalMinutes);
-    renderMoistureChart('moistChartWrap', labels, moistVals, moistDeepVals, moistAvgVals, intervalMinutes);
-    renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLvls);
-
-  } catch(e) {
-    console.error('History load error:', e);
-  }
-  btn.textContent = '📊 Load'; btn.disabled = false;
+    const nodeLabel=activeHistoryNode==='node1'?nodes[0].label:nodes[1].label;
+    document.getElementById('tiltChartTitle').textContent=nodeLabel+' — Tilt: Shallow vs Deep';
+    document.getElementById('moistChartTitle').textContent=nodeLabel+' — Soil Moisture';
+    renderDualTiltChart('tiltChartWrap',labels,tiltShallowVals,tiltDeepVals,tiltVals,intervalMinutes);
+    renderMoistureChart('moistChartWrap',labels,moistVals,moistDeepVals,moistAvgVals,intervalMinutes);
+    renderTable(nodeLabel,timestamps,tiltShallowVals,tiltDeepVals,tiltVals,moistVals,moistDeepVals,moistAvgVals,vibVals,alertLvls);
+  } catch(e) { console.error('History load error:',e); }
+  btn.textContent='📊 Load'; btn.disabled=false;
 }
 
-function renderChart(wid, labels, vals, label, color, pointColorFn, thresholds) {
-  if (historyCharts[wid]) historyCharts[wid].destroy();
-  const wrap = document.getElementById(wid);
-  wrap.innerHTML = '<canvas></canvas>';
-  wrap.className = 'chart-wrap';
-  historyCharts[wid] = new Chart(wrap.querySelector('canvas'), {
-    type:'line',
-    data:{labels,datasets:[{label,data:vals,tension:0.4,borderColor:color,backgroundColor:color+'20',fill:true,pointRadius:4,pointHoverRadius:7,pointBackgroundColor:vals.map(pointColorFn),borderWidth:2}]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}},
-      scales:{x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:45},grid:{color:'#e5f7f5'}},y:{ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}}
-    },
-    plugins:[{ id:'threshLines', afterDraw(ch) {
-      const c2=ch.ctx, ya=ch.scales.y;
-      thresholds.forEach(t => {
-        const yp=ya.getPixelForValue(t.value);
-        if(yp<ch.chartArea.top||yp>ch.chartArea.bottom) return;
-        c2.save();c2.setLineDash([6,4]);c2.strokeStyle=t.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
-        c2.beginPath();c2.moveTo(ch.chartArea.left,yp);c2.lineTo(ch.chartArea.right,yp);c2.stroke();c2.restore();
-      });
-    }}]
-  });
+// ── Read thresholds from admin localStorage config for chart lines ──
+function getAdminThresholds(nodeId) {
+  try {
+    const raw = localStorage.getItem('litsAdminConfig');
+    if (!raw) return { l1:5, l2:10, l3:15, l4:20 };
+    const cfg = JSON.parse(raw);
+    const n = cfg.nodes && cfg.nodes.find(n => n.id === nodeId);
+    if (n && n.thresholds) return n.thresholds;
+    // If node is in a group, find group's representative thresholds
+    if (n && n.group && cfg.groups) {
+      const groupNodes = cfg.nodes.filter(gn => gn.group === n.group);
+      if (groupNodes.length && groupNodes[0].thresholds) return groupNodes[0].thresholds;
+    }
+  } catch(e) {}
+  return { l1:5, l2:10, l3:15, l4:20 };
 }
 
-// ── Dual Tilt Chart (Shallow vs Deep) ──
 function renderDualTiltChart(wid, labels, shallowVals, deepVals, avgVals, intervalMinutes) {
   if (historyCharts[wid]) historyCharts[wid].destroy();
-  const wrap = document.getElementById(wid);
-  wrap.innerHTML = '<canvas></canvas>';
-  wrap.className = 'chart-wrap';
-  historyCharts[wid] = new Chart(wrap.querySelector('canvas'), {
+  const wrap=document.getElementById(wid); wrap.innerHTML='<canvas></canvas>'; wrap.className='chart-wrap';
+  historyCharts[wid]=new Chart(wrap.querySelector('canvas'),{
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        { label:'🌱 Shallow Tilt (°)', data:shallowVals, tension:0.4, borderColor:'#0d9488', backgroundColor:'#0d948820', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2 },
-        { label:'🪨 Deep Tilt (°)',    data:deepVals,   tension:0.4, borderColor:'#7c3aed', backgroundColor:'#7c3aed20', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2, borderDash:[4,3] },
-        { label:'Avg Tilt (°)',        data:avgVals,    tension:0.4, borderColor:'#94a3b8', backgroundColor:'transparent', fill:false, pointRadius:0, borderWidth:1.5, borderDash:[2,4] }
-      ]
+    data:{labels,datasets:[
+      {label:'🌱 Shallow Tilt (°)',data:shallowVals,tension:0.4,borderColor:'#0d9488',backgroundColor:'#0d948820',fill:false,pointRadius:3,pointHoverRadius:6,borderWidth:2},
+      {label:'🪨 Deep Tilt (°)',data:deepVals,tension:0.4,borderColor:'#7c3aed',backgroundColor:'#7c3aed20',fill:false,pointRadius:3,pointHoverRadius:6,borderWidth:2,borderDash:[4,3]},
+      {label:'Avg Tilt (°)',data:avgVals,tension:0.4,borderColor:'#94a3b8',backgroundColor:'transparent',fill:false,pointRadius:0,borderWidth:1.5,borderDash:[2,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',labels:{font:{family:'Space Mono',size:10},boxWidth:20}},tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}},
+      scales:{x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:45},grid:{color:'#e5f7f5'}},y:{ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}}
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index', intersect:false},
-      plugins:{
-        legend:{display:true, position:'top', labels:{font:{family:'Space Mono', size:10}, boxWidth:20}},
-        tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}
-      },
-      scales:{
-        x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:(intervalMinutes>=360?60:45),minRotation:(intervalMinutes>=360?45:0)},grid:{color:'#e5f7f5'}},
-        y:{ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}
-      }
-    },
-    plugins:[{ id:'threshLines', afterDraw(ch) {
-      const c2=ch.ctx, ya=ch.scales.y;
-      [{value:5,color:'#16a34a'},{value:10,color:'#ca8a04'},{value:15,color:'#ea580c'},{value:20,color:'#dc2626'}].forEach(t => {
-        const yp=ya.getPixelForValue(t.value);
+    plugins:[{id:'threshLines',afterDraw(ch){
+      const c2=ch.ctx,ya=ch.scales.y;
+      // Read thresholds from admin panel config — updates automatically if changed in admin.html
+      const t=getAdminThresholds(activeHistoryNode);
+      [{value:t.l1,color:'#16a34a'},{value:t.l2,color:'#ca8a04'},{value:t.l3,color:'#ea580c'},{value:t.l4,color:'#dc2626'}].forEach(th=>{
+        const yp=ya.getPixelForValue(th.value);
         if(yp<ch.chartArea.top||yp>ch.chartArea.bottom) return;
-        c2.save();c2.setLineDash([6,4]);c2.strokeStyle=t.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
+        c2.save();c2.setLineDash([6,4]);c2.strokeStyle=th.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
         c2.beginPath();c2.moveTo(ch.chartArea.left,yp);c2.lineTo(ch.chartArea.right,yp);c2.stroke();c2.restore();
       });
     }}]
   });
 }
 
-// ── Moisture Chart (Shallow, Deep, Avg) ──
 function renderMoistureChart(wid, labels, shallowVals, deepVals, avgVals, intervalMinutes) {
   if (historyCharts[wid]) historyCharts[wid].destroy();
-  const wrap = document.getElementById(wid);
-  wrap.innerHTML = '<canvas></canvas>';
-  wrap.className = 'chart-wrap';
-  historyCharts[wid] = new Chart(wrap.querySelector('canvas'), {
+  const wrap=document.getElementById(wid); wrap.innerHTML='<canvas></canvas>'; wrap.className='chart-wrap';
+  historyCharts[wid]=new Chart(wrap.querySelector('canvas'),{
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        { label:'🌱 Shallow (%)', data:shallowVals, tension:0.4, borderColor:'#3b82f6', backgroundColor:'#3b82f620', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2 },
-        { label:'🪨 Deep (%)',    data:deepVals,    tension:0.4, borderColor:'#8b5cf6', backgroundColor:'#8b5cf620', fill:false, pointRadius:3, pointHoverRadius:6, borderWidth:2, borderDash:[4,3] },
-        { label:'Avg (%)',        data:avgVals,     tension:0.4, borderColor:'#94a3b8', backgroundColor:'transparent', fill:false, pointRadius:0, borderWidth:1.5, borderDash:[2,4] }
-      ]
+    data:{labels,datasets:[
+      {label:'🌱 Shallow (%)',data:shallowVals,tension:0.4,borderColor:'#3b82f6',backgroundColor:'#3b82f620',fill:false,pointRadius:3,pointHoverRadius:6,borderWidth:2},
+      {label:'🪨 Deep (%)',data:deepVals,tension:0.4,borderColor:'#8b5cf6',backgroundColor:'#8b5cf620',fill:false,pointRadius:3,pointHoverRadius:6,borderWidth:2,borderDash:[4,3]},
+      {label:'Avg (%)',data:avgVals,tension:0.4,borderColor:'#94a3b8',backgroundColor:'transparent',fill:false,pointRadius:0,borderWidth:1.5,borderDash:[2,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',labels:{font:{family:'Space Mono',size:10},boxWidth:20}},tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}},
+      scales:{x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:45},grid:{color:'#e5f7f5'}},y:{min:0,max:100,ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}}
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index', intersect:false},
-      plugins:{
-        legend:{display:true, position:'top', labels:{font:{family:'Space Mono', size:10}, boxWidth:20}},
-        tooltip:{backgroundColor:'#0f2b2a',titleFont:{family:'Space Mono',size:11},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8}
-      },
-      scales:{
-        x:{ticks:{font:{size:10,family:'Space Mono'},maxRotation:(intervalMinutes>=360?60:45),minRotation:(intervalMinutes>=360?45:0)},grid:{color:'#e5f7f5'}},
-        y:{min:0,max:100,ticks:{font:{size:10,family:'Space Mono'}},grid:{color:'#e5f7f5'}}
-      }
-    },
-    plugins:[{ id:'threshLines', afterDraw(ch) {
-      const c2=ch.ctx, ya=ch.scales.y;
-      [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}].forEach(t => {
+    plugins:[{id:'threshLines',afterDraw(ch){
+      const c2=ch.ctx,ya=ch.scales.y;
+      [{value:60,color:'#16a34a'},{value:75,color:'#ca8a04'},{value:85,color:'#ea580c'},{value:95,color:'#dc2626'}].forEach(t=>{
         const yp=ya.getPixelForValue(t.value);
         if(yp<ch.chartArea.top||yp>ch.chartArea.bottom) return;
         c2.save();c2.setLineDash([6,4]);c2.strokeStyle=t.color;c2.lineWidth=1.8;c2.globalAlpha=0.8;
@@ -1934,450 +1479,171 @@ function renderMoistureChart(wid, labels, shallowVals, deepVals, avgVals, interv
   });
 }
 
-// ── Data Table ──
 function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLevelVals) {
-  // Get calibration baseline for this node to apply relative display for normal users
-  const nodeId   = activeHistoryNode;
-  const calib    = getCalib(nodeId);
-  const hasCalib = calib.baseline !== null;
-  const baseline = hasCalib ? calib.baseline : 0;
-
-  const tableLabel = adminAuth
-    ? nodeLabel + ' — Data Table (' + tiltVals.length + ' readings) [TRUE VALUES]'
-    : nodeLabel + ' — Data Table (' + tiltVals.length + ' readings)';
-  document.getElementById('tableTitle').textContent = tableLabel;
-  const wrap = document.getElementById('tableWrap');
-  if (!tiltVals.length) { wrap.innerHTML = '<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
-
-  function tiltClass(v) {
-    const t = Math.abs(v);
-    return t>=20?'dt-l4':t>=15?'dt-l3':t>=10?'dt-l2':t>=5?'dt-l1':'dt-safe';
-  }
-  function moistClass(v) {
-    return v>=95?'dt-l4':v>=85?'dt-l3':v>=75?'dt-l2':v>=60?'dt-l1':'dt-safe';
-  }
-  function vibLabel(v) {
-    return v>=41?'Strong':v>=21?'Moderate':v>=9?'Light':v>=3?'Weak':'Not Felt';
-  }
-  function vibClass(v) {
-    return v>=41?'dt-l4':v>=21?'dt-l3':v>=9?'dt-l2':v>=3?'dt-l1':'dt-safe';
-  }
-
-  function alertLabel(tilt, moist, rowTime, firmwareLv) {
-    const t = Math.abs(tilt);
-    // Use firmware level from field8 if available, otherwise calculate from sensors
-    const sensorLv = (t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
-    // If tilt is near 0 but firmware says elevated — likely stale field8 after calibration
-    // Trust sensor calculation in that case
-    const staleAfterCalib = (t < 2 && moist < 10 && firmwareLv >= 1);
-    const lv = staleAfterCalib ? 0 : (firmwareLv !== undefined && firmwareLv !== null && firmwareLv >= 0) ? Math.min(firmwareLv, 3) : sensorLv;
-    const labels = ['Normal','Level 1','Level 2','Level 3','Level 4'];
-    const cls    = ['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
-    let label = labels[lv];
-    let displayLv = lv;
-
-    // Check if a manual judgement was active at this row's time
-    const j = getJudgement(nodeId);
-    if (j && j.setAt) {
-      const jTime = new Date(j.setAt).getTime();
-      const rTime = rowTime ? rowTime.getTime() : 0;
-      // Only apply manual label to rows AFTER judgement was set
-      // AND only if sensor actually had some reading (not truly Normal/Level 0)
-      if (rTime >= jTime) {
-        // Apply manual label to ALL rows after judgement was set
-        // Rows before judgement timestamp are unaffected
-        if (j.type === 'caution') {
-          displayLv = Math.max(lv, 3);
-          label = labels[displayLv] + ' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';
-        } else if (j.type === 'evacuate') {
-          displayLv = 4;
-          label = 'Level 4 <span style="color:#dc2626;font-weight:700;">(Manual Evacuation Order)</span>';
-        }
+  const nodeId=activeHistoryNode;
+  document.getElementById('tableTitle').textContent=nodeLabel+' — Data Table ('+tiltVals.length+' readings)';
+  const wrap=document.getElementById('tableWrap');
+  if (!tiltVals.length) { wrap.innerHTML='<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
+  function tiltClass(v){const t=Math.abs(v);return t>=20?'dt-l4':t>=15?'dt-l3':t>=10?'dt-l2':t>=5?'dt-l1':'dt-safe';}
+  function moistClass(v){return v>=95?'dt-l4':v>=85?'dt-l3':v>=75?'dt-l2':v>=60?'dt-l1':'dt-safe';}
+  function vibLabel(v){return v>=41?'Strong':v>=21?'Moderate':v>=9?'Light':v>=3?'Weak':'Not Felt';}
+  function vibClass(v){return v>=41?'dt-l4':v>=21?'dt-l3':v>=9?'dt-l2':v>=3?'dt-l1':'dt-safe';}
+  function alertLabel(tilt,moist,rowTime,firmwareLv){
+    const t=Math.abs(tilt);
+    const staleAfterCalib=(t<2&&moist<10&&firmwareLv>=1);
+    const lv=staleAfterCalib?0:(firmwareLv!==undefined&&firmwareLv>=0)?Math.min(firmwareLv,3):(t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
+    const labels=['Normal','Level 1','Level 2','Level 3','Level 4'];
+    const cls=['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
+    let label=labels[lv],displayLv=lv;
+    const j=getJudgement(nodeId);
+    if(j&&j.setAt){
+      const jTime=new Date(j.setAt).getTime(),rTime=rowTime?rowTime.getTime():0;
+      if(rTime>=jTime){
+        if(j.type==='caution'){displayLv=Math.max(lv,3);label=labels[displayLv]+' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';}
+        else if(j.type==='evacuate'){displayLv=4;label='Level 4 <span style="color:#dc2626;font-weight:700;">(Manual Evacuation Order)</span>';}
       }
     }
     return `<span class="${cls[displayLv]}">${label}</span>`;
   }
-
-  const rows = tiltVals.map((t, i) => {
-    const ts   = timestamps[i];
-    const time = ts.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
-                 ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const shallow = tiltShallowVals[i], deep = tiltDeepVals[i];
-    const mA = moistVals[i], mB = moistDeepVals[i], mAvg = moistAvgVals[i], v = vibVals[i];
-    const tiltDeepFlag  = deep > shallow && deep >= 3;
-    const moistDeepFlag = mB > mA && mB >= 60;
-
-    // For normal users apply relative display using baseline offset
-    const ratio      = t > 0 ? t : 1;
-    // Arduino already applies EEPROM baseline — display values directly
-    const dispShallow = Math.abs(shallow);
-    const dispDeep    = Math.abs(deep);
-    const dispAvg     = Math.abs(t);
-
-    return `<tr>
-      <td>${time}</td>
-      <td class="${tiltClass(dispShallow)}">${dispShallow.toFixed(1)}°</td>
-      <td class="${tiltClass(dispDeep)}">${dispDeep.toFixed(1)}°${tiltDeepFlag ? ' ⚠️' : ''}</td>
-      <td class="${tiltClass(dispAvg)}">${dispAvg.toFixed(1)}°</td>
-      <td class="${moistClass(mA)}">${mA.toFixed(1)}%</td>
-      <td class="${moistClass(mB)}">${mB.toFixed(1)}%${moistDeepFlag ? ' ⚠️' : ''}</td>
-      <td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td>
-      <td class="${vibClass(v)}">${vibLabel(v)}</td>
-      <td>${alertLabel(dispAvg, mAvg || Math.max(mA, mB), ts, alertLevelVals[i])}</td>
-    </tr>`;
+  const rows=tiltVals.map((t,i)=>{
+    const ts=timestamps[i];
+    const time=ts.toLocaleDateString([],{month:'short',day:'numeric'})+' '+ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const shallow=tiltShallowVals[i],deep=tiltDeepVals[i],mA=moistVals[i],mB=moistDeepVals[i],mAvg=moistAvgVals[i],v=vibVals[i];
+    const dispShallow=Math.abs(shallow),dispDeep=Math.abs(deep),dispAvg=Math.abs(t);
+    return `<tr><td>${time}</td><td class="${tiltClass(dispShallow)}">${dispShallow.toFixed(1)}°</td><td class="${tiltClass(dispDeep)}">${dispDeep.toFixed(1)}°${deep>shallow&&deep>=3?' ⚠️':''}</td><td class="${tiltClass(dispAvg)}">${dispAvg.toFixed(1)}°</td><td class="${moistClass(mA)}">${mA.toFixed(1)}%</td><td class="${moistClass(mB)}">${mB.toFixed(1)}%${mB>mA&&mB>=60?' ⚠️':''}</td><td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td><td class="${vibClass(v)}">${vibLabel(v)}</td><td>${alertLabel(dispAvg,mAvg||Math.max(mA,mB),ts,alertLevelVals[i])}</td></tr>`;
   }).reverse().join('');
-
-  wrap.innerHTML = `
-    <table class="data-table">
-      <thead><tr>
-        <th>Time</th>
-        <th>🌱 Shallow Tilt</th>
-        <th>🪨 Deep Tilt</th>
-        <th>Avg Tilt</th>
-        <th>💧 Moisture Shallow</th>
-        <th>💧 Moisture Deep</th>
-        <th>💧 Moisture Avg</th>
-        <th>Vibration</th>
-        <th>Alert Level</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  wrap.innerHTML=`<table class="data-table"><thead><tr><th>Time</th><th>🌱 Shallow Tilt</th><th>🪨 Deep Tilt</th><th>Avg Tilt</th><th>💧 Moisture Shallow</th><th>💧 Moisture Deep</th><th>💧 Moisture Avg</th><th>Vibration</th><th>Alert Level</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 // ── Admin / PIN ──
-function openAdmin() {
-  document.getElementById('adminModal').classList.add('open');
-  if (!adminAuth) showPinScreen(); else showAdminPanel();
-}
+function openAdmin() { document.getElementById('adminModal').classList.add('open'); if (!adminAuth) showPinScreen(); else showAdminPanel(); }
 function closeAdmin() { document.getElementById('adminModal').classList.remove('open'); }
-function showPinScreen() {
-  document.getElementById('pinScreen').style.display = 'block';
-  document.getElementById('adminPanel').classList.remove('open');
-  pinBuffer = ''; updatePinDots();
-  document.getElementById('pinError').textContent = '';
-}
-function showAdminPanel() {
-  document.getElementById('pinScreen').style.display = 'none';
-  document.getElementById('adminPanel').classList.add('open');
-  refreshAdminPanel();
-}
+function showPinScreen() { document.getElementById('pinScreen').style.display='block'; document.getElementById('adminPanel').classList.remove('open'); pinBuffer=''; updatePinDots(); document.getElementById('pinError').textContent=''; }
+function showAdminPanel() { document.getElementById('pinScreen').style.display='none'; document.getElementById('adminPanel').classList.add('open'); refreshAdminPanel(); }
 function signOut() {
-  adminAuth = false;
-  pinBuffer = '';
-  // Hide all judgement panels on sign out
-  ['node1','node2'].forEach(id => {
-    const jp = document.getElementById(id + '-judgementPanel');
-    if (jp) jp.classList.remove('visible');
-  });
+  adminAuth=false; pinBuffer='';
+  ['node1','node2'].forEach(id=>{ const jp=document.getElementById(id+'-judgementPanel'); if(jp) jp.classList.remove('visible'); });
   showPinScreen();
 }
 
-// ── Judgement handler ──
 async function setJudgement(nodeId, type) {
-  const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
-  const level     = nodeStatuses[nodeId] || 0;
-  const existing  = getJudgement(nodeId);
-
-  // If clicking the same button again, toggle off (clear judgement)
-  if (existing && existing.type === type) {
-    if (!confirm(`Clear the current judgement for ${nodeName}?`)) return;
-    await saveJudgement(nodeId, null);
-    updateJudgementUI(nodeId);
-    return;
+  const nodeName=nodes.find(n=>n.id===nodeId)?.label||nodeId;
+  const level=nodeStatuses[nodeId]||0;
+  const existing=getJudgement(nodeId);
+  if (existing&&existing.type===type) { if(!confirm(`Clear the current judgement for ${nodeName}?`)) return; await saveJudgement(nodeId,null); updateJudgementUI(nodeId); return; }
+  if (type==='safe') {
+    if(!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE? This will set the current state as the new baseline.`)) return;
+    const node=nodes.find(n=>n.id===nodeId);
+    const btnSafe=document.getElementById(nodeId+'-btnSafe');
+    btnSafe.textContent='Sending...'; btnSafe.disabled=true;
+    let accepted=false,attempts=0;
+    while(!accepted&&attempts<5){ attempts++; try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;}else{await new Promise(r=>setTimeout(r,16000));} }catch(e){await new Promise(r=>setTimeout(r,16000));} }
+    btnSafe.textContent='Confirm Safe'; btnSafe.disabled=false;
+    if(!accepted){alert('Could not send calibration command. Please try again.');return;}
+    const calib=getCalib(nodeId); if(!calib.log) calib.log=[];
+    calib.log.unshift({baseline:latestTrue[nodeId],setAt:new Date().toISOString(),note:'Confirmed Safe — hardware calibrated'});
+    if(calib.log.length>20) calib.log=calib.log.slice(0,20); calib.baseline=null;
+    await saveCalib(nodeId,calib); await saveJudgement('node1',null); await saveJudgement('node2',null); fetchAll();
+  } else if (type==='caution') {
+    if(!confirm(`Issue CAUTION for ${nodeName}? This will send a Level 3 caution SMS to all recipients.`)) return;
+    const node=nodes.find(n=>n.id===nodeId); const btn=document.getElementById(nodeId+'-btnCaution');
+    btn.textContent='Sending...'; btn.disabled=true;
+    let accepted=false,attempts=0;
+    while(!accepted&&attempts<5){ attempts++; try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=98`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;}else{await new Promise(r=>setTimeout(r,16000));} }catch(e){await new Promise(r=>setTimeout(r,16000));} }
+    btn.textContent='⚠️ Issue Caution (L3)'; btn.disabled=false;
+    if(!accepted){alert('Could not send caution command. Please try again.');return;}
+    await saveJudgement(nodeId,'caution'); nodeStatuses[nodeId]=Math.max(nodeStatuses[nodeId],3); applyNodeStatus(nodeId,nodeStatuses[nodeId]); updateBanner('caution',nodeId);
+  } else if (type==='evacuate') {
+    if(!confirm(`Order EVACUATION for ${nodeName}? This will send a Level 4 EVACUATE SMS to ALL recipients immediately.`)) return;
+    const node=nodes.find(n=>n.id===nodeId); const btn=document.getElementById(nodeId+'-btnEvacuate');
+    btn.textContent='Sending...'; btn.disabled=true;
+    let accepted=false,attempts=0;
+    while(!accepted&&attempts<5){ attempts++; try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=97`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;}else{await new Promise(r=>setTimeout(r,16000));} }catch(e){await new Promise(r=>setTimeout(r,16000));} }
+    btn.textContent='🚨 Order Evacuation (L4)'; btn.disabled=false;
+    if(!accepted){alert('Could not send evacuation command. Please try again.');return;}
+    await saveJudgement(nodeId,'evacuate'); nodeStatuses['node1']=4; nodeStatuses['node2']=4; applyNodeStatus('node1',4); applyNodeStatus('node2',4); updateBanner('evacuate',nodeId);
   }
-
-  if (type === 'safe') {
-    if (!confirm(`Confirm that ${nodeName} (Level ${level}) has been inspected and is SAFE? This will set the current state as the new baseline and log Confirmed Safe in history.`)) return;
-
-    // Same as Set Baseline — write 99 to ThingSpeak field8 with retry
-    const node = nodes.find(n => n.id === nodeId);
-    const btnSafe = document.getElementById(nodeId + '-btnSafe');
-    btnSafe.textContent = 'Sending...'; btnSafe.disabled = true;
-    let accepted = false;
-    let attempts = 0;
-    while (!accepted && attempts < 5) {
-      attempts++;
-      try {
-        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
-        const entry = parseInt((await res.text()).trim());
-        if (entry > 0) { accepted = true; }
-        else { await new Promise(r => setTimeout(r, 16000)); }
-      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
-    }
-    btnSafe.textContent = 'Confirm Safe'; btnSafe.disabled = false;
-    if (!accepted) { alert('Could not send calibration command. Please try again.'); return; }
-
-    // Clear Firebase baseline — Arduino EEPROM is now source of truth
-    const calib = getCalib(nodeId);
-    if (!calib.log) calib.log = [];
-    calib.log.unshift({ baseline: latestTrue[nodeId], setAt: new Date().toISOString(), note: 'Confirmed Safe — hardware calibrated' });
-    if (calib.log.length > 20) calib.log = calib.log.slice(0, 20);
-    calib.baseline = null;
-    await saveCalib(nodeId, calib);
-
-    // Clear both nodes first, then save safe — order matters for Firebase
-    await saveJudgement('node1', null);
-    await saveJudgement('node2', null);
-    // No judgement saved for 'safe' — just clear everything
-    // Confirmed Safe means return to normal sensor-based display
-    fetchAll();
-
-  } else if (type === 'caution') {
-    // Issue Caution — writes 98 to field8 — ESP32 tells Arduino to send Level 3 caution SMS
-    if (!confirm(`Issue CAUTION for ${nodeName}? This will send a Level 3 caution SMS to all recipients.`)) return;
-    const node = nodes.find(n => n.id === nodeId);
-    const btn = document.getElementById(nodeId + '-btnCaution');
-    btn.textContent = 'Sending...'; btn.disabled = true;
-    let accepted = false; let attempts = 0;
-    while (!accepted && attempts < 5) {
-      attempts++;
-      try {
-        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=98`);
-        const entry = parseInt((await res.text()).trim());
-        if (entry > 0) { accepted = true; }
-        else { await new Promise(r => setTimeout(r, 16000)); }
-      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
-    }
-    btn.textContent = '⚠️ Issue Caution (L3)'; btn.disabled = false;
-    if (!accepted) { alert('Could not send caution command. Please try again.'); return; }
-    await saveJudgement(nodeId, 'caution');
-    // Update banner to reflect manual caution
-    nodeStatuses[nodeId] = Math.max(nodeStatuses[nodeId], 3);
-    applyNodeStatus(nodeId, nodeStatuses[nodeId]);
-    updateBanner('caution', nodeId);
-
-  } else if (type === 'evacuate') {
-    // Order Evacuation — writes 97 to field8 — ESP32 tells Arduino to send Level 4 EVACUATE SMS
-    if (!confirm(`Order EVACUATION for ${nodeName}? This will send a Level 4 EVACUATE SMS to ALL recipients immediately.`)) return;
-    const node = nodes.find(n => n.id === nodeId);
-    const btn = document.getElementById(nodeId + '-btnEvacuate');
-    btn.textContent = 'Sending...'; btn.disabled = true;
-    let accepted = false; let attempts = 0;
-    while (!accepted && attempts < 5) {
-      attempts++;
-      try {
-        const res   = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=97`);
-        const entry = parseInt((await res.text()).trim());
-        if (entry > 0) { accepted = true; }
-        else { await new Promise(r => setTimeout(r, 16000)); }
-      } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
-    }
-    btn.textContent = '🚨 Order Evacuation (L4)'; btn.disabled = false;
-    if (!accepted) { alert('Could not send evacuation command. Please try again.'); return; }
-    await saveJudgement(nodeId, 'evacuate');
-    // Update banner to reflect manual evacuation order — force Level 4
-    nodeStatuses['node1'] = 4;
-    nodeStatuses['node2'] = 4;
-    applyNodeStatus('node1', 4);
-    applyNodeStatus('node2', 4);
-    updateBanner('evacuate', nodeId);
-  }
-
   updateJudgementUI(nodeId);
 }
 
-function pinKey(digit) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += digit; updatePinDots();
-  if (pinBuffer.length === 4) setTimeout(checkPin, 120);
-}
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0,-1); updatePinDots();
-  document.getElementById('pinError').textContent = '';
-}
-function updatePinDots() {
-  for (let i=0; i<4; i++) {
-    const dot = document.getElementById('dot'+i);
-    dot.classList.toggle('filled', i < pinBuffer.length);
-    dot.classList.remove('error');
-  }
-}
-function checkPin() {
-  if (pinBuffer === ADMIN_PIN) { adminAuth = true; showAdminPanel(); }
-  else {
-    for (let i=0; i<4; i++) document.getElementById('dot'+i).classList.add('error');
-    document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
-    setTimeout(() => { pinBuffer=''; updatePinDots(); }, 900);
-  }
+function pinKey(digit){if(pinBuffer.length>=4)return;pinBuffer+=digit;updatePinDots();if(pinBuffer.length===4)setTimeout(checkPin,120);}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();document.getElementById('pinError').textContent='';}
+function updatePinDots(){for(let i=0;i<4;i++){const dot=document.getElementById('dot'+i);dot.classList.toggle('filled',i<pinBuffer.length);dot.classList.remove('error');}}
+function checkPin(){
+  if(pinBuffer===ADMIN_PIN){adminAuth=true;showAdminPanel();}
+  else{for(let i=0;i<4;i++)document.getElementById('dot'+i).classList.add('error');document.getElementById('pinError').textContent='Incorrect PIN. Try again.';setTimeout(()=>{pinBuffer='';updatePinDots();},900);}
 }
 
 async function setCalibration(nodeId) {
-  const trueAngle = latestTrue[nodeId];
-  const nodeName  = nodeId === 'node1' ? 'Node 1' : 'Node 2';
-  if (!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? This sends a calibration command to the hardware. Keep the sensor still.`)) return;
-  const btn = document.getElementById('calibBtn-' + nodeId);
-  btn.disabled = true;
-
-  // Write 99 to field8 — retry every 16 seconds until ThingSpeak confirms
-  // ThingSpeak returns 0 if rate limited, returns entry number (>0) if accepted
-  const node = nodes.find(n => n.id === nodeId);
-  let accepted = false;
-  let attempts = 0;
-  const maxAttempts = 5;
-
-  while (!accepted && attempts < maxAttempts) {
-    attempts++;
-    btn.textContent = `Sending command… (attempt ${attempts}/${maxAttempts})`;
-    try {
-      const res  = await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`);
-      const text = await res.text();
-      const entry = parseInt(text.trim());
-      if (entry > 0) {
-        accepted = true;
-        btn.textContent = 'Command sent — waiting for hardware…';
-        console.log('Calibration command accepted, entry:', entry);
-      } else {
-        // Rate limited — wait 16 seconds then retry
-        console.log('ThingSpeak rate limited, retrying in 16s...');
-        btn.textContent = `Rate limited — retrying in 16s… (${attempts}/${maxAttempts})`;
-        await new Promise(r => setTimeout(r, 16000));
-      }
-    } catch(e) {
-      console.warn('Failed to send calibration command:', e);
-      btn.textContent = `Network error — retrying… (${attempts}/${maxAttempts})`;
-      await new Promise(r => setTimeout(r, 16000));
-    }
-  }
-
-  if (!accepted) {
-    btn.textContent = 'Set Current as Baseline';
-    btn.disabled = false;
-    alert('Could not send calibration command to ThingSpeak after ' + maxAttempts + ' attempts. Please try again.');
-    return;
-  }
-
-  // Clear Firebase display baseline — Arduino now handles baseline in EEPROM
-  // Arduino uploads tiltAvg relative to its own baseline, so dashboard shows 0 directly
-  const calib = getCalib(nodeId);
-  if (!calib.log) calib.log = [];
-  calib.log.unshift({ baseline: trueAngle, setAt: new Date().toISOString(), note: 'Hardware calibration triggered' });
-  if (calib.log.length > 20) calib.log = calib.log.slice(0,20);
-  calib.baseline = null; // clear Firebase baseline — Arduino EEPROM is source of truth
-  await saveCalib(nodeId, calib);
-  btn.textContent = 'Set Current as Baseline'; btn.disabled = false;
-  fetchAll(); refreshAdminPanel();
+  const trueAngle=latestTrue[nodeId]; const nodeName=nodes.find(n=>n.id===nodeId)?.label||nodeId;
+  if(!confirm(`Set ${trueAngle.toFixed(2)}° as new baseline for ${nodeName}? Keep the sensor still.`)) return;
+  const btn=document.getElementById('calibBtn-'+nodeId); btn.disabled=true;
+  const node=nodes.find(n=>n.id===nodeId); let accepted=false,attempts=0;
+  while(!accepted&&attempts<5){ attempts++; btn.textContent=`Sending… (${attempts}/5)`;
+    try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;btn.textContent='Command sent — waiting…';}else{btn.textContent=`Rate limited — retrying… (${attempts}/5)`;await new Promise(r=>setTimeout(r,16000));} }catch(e){btn.textContent=`Error — retrying… (${attempts}/5)`;await new Promise(r=>setTimeout(r,16000));} }
+  if(!accepted){btn.textContent='Set Current as Baseline';btn.disabled=false;alert('Could not send calibration command. Please try again.');return;}
+  const calib=getCalib(nodeId); if(!calib.log) calib.log=[];
+  calib.log.unshift({baseline:trueAngle,setAt:new Date().toISOString(),note:'Hardware calibration triggered'});
+  if(calib.log.length>20) calib.log=calib.log.slice(0,20); calib.baseline=null;
+  await saveCalib(nodeId,calib); btn.textContent='Set Current as Baseline'; btn.disabled=false; fetchAll(); refreshAdminPanel();
 }
 
 async function clearCalibration(nodeId) {
-  const nodeName = nodeId === 'node1' ? 'Node 1' : 'Node 2';
-  if (!confirm(`Clear calibration for ${nodeName}? Dashboard will return to true absolute tilt angle.`)) return;
-  const calib = getCalib(nodeId);
-  if (!calib.log) calib.log = [];
-  if (calib.baseline !== null) calib.log.unshift({ baseline:null, setAt:new Date().toISOString(), note:'Calibration cleared' });
-  calib.baseline = null;
-  await saveCalib(nodeId, calib);
-  fetchAll(); refreshAdminPanel();
+  const nodeName=nodes.find(n=>n.id===nodeId)?.label||nodeId;
+  if(!confirm(`Clear calibration for ${nodeName}?`)) return;
+  const calib=getCalib(nodeId); if(!calib.log) calib.log=[];
+  if(calib.baseline!==null) calib.log.unshift({baseline:null,setAt:new Date().toISOString(),note:'Calibration cleared'});
+  calib.baseline=null; await saveCalib(nodeId,calib); fetchAll(); refreshAdminPanel();
 }
 
-function refreshAdminPanel() {
-  ['node1','node2'].forEach((nodeId, i) => {
-    const n     = i + 1;
-    const calib = getCalib(nodeId);
-    const tv    = latestTrue[nodeId];
-    document.getElementById(`calib-n${n}-current`).textContent  = tv !== undefined ? tv.toFixed(2)+'°' : '—';
-    document.getElementById(`calib-n${n}-baseline`).textContent = calib.baseline !== null ? calib.baseline.toFixed(2)+'°' : 'None — showing true angle';
-    document.getElementById(`calib-n${n}-date`).textContent     = (calib.baseline !== null && calib.log?.length) ? new Date(calib.log[0].setAt).toLocaleString() : '—';
-    const logEl   = document.getElementById('calib-log-' + nodeId);
-    const entries = calib.log || [];
-    logEl.innerHTML = entries.length === 0
-      ? '<div class="calib-log-empty">No calibrations recorded yet.</div>'
-      : entries.map(e => {
-          const d      = new Date(e.setAt).toLocaleString();
-          const detail = e.note || ('Set baseline to ' + (e.baseline !== null ? e.baseline.toFixed(2)+'°' : 'cleared'));
-          return `<div class="calib-log-entry">${d} — ${detail}</div>`;
-        }).join('');
+function refreshAdminPanel(){
+  ['node1','node2'].forEach((nodeId,i)=>{
+    const n=i+1,calib=getCalib(nodeId),tv=latestTrue[nodeId];
+    document.getElementById(`calib-n${n}-current`).textContent=tv!==undefined?tv.toFixed(2)+'°':'—';
+    document.getElementById(`calib-n${n}-baseline`).textContent=calib.baseline!==null?calib.baseline.toFixed(2)+'°':'None — showing true angle';
+    document.getElementById(`calib-n${n}-date`).textContent=(calib.baseline!==null&&calib.log?.length)?new Date(calib.log[0].setAt).toLocaleString():'—';
+    const logEl=document.getElementById('calib-log-'+nodeId),entries=calib.log||[];
+    logEl.innerHTML=entries.length===0?'<div class="calib-log-empty">No calibrations recorded yet.</div>':entries.map(e=>`<div class="calib-log-entry">${new Date(e.setAt).toLocaleString()} — ${e.note||('Set baseline to '+(e.baseline!==null?e.baseline.toFixed(2)+'°':'cleared'))}</div>`).join('');
   });
 }
 
 // ── PWA Install ──
-let deferredPrompt = null;
-const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) &&
-            !window.MSStream; // exclude IE11 false positives
-const isStandalone = window.navigator.standalone === true ||
-                     window.matchMedia('(display-mode: standalone)').matches;
-
-if (isStandalone) {
-  document.getElementById('installHeaderBtn').style.display = 'none';
+let deferredPrompt=null;
+const isIos=/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())&&!window.MSStream;
+const isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+if(isStandalone) document.getElementById('installHeaderBtn').style.display='none';
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;});
+function openModal(){document.getElementById('installModal').style.display='flex';document.getElementById('installSplash').style.display='block';document.getElementById('installGuide').style.display='none';}
+function closeModal(){document.getElementById('installModal').style.display='none';}
+function showGuide(){
+  document.getElementById('installSplash').style.display='none';document.getElementById('installGuide').style.display='block';
+  if(isIos){document.getElementById('guideIos').style.display='block';document.getElementById('guideAndroid').style.display='none';}
+  else{document.getElementById('guideIos').style.display='none';document.getElementById('guideAndroid').style.display='block';}
 }
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
+document.getElementById('installHeaderBtn').addEventListener('click',openModal);
+document.getElementById('splashCancelBtn').addEventListener('click',closeModal);
+document.getElementById('installGuideClose').addEventListener('click',closeModal);
+document.getElementById('installModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById('splashInstallBtn').addEventListener('click',async()=>{
+  if(deferredPrompt){deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;deferredPrompt=null;if(outcome==='accepted'){closeModal();document.getElementById('installHeaderBtn').style.display='none';}}
+  else{showGuide();}
 });
+window.addEventListener('appinstalled',()=>{closeModal();document.getElementById('installHeaderBtn').style.display='none';deferredPrompt=null;});
 
-function openModal() {
-  document.getElementById('installModal').style.display = 'flex';
-  document.getElementById('installSplash').style.display = 'block';
-  document.getElementById('installGuide').style.display  = 'none';
+// ── Language toggle ──
+function setLang(lang){
+  const page=document.getElementById('guidePage');
+  if(lang==='ceb'){page.classList.add('guide-page-ceb');document.getElementById('langCeb').classList.add('active');document.getElementById('langEng').classList.remove('active');}
+  else{page.classList.remove('guide-page-ceb');document.getElementById('langEng').classList.add('active');document.getElementById('langCeb').classList.remove('active');}
 }
-function closeModal() {
-  document.getElementById('installModal').style.display = 'none';
-}
-function showGuide() {
-  document.getElementById('installSplash').style.display = 'none';
-  document.getElementById('installGuide').style.display  = 'block';
-  // Explicitly show the right guide for this device
-  if (isIos) {
-    document.getElementById('guideIos').style.display     = 'block';
-    document.getElementById('guideAndroid').style.display = 'none';
-  } else {
-    document.getElementById('guideIos').style.display     = 'none';
-    document.getElementById('guideAndroid').style.display = 'block';
-  }
-}
-
-document.getElementById('installHeaderBtn').addEventListener('click', openModal);
-document.getElementById('splashCancelBtn').addEventListener('click', closeModal);
-document.getElementById('installGuideClose').addEventListener('click', closeModal);
-document.getElementById('installModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-document.getElementById('splashInstallBtn').addEventListener('click', async () => {
-  if (deferredPrompt) {
-    // Browser is ready — native one-tap install
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    if (outcome === 'accepted') {
-      closeModal();
-      document.getElementById('installHeaderBtn').style.display = 'none';
-    }
-  } else {
-    // Show step-by-step guide
-    showGuide();
-  }
-});
-
-window.addEventListener('appinstalled', () => {
-  closeModal();
-  document.getElementById('installHeaderBtn').style.display = 'none';
-  deferredPrompt = null;
-});
-// ── Language Toggle ──
-function setLang(lang) {
-  const page = document.getElementById('guidePage');
-  if (lang === 'ceb') {
-    page.classList.add('guide-page-ceb');
-    document.getElementById('langCeb').classList.add('active');
-    document.getElementById('langEng').classList.remove('active');
-  } else {
-    page.classList.remove('guide-page-ceb');
-    document.getElementById('langEng').classList.add('active');
-    document.getElementById('langCeb').classList.remove('active');
-  }
-}
-document.getElementById('langEng').addEventListener('click', () => setLang('eng'));
-document.getElementById('langCeb').addEventListener('click', () => setLang('ceb'));
-
+document.getElementById('langEng').addEventListener('click',()=>setLang('eng'));
+document.getElementById('langCeb').addEventListener('click',()=>setLang('ceb'));
 </script>
 
-<!-- UPDATE TOAST -->
 <div id="updateToast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#134e4a;color:#fff;font-family:'Space Mono',monospace;font-size:12px;padding:12px 18px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;align-items:center;gap:12px;white-space:nowrap;">
   <span>🔄 New version available</span>
   <button onclick="applyUpdate()" style="background:#0fba9e;border:none;color:#000;padding:6px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;">Update Now</button>
   <button onclick="document.getElementById('updateToast').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
 </div>
-
 </body>
 </html>
