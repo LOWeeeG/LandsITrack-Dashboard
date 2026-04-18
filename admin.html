@@ -447,8 +447,11 @@ async function loadFromFirebase() {
     if (snap.exists()) {
       cfg = snap.data();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-      renderAll();
-      showToast('Config loaded from cloud', 'success');
+      // Only re-render if app panel is already open (user already logged in)
+      if (document.getElementById('app').style.display === 'flex') {
+        renderAll();
+        showToast('Config loaded from cloud', 'success');
+      }
     } else {
       // First time — push local defaults to Firebase
       await setDoc(CONFIG_DOC, cfg);
@@ -461,14 +464,16 @@ function startFirebaseSync() {
   onSnapshot(CONFIG_DOC, snap => {
     if (!snap.exists()) return;
     const remote = snap.data();
-    // Don't overwrite if this device just saved (avoid echo)
     const remoteStr = JSON.stringify(remote);
     const localStr  = JSON.stringify(cfg);
     if (remoteStr !== localStr) {
       cfg = remote;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-      renderAll();
-      showToast('Config synced from another device', 'success');
+      // Only re-render if app panel is already open
+      if (document.getElementById('app').style.display === 'flex') {
+        renderAll();
+        showToast('Config synced from another device', 'success');
+      }
     }
   });
 }
@@ -498,13 +503,14 @@ pinInputs.forEach((input, i) => {
 
 function checkPin() {
   const entered = Array.from(pinInputs).map(i => i.value).join('');
+  // cfg.pin is kept in sync with Firebase so always up to date
   if (entered === cfg.pin) {
     document.getElementById('login-screen').style.opacity = '0';
     document.getElementById('login-screen').style.transition = '.4s';
     setTimeout(() => {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
-      renderAll();
+      renderAll(); // renders with latest cfg (already synced from Firebase)
     }, 400);
   } else {
     const err = document.getElementById('login-error');
