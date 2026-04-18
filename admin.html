@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LandsITrack — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0a0e14;
+    --bg2:      #0f1520;
+    --bg3:      #141c2b;
+    --border:   #1e2d44;
+    --accent:   #f0a500;
+    --accent2:  #e05c2a;
+    --green:    #2ecc71;
+    --red:      #e74c3c;
+    --blue:     #3498db;
+    --text:     #d0dbe8;
+    --muted:    #5a6f88;
+    --danger:   #c0392b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen{
+    position:fixed;inset:0;background:var(--bg);z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;
+  }
+  .login-logo{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:6px;color:var(--muted);text-transform:uppercase;}
+  .login-title{font-family:'Share Tech Mono',monospace;font-size:28px;color:var(--accent);text-align:center;line-height:1.2;}
+  .login-title span{color:var(--text);font-size:14px;display:block;font-family:'Barlow',sans-serif;letter-spacing:2px;margin-top:6px;font-weight:300;}
+  .pin-row{display:flex;gap:12px;}
+  .pin-dot{
+    width:52px;height:52px;border:2px solid var(--border);background:var(--bg2);
+    border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:28px;
+    color:var(--accent);text-align:center;outline:none;transition:.2s;
+  }
+  .pin-dot:focus{border-color:var(--accent);background:var(--bg3);}
+  .pin-dot.filled{border-color:var(--accent);color:var(--accent);}
+  .login-hint{font-size:12px;color:var(--muted);letter-spacing:1px;}
+  .login-error{color:var(--red);font-size:13px;letter-spacing:1px;opacity:0;transition:.3s;}
+  .login-error.show{opacity:1;}
+
+  /* ── MAIN LAYOUT ── */
+  #app{display:none;flex-direction:column;min-height:100vh;}
+  header{
+    background:var(--bg2);border-bottom:1px solid var(--border);
+    padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;
+  }
+  .header-brand{display:flex;align-items:center;gap:14px;}
+  .header-brand .logo-mark{
+    width:32px;height:32px;border:2px solid var(--accent);border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;
+  }
+  .header-brand .brand-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;color:var(--text);}
+  .header-brand .brand-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:1px;}
+  .header-right{display:flex;align-items:center;gap:20px;}
+  .status-pill{
+    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;
+    padding:4px 12px;border-radius:2px;background:rgba(46,204,113,.1);
+    border:1px solid rgba(46,204,113,.3);color:var(--green);
+  }
+  .btn-logout{
+    font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;
+    background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;
+    padding:6px 16px;border-radius:3px;transition:.2s;text-transform:uppercase;
+  }
+  .btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+  /* ── NAV TABS ── */
+  nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 32px;display:flex;gap:0;}
+  .nav-tab{
+    font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;
+    padding:14px 24px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;
+    transition:.2s;background:none;border-top:none;border-left:none;border-right:none;
+  }
+  .nav-tab:hover{color:var(--text);}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  /* ── CONTENT ── */
+  main{flex:1;padding:32px;max-width:1100px;width:100%;margin:0 auto;}
+  .section{display:none;}
+  .section.active{display:block;}
+  .section-title{
+    font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;
+    letter-spacing:3px;text-transform:uppercase;color:var(--text);
+    border-left:3px solid var(--accent);padding-left:16px;margin-bottom:24px;
+  }
+  .section-desc{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6;margin-top:-16px;padding-left:19px;}
+
+  /* ── CARDS ── */
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:16px;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .card-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;letter-spacing:2px;font-weight:600;text-transform:uppercase;color:var(--text);}
+  .card-badge{
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;
+    padding:3px 10px;border-radius:2px;
+  }
+  .badge-node{background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.4);color:var(--blue);}
+  .badge-group{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3);color:var(--accent);}
+  .badge-ungrouped{background:rgba(90,111,136,.1);border:1px solid rgba(90,111,136,.3);color:var(--muted);}
+
+  /* ── FORM ELEMENTS ── */
+  .field-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .field-label{font-size:12px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;width:120px;flex-shrink:0;}
+  .field-input{
+    flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+    padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:13px;
+    outline:none;transition:.2s;
+  }
+  .field-input:focus{border-color:var(--accent);background:var(--bg);}
+  .field-input.error{border-color:var(--red);}
+  select.field-input{cursor:pointer;}
+
+  /* ── THRESHOLD INPUTS ── */
+  .thresh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .thresh-cell{text-align:center;}
+  .thresh-level{
+    font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;
+    text-transform:uppercase;margin-bottom:6px;
+  }
+  .thresh-level.l1{color:#2ecc71;}
+  .thresh-level.l2{color:#f0a500;}
+  .thresh-level.l3{color:#e05c2a;}
+  .thresh-level.l4{color:#e74c3c;}
+  .thresh-input{
+    width:100%;background:var(--bg3);border:1px solid var(--border);
+    color:var(--text);padding:10px;border-radius:3px;
+    font-family:'Share Tech Mono',monospace;font-size:20px;text-align:center;
+    outline:none;transition:.2s;
+  }
+  .thresh-input:focus{border-color:var(--accent);}
+  .thresh-input.error{border-color:var(--red);animation:shake .3s;}
+  .thresh-unit{font-size:11px;color:var(--muted);margin-top:4px;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+  /* ── BUTTONS ── */
+  .btn{
+    font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;
+    text-transform:uppercase;padding:9px 20px;border-radius:3px;cursor:pointer;
+    border:1px solid;transition:.2s;
+  }
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+  .btn-primary:hover{background:#d49400;border-color:#d49400;}
+  .btn-primary:disabled{background:#5a4a00;border-color:#5a4a00;color:#887a40;cursor:not-allowed;}
+  .btn-secondary{background:none;border-color:var(--border);color:var(--muted);}
+  .btn-secondary:hover{border-color:var(--text);color:var(--text);}
+  .btn-danger{background:none;border-color:rgba(231,76,60,.4);color:var(--red);}
+  .btn-danger:hover{background:rgba(231,76,60,.1);}
+  .btn-success{background:rgba(46,204,113,.15);border-color:rgba(46,204,113,.4);color:var(--green);}
+  .btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+
+  /* ── STATUS MESSAGES ── */
+  .status-msg{
+    font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1px;
+    padding:8px 14px;border-radius:3px;display:none;align-items:center;gap:8px;
+  }
+  .status-msg.show{display:flex;}
+  .status-msg.success{background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);color:var(--green);}
+  .status-msg.error{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:var(--red);}
+  .status-msg.loading{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3);color:var(--accent);}
+  .spin{display:inline-block;animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── GROUP MANAGEMENT ── */
+  .group-block{border:1px solid var(--border);border-radius:4px;margin-bottom:12px;overflow:hidden;}
+  .group-header{
+    background:var(--bg3);padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;
+    border-bottom:1px solid var(--border);
+  }
+  .group-chevron{color:var(--muted);transition:.3s;font-size:12px;}
+  .group-block.expanded .group-chevron{transform:rotate(90deg);}
+  .group-name-display{font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:1px;font-weight:600;}
+  .group-node-count{font-size:11px;color:var(--muted);margin-left:auto;}
+  .group-body{display:none;padding:16px 18px;}
+  .group-block.expanded .group-body{display:block;}
+  .node-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+    padding:5px 12px;margin:4px;font-size:12px;letter-spacing:1px;
+  }
+  .node-chip .chip-remove{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;
+    padding:0 2px;transition:.2s;
+  }
+  .node-chip .chip-remove:hover{color:var(--red);}
+
+  /* ── NODE LIST ── */
+  .node-row{
+    display:grid;grid-template-columns:1fr 1fr auto auto;gap:12px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--border);
+  }
+  .node-row:last-child{border-bottom:none;}
+  .node-id-tag{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+
+  /* ── TOAST ── */
+  #toast{
+    position:fixed;bottom:32px;right:32px;z-index:9998;
+    font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1px;
+    padding:12px 20px;border-radius:4px;transform:translateY(80px);opacity:0;
+    transition:.3s cubic-bezier(.4,0,.2,1);pointer-events:none;
+  }
+  #toast.show{transform:translateY(0);opacity:1;}
+  #toast.success{background:#0a2e1a;border:1px solid rgba(46,204,113,.5);color:var(--green);}
+  #toast.error{background:#2e0a0a;border:1px solid rgba(231,76,60,.5);color:var(--red);}
+
+  /* ── DIVIDER ── */
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+  /* ── ADD GROUP FORM ── */
+  .add-group-form{background:var(--bg3);border:1px dashed var(--border);border-radius:4px;padding:16px;margin-bottom:16px;}
+  .add-group-form h4{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+
+  /* ── INFO BOX ── */
+  .info-box{background:rgba(52,152,219,.07);border:1px solid rgba(52,152,219,.2);border-radius:4px;padding:14px 16px;margin-bottom:20px;}
+  .info-box p{font-size:12px;color:#7ab8e0;line-height:1.7;letter-spacing:.3px;}
+  .info-box strong{color:var(--blue);}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:700px){
+    main{padding:16px;}
+    .thresh-grid{grid-template-columns:repeat(2,1fr);}
+    .node-row{grid-template-columns:1fr 1fr;gap:8px;}
+    header{padding:0 16px;}
+    nav{padding:0 16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-logo">LandsITrack System</div>
+  <div class="login-title">
+    ADMIN ACCESS
+    <span>Enter 4-digit PIN to continue</span>
+  </div>
+  <div class="pin-row" id="pin-row">
+    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+  </div>
+  <div class="login-hint">Default PIN: 1234</div>
+  <div class="login-error" id="login-error">✗ &nbsp; Incorrect PIN. Try again.</div>
+</div>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app">
+  <header>
+    <div class="header-brand">
+      <div class="logo-mark">LITS</div>
+      <div>
+        <div class="brand-name">LandsITrack</div>
+        <div class="brand-sub">Admin Panel</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">● AUTHENTICATED</div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-tab active" onclick="switchTab('nodes')">Node Management</button>
+    <button class="nav-tab" onclick="switchTab('thresholds')">Thresholds</button>
+    <button class="nav-tab" onclick="switchTab('groups')">Group Management</button>
+    <button class="nav-tab" onclick="switchTab('settings')">Config / API Keys</button>
+  </nav>
+
+  <main>
+
+    <!-- ══ TAB: NODE MANAGEMENT ══ -->
+    <div class="section active" id="tab-nodes">
+      <div class="section-title">Node Management</div>
+      <p class="section-desc">Rename nodes and assign them to groups. Names appear on the main dashboard.</p>
+
+      <div class="info-box">
+        <p>Nodes are the physical sensor units deployed in the field. You can give each node a <strong>display name</strong> (e.g. "Purok Riverside") and optionally assign it to a <strong>group</strong> for shared threshold control. Changes are saved locally and reflected on the dashboard immediately.</p>
+      </div>
+
+      <div id="node-list-container"></div>
+
+      <div style="margin-top:20px;" class="btn-row">
+        <button class="btn btn-secondary" onclick="addNode()">+ Add Node</button>
+        <button class="btn btn-primary" onclick="saveNodes()">Save Changes</button>
+        <div class="status-msg" id="nodes-status"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: THRESHOLDS ══ -->
+    <div class="section" id="tab-thresholds">
+      <div class="section-title">Threshold Configuration</div>
+      <p class="section-desc">Set tilt angle thresholds per node or group. Changes are pushed to ThingSpeak config channels and applied to hardware on the next ESP32 wake cycle (~30 seconds).</p>
+
+      <div class="info-box">
+        <p>
+          <strong>L1</strong> = Barangay Officials notified &nbsp;|&nbsp;
+          <strong>L2</strong> = + BDRRMC &nbsp;|&nbsp;
+          <strong>L3</strong> = + Purok Residents &nbsp;|&nbsp;
+          <strong>L4</strong> = All groups — Evacuation order (requires both nodes at L3)
+        </p>
+      </div>
+
+      <div id="threshold-panels"></div>
+    </div>
+
+    <!-- ══ TAB: GROUP MANAGEMENT ══ -->
+    <div class="section" id="tab-groups">
+      <div class="section-title">Group Management</div>
+      <p class="section-desc">Groups allow you to control multiple nodes together. Nodes in the same group share thresholds — changing one updates all. A node can only belong to one group.</p>
+
+      <div class="add-group-form">
+        <h4>Create New Group</h4>
+        <div class="field-row">
+          <div class="field-label">Group Name</div>
+          <input class="field-input" id="new-group-name" placeholder="e.g. Purok Riverside" style="max-width:300px;"/>
+          <button class="btn btn-primary" onclick="createGroup()">Create</button>
+        </div>
+      </div>
+
+      <div id="group-list-container"></div>
+    </div>
+
+    <!-- ══ TAB: SETTINGS ══ -->
+    <div class="section" id="tab-settings">
+      <div class="section-title">Config &amp; API Keys</div>
+      <p class="section-desc">Register ThingSpeak channel IDs and API keys for each node. These are needed to push threshold changes from this dashboard to the hardware.</p>
+
+      <div class="info-box">
+        <p>Each node needs a <strong>data channel</strong> (where sensor readings go) and a <strong>config channel</strong> (where threshold values are written by this admin panel and read by the ESP32). Create config channels in ThingSpeak and enter their details here.</p>
+      </div>
+
+      <div id="api-key-panels"></div>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="saveApiKeys()">Save API Keys</button>
+        <div class="status-msg" id="apikey-status"></div>
+      </div>
+
+      <hr class="divider"/>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Change Admin PIN</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">New PIN</div>
+          <input class="field-input" id="new-pin" type="password" maxlength="4" inputmode="numeric" placeholder="4 digits" style="max-width:140px;"/>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Confirm PIN</div>
+          <input class="field-input" id="confirm-pin" type="password" maxlength="4" inputmode="numeric" placeholder="4 digits" style="max-width:140px;"/>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" onclick="changePin()">Update PIN</button>
+          <div class="status-msg" id="pin-status"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE — stored in localStorage
+// ══════════════════════════════════════════════
+const STORAGE_KEY = 'litsAdminConfig';
+
+function defaultConfig() {
+  return {
+    pin: '1234',
+    nodes: [
+      {
+        id: 'node1',
+        name: 'Node 1',
+        group: null,
+        dataChannel: '3271719',
+        dataReadKey: '8MTCFINXP6BB88WP',
+        configChannel: '',
+        configWriteKey: '',
+        thresholds: { l1: 5, l2: 10, l3: 15, l4: 20 }
+      },
+      {
+        id: 'node2',
+        name: 'Node 2',
+        group: null,
+        dataChannel: '3272515',
+        dataReadKey: 'UG7PTO84BATZVRLN',
+        configChannel: '',
+        configWriteKey: '',
+        thresholds: { l1: 5, l2: 10, l3: 15, l4: 20 }
+      }
+    ],
+    groups: []
+  };
+}
+
+let cfg = loadConfig();
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return defaultConfig();
+}
+
+function saveConfig() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+}
+
+// ══════════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════════
+const pinInputs = document.querySelectorAll('.pin-dot');
+pinInputs.forEach((input, i) => {
+  input.addEventListener('input', e => {
+    input.classList.toggle('filled', input.value.length > 0);
+    if (input.value.length === 1 && i < pinInputs.length - 1) {
+      pinInputs[i+1].focus();
+    }
+    if (i === pinInputs.length - 1 && input.value.length === 1) {
+      setTimeout(checkPin, 100);
+    }
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !input.value && i > 0) {
+      pinInputs[i-1].focus();
+      pinInputs[i-1].value = '';
+      pinInputs[i-1].classList.remove('filled');
+    }
+  });
+});
+
+function checkPin() {
+  const entered = Array.from(pinInputs).map(i => i.value).join('');
+  if (entered === cfg.pin) {
+    document.getElementById('login-screen').style.opacity = '0';
+    document.getElementById('login-screen').style.transition = '.4s';
+    setTimeout(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      renderAll();
+    }, 400);
+  } else {
+    const err = document.getElementById('login-error');
+    err.classList.add('show');
+    pinInputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+    pinInputs[0].focus();
+    setTimeout(() => err.classList.remove('show'), 2500);
+  }
+}
+
+function logout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.opacity = '1';
+  pinInputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+  pinInputs[0].focus();
+}
+
+// ══════════════════════════════════════════════
+//  TAB NAVIGATION
+// ══════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'thresholds') renderThresholds();
+  if (name === 'groups') renderGroups();
+  if (name === 'settings') renderApiKeys();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER: NODE LIST
+// ══════════════════════════════════════════════
+function renderAll() {
+  renderNodeList();
+  renderThresholds();
+  renderGroups();
+  renderApiKeys();
+}
+
+function renderNodeList() {
+  const container = document.getElementById('node-list-container');
+  if (!cfg.nodes.length) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">No nodes configured. Add one below.</p>';
+    return;
+  }
+  container.innerHTML = cfg.nodes.map((node, idx) => `
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="card-badge badge-node">NODE ${idx+1}</div>
+          <div class="node-id-tag">${node.id}</div>
+        </div>
+        <button class="btn btn-danger" onclick="removeNode(${idx})" style="font-size:11px;padding:5px 12px;">Remove</button>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Display Name</div>
+        <input class="field-input" value="${node.name}" onchange="cfg.nodes[${idx}].name=this.value"
+          placeholder="e.g. Purok Riverside Node 1" style="max-width:320px;"/>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Node ID</div>
+        <input class="field-input" value="${node.id}" onchange="cfg.nodes[${idx}].id=this.value"
+          placeholder="node1" style="max-width:160px;font-family:'Share Tech Mono',monospace;"/>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Group</div>
+        <select class="field-input" onchange="cfg.nodes[${idx}].group=this.value||null" style="max-width:240px;">
+          <option value="">— Ungrouped —</option>
+          ${cfg.groups.map(g => `<option value="${g.id}" ${node.group===g.id?'selected':''}>${g.name}</option>`).join('')}
+        </select>
+        <span class="card-badge ${node.group ? 'badge-group' : 'badge-ungrouped'}" style="margin-left:4px;">
+          ${node.group ? cfg.groups.find(g=>g.id===node.group)?.name || 'Group' : 'Ungrouped'}
+        </span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addNode() {
+  const id = 'node' + (cfg.nodes.length + 1);
+  cfg.nodes.push({
+    id, name: 'Node ' + (cfg.nodes.length + 1),
+    group: null, dataChannel: '', dataReadKey: '',
+    configChannel: '', configWriteKey: '',
+    thresholds: { l1: 5, l2: 10, l3: 15, l4: 20 }
+  });
+  renderNodeList();
+  renderThresholds();
+  renderApiKeys();
+}
+
+function removeNode(idx) {
+  if (!confirm(`Remove "${cfg.nodes[idx].name}"? This cannot be undone.`)) return;
+  cfg.nodes.splice(idx, 1);
+  renderNodeList();
+  renderThresholds();
+  renderApiKeys();
+}
+
+function saveNodes() {
+  saveConfig();
+  showStatus('nodes-status', 'success', '✓ Node configuration saved');
+  showToast('Node configuration saved', 'success');
+  // Re-render groups so node chips update
+  renderGroups();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER: THRESHOLDS
+// ══════════════════════════════════════════════
+function renderThresholds() {
+  const container = document.getElementById('threshold-panels');
+
+  // Build list of threshold targets: groups first, then ungrouped nodes
+  let panels = [];
+
+  // Groups
+  cfg.groups.forEach(group => {
+    const groupNodes = cfg.nodes.filter(n => n.group === group.id);
+    if (!groupNodes.length) return;
+    // Use first node's thresholds as representative
+    const rep = groupNodes[0];
+    panels.push({ type: 'group', group, nodes: groupNodes, thresholds: rep.thresholds });
+  });
+
+  // Ungrouped nodes
+  cfg.nodes.filter(n => !n.group).forEach(node => {
+    panels.push({ type: 'node', node, thresholds: node.thresholds });
+  });
+
+  if (!panels.length) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">No nodes configured. Add nodes in the Node Management tab first.</p>';
+    return;
+  }
+
+  container.innerHTML = panels.map((panel, pi) => {
+    const label = panel.type === 'group'
+      ? `<span class="card-badge badge-group">GROUP</span> ${panel.group.name} <span style="color:var(--muted);font-size:12px;margin-left:8px;">(${panel.nodes.map(n=>n.name).join(', ')})</span>`
+      : `<span class="card-badge badge-node">NODE</span> ${panel.node.name}`;
+    const t = panel.thresholds;
+    return `
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${label}</div>
+        </div>
+        <div class="thresh-grid">
+          <div class="thresh-cell">
+            <div class="thresh-level l1">Level 1</div>
+            <input class="thresh-input" type="number" min="1" max="89" value="${t.l1}" id="t${pi}_l1" onchange="updateThreshold(${pi},'l1',this)"/>
+            <div class="thresh-unit">degrees °</div>
+          </div>
+          <div class="thresh-cell">
+            <div class="thresh-level l2">Level 2</div>
+            <input class="thresh-input" type="number" min="1" max="89" value="${t.l2}" id="t${pi}_l2" onchange="updateThreshold(${pi},'l2',this)"/>
+            <div class="thresh-unit">degrees °</div>
+          </div>
+          <div class="thresh-cell">
+            <div class="thresh-level l3">Level 3</div>
+            <input class="thresh-input" type="number" min="1" max="89" value="${t.l3}" id="t${pi}_l3" onchange="updateThreshold(${pi},'l3',this)"/>
+            <div class="thresh-unit">degrees °</div>
+          </div>
+          <div class="thresh-cell">
+            <div class="thresh-level l4">Level 4</div>
+            <input class="thresh-input" type="number" min="1" max="89" value="${t.l4}" id="t${pi}_l4" onchange="updateThreshold(${pi},'l4',this)"/>
+            <div class="thresh-unit">degrees °</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="pushThresholds(${pi})">Push to Hardware</button>
+          <button class="btn btn-secondary" onclick="resetThresholds(${pi})">Reset to 5/10/15/20</button>
+          <div class="status-msg" id="thresh-status-${pi}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Store panels ref for push logic
+  window._threshPanels = panels;
+}
+
+function updateThreshold(pi, level, input) {
+  const val = parseInt(input.value);
+  const panel = window._threshPanels[pi];
+
+  if (panel.type === 'group') {
+    panel.nodes.forEach(n => n.thresholds[level] = val);
+    panel.thresholds[level] = val;
+  } else {
+    panel.node.thresholds[level] = val;
+    panel.thresholds[level] = val;
+  }
+  saveConfig();
+}
+
+function validateThresholds(t) {
+  return t.l1 < t.l2 && t.l2 < t.l3 && t.l3 < t.l4;
+}
+
+async function pushThresholds(pi) {
+  const panel = window._threshPanels[pi];
+  const t = panel.thresholds;
+  const statusId = `thresh-status-${pi}`;
+
+  if (!validateThresholds(t)) {
+    showStatus(statusId, 'error', '✗ L1 < L2 < L3 < L4 required');
+    // Shake invalid inputs
+    ['l1','l2','l3','l4'].forEach(l => {
+      const inp = document.getElementById(`t${pi}_${l}`);
+      if (inp) { inp.classList.add('error'); setTimeout(()=>inp.classList.remove('error'), 400); }
+    });
+    return;
+  }
+
+  const nodes = panel.type === 'group' ? panel.nodes : [panel.node];
+  const noConfig = nodes.filter(n => !n.configChannel || !n.configWriteKey);
+  if (noConfig.length) {
+    showStatus(statusId, 'error', `✗ Config channel not set for: ${noConfig.map(n=>n.name).join(', ')}`);
+    return;
+  }
+
+  showStatus(statusId, 'loading', '⟳ Pushing to ThingSpeak...');
+
+  let allOk = true;
+  for (const node of nodes) {
+    const url = `https://api.thingspeak.com/update?api_key=${node.configWriteKey}&field1=${t.l1}&field2=${t.l2}&field3=${t.l3}&field4=${t.l4}`;
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      if (text === '0' || !res.ok) { allOk = false; }
+    } catch(e) {
+      allOk = false;
+    }
+  }
+
+  saveConfig();
+  if (allOk) {
+    showStatus(statusId, 'success', `✓ Pushed ${t.l1}° / ${t.l2}° / ${t.l3}° / ${t.l4}° to ${nodes.length} node(s)`);
+    showToast('Thresholds pushed — hardware updates within 30s', 'success');
+  } else {
+    showStatus(statusId, 'error', '✗ One or more nodes failed. Check API keys.');
+  }
+}
+
+function resetThresholds(pi) {
+  const panel = window._threshPanels[pi];
+  const defaults = { l1:5, l2:10, l3:15, l4:20 };
+  if (panel.type === 'group') {
+    panel.nodes.forEach(n => n.thresholds = {...defaults});
+    panel.thresholds = {...defaults};
+  } else {
+    panel.node.thresholds = {...defaults};
+    panel.thresholds = {...defaults};
+  }
+  saveConfig();
+  renderThresholds();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER: GROUP MANAGEMENT
+// ══════════════════════════════════════════════
+function renderGroups() {
+  const container = document.getElementById('group-list-container');
+  if (!cfg.groups.length) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">No groups yet. Create one above to start grouping nodes.</p>';
+    return;
+  }
+
+  container.innerHTML = cfg.groups.map((group, gi) => {
+    const groupNodes = cfg.nodes.filter(n => n.group === group.id);
+    const availableNodes = cfg.nodes.filter(n => !n.group || n.group === group.id);
+    return `
+      <div class="group-block expanded" id="grp-${group.id}">
+        <div class="group-header" onclick="toggleGroup('${group.id}')">
+          <span class="group-chevron">▶</span>
+          <span class="group-name-display">${group.name}</span>
+          <span class="card-badge badge-group" style="margin-left:8px;">GROUP</span>
+          <span class="group-node-count">${groupNodes.length} node(s)</span>
+          <button class="btn btn-danger" style="font-size:11px;padding:4px 12px;margin-left:12px;" onclick="event.stopPropagation();deleteGroup(${gi})">Delete</button>
+        </div>
+        <div class="group-body">
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Nodes in this group:</div>
+            <div id="chips-${group.id}">
+              ${groupNodes.length
+                ? groupNodes.map(n => `<span class="node-chip">${n.name} <button class="chip-remove" onclick="removeFromGroup('${n.id}','${group.id}')">×</button></span>`).join('')
+                : '<span style="color:var(--muted);font-size:12px;">No nodes assigned yet</span>'
+              }
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:12px;">
+            <div class="field-label">Add Node</div>
+            <select class="field-input" id="add-node-select-${group.id}" style="max-width:220px;">
+              <option value="">Select a node...</option>
+              ${cfg.nodes.filter(n=>!n.group).map(n=>`<option value="${n.id}">${n.name}</option>`).join('')}
+            </select>
+            <button class="btn btn-secondary" onclick="addToGroup('${group.id}')">Add</button>
+          </div>
+          <div style="margin-top:8px;">
+            <span style="font-size:11px;color:var(--muted);">Rename group: </span>
+            <input class="field-input" value="${group.name}" onchange="cfg.groups[${gi}].name=this.value;saveConfig();renderGroups();"
+              style="max-width:200px;font-size:13px;padding:5px 10px;display:inline-block;"/>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleGroup(id) {
+  document.getElementById('grp-' + id).classList.toggle('expanded');
+}
+
+function createGroup() {
+  const name = document.getElementById('new-group-name').value.trim();
+  if (!name) { showToast('Enter a group name first', 'error'); return; }
+  const id = 'group_' + Date.now();
+  cfg.groups.push({ id, name });
+  saveConfig();
+  document.getElementById('new-group-name').value = '';
+  renderGroups();
+  renderNodeList();
+  renderThresholds();
+  showToast(`Group "${name}" created`, 'success');
+}
+
+function deleteGroup(gi) {
+  const group = cfg.groups[gi];
+  if (!confirm(`Delete group "${group.name}"? Nodes in this group will become ungrouped.`)) return;
+  cfg.nodes.forEach(n => { if (n.group === group.id) n.group = null; });
+  cfg.groups.splice(gi, 1);
+  saveConfig();
+  renderGroups();
+  renderNodeList();
+  renderThresholds();
+}
+
+function addToGroup(groupId) {
+  const sel = document.getElementById('add-node-select-' + groupId);
+  const nodeId = sel.value;
+  if (!nodeId) return;
+  const node = cfg.nodes.find(n => n.id === nodeId);
+  if (node) { node.group = groupId; saveConfig(); }
+  renderGroups();
+  renderNodeList();
+  renderThresholds();
+}
+
+function removeFromGroup(nodeId, groupId) {
+  const node = cfg.nodes.find(n => n.id === nodeId);
+  if (node) { node.group = null; saveConfig(); }
+  renderGroups();
+  renderNodeList();
+  renderThresholds();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER: API KEYS
+// ══════════════════════════════════════════════
+function renderApiKeys() {
+  const container = document.getElementById('api-key-panels');
+  container.innerHTML = cfg.nodes.map((node, idx) => `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="card-title">${node.name}</div>
+        <div class="card-badge badge-node">${node.id}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Data Channel</div>
+        <input class="field-input" value="${node.dataChannel}" onchange="cfg.nodes[${idx}].dataChannel=this.value"
+          placeholder="ThingSpeak Channel ID" style="max-width:220px;"/>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Data Read Key</div>
+        <input class="field-input" value="${node.dataReadKey}" onchange="cfg.nodes[${idx}].dataReadKey=this.value"
+          placeholder="Read API Key" style="max-width:260px;font-size:12px;"/>
+      </div>
+      <hr class="divider" style="margin:12px 0;"/>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Config Channel (for threshold push)</div>
+      <div class="field-row">
+        <div class="field-label">Config Channel</div>
+        <input class="field-input" value="${node.configChannel}" onchange="cfg.nodes[${idx}].configChannel=this.value"
+          placeholder="ThingSpeak Config Channel ID" style="max-width:220px;"/>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Write Key</div>
+        <input class="field-input" value="${node.configWriteKey}" onchange="cfg.nodes[${idx}].configWriteKey=this.value"
+          placeholder="Config Channel Write Key" style="max-width:260px;font-size:12px;"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+function saveApiKeys() {
+  saveConfig();
+  showStatus('apikey-status', 'success', '✓ API keys saved');
+  showToast('API keys saved', 'success');
+}
+
+// ══════════════════════════════════════════════
+//  PIN CHANGE
+// ══════════════════════════════════════════════
+function changePin() {
+  const np = document.getElementById('new-pin').value;
+  const cp = document.getElementById('confirm-pin').value;
+  if (np.length !== 4 || !/^\d{4}$/.test(np)) {
+    showStatus('pin-status', 'error', '✗ PIN must be exactly 4 digits'); return;
+  }
+  if (np !== cp) {
+    showStatus('pin-status', 'error', '✗ PINs do not match'); return;
+  }
+  cfg.pin = np;
+  saveConfig();
+  document.getElementById('new-pin').value = '';
+  document.getElementById('confirm-pin').value = '';
+  showStatus('pin-status', 'success', '✓ PIN updated');
+  showToast('Admin PIN changed', 'success');
+}
+
+// ══════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `status-msg show ${type}`;
+  el.innerHTML = type === 'loading' ? `<span class="spin">⟳</span> ${msg.replace('⟳ ','')}` : msg;
+  if (type !== 'loading') {
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auto-focus first PIN input
+window.addEventListener('load', () => pinInputs[0].focus());
+</script>
+</body>
+</html>
