@@ -1510,6 +1510,17 @@ function switchHistoryView(mode) {
   document.getElementById('viewGroup').classList.toggle('active', mode === 'group');
   populateHistoryDropdown();
   resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
+  // Group mode needs a minimum interval — "All readings" gives inaccurate averages
+  const intervalSel = document.getElementById('intervalSelect');
+  if (mode === 'group' && intervalSel) {
+    if (intervalSel.value === '0') intervalSel.value = '30'; // force min 30 min
+    // Disable "All readings" option in group mode
+    Array.from(intervalSel.options).forEach(opt => {
+      opt.disabled = (mode === 'group' && opt.value === '0');
+    });
+  } else if (mode === 'single' && intervalSel) {
+    Array.from(intervalSel.options).forEach(opt => { opt.disabled = false; });
+  }
   if (mode === 'single') {
     // Restore static node buttons if populateHistoryDropdown cleared them
     const container = document.getElementById('historySelectors');
@@ -1645,11 +1656,11 @@ async function loadHistory() {
       const recentCount=intervalValRecent===0?500:intervalValRecent<=15?720:intervalValRecent<=30?1440:intervalValRecent<=60?2880:intervalValRecent<=120?5760:8000;
       fetchURL=`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=${recentCount}`;
     }
-    // For group mode, fetch all nodes and merge+average their feeds
-    let allFeeds = [];
+    // For group mode: fetch each node separately, bucket by interval, then average buckets
     if (isGroupMode && groupNodes.length > 1) {
-      // Fetch each node's data and combine
-      const allFetchResults = await Promise.all(groupNodes.map(async gn => {
+      const intervalMinutesGroup = parseInt(document.getElementById('intervalSelect').value) || 60;
+      // Fetch all group nodes in parallel
+      const allNodeFeeds = await Promise.all(groupNodes.map(async gn => {
         const url = fetchURL.replace(
           `channels/${node.channel}/feeds.json?api_key=${node.apiKey}`,
           `channels/${gn.channel}/feeds.json?api_key=${gn.apiKey}`
@@ -1660,13 +1671,80 @@ async function loadHistory() {
           return d.feeds || [];
         } catch(e) { return []; }
       }));
-      // Merge all feeds and sort by time
-      allFeeds = allFetchResults.flat().sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+      // Group each node's feeds into time buckets independently
+      const TZ_OFFSET_MS = 8*60*60*1000;
+      const effectiveInterval = intervalMinutesGroup === 0 ? 30 : intervalMinutesGroup;
+      const masterBuckets = {}; // timestamp → {sums, counts}
+      const flds = node.fields;
+
+      allNodeFeeds.forEach(nodeFeeds => {
+        nodeFeeds.forEach(f => {
+          const d = new Date(f.created_at);
+          const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(effectiveInterval*60000))*(effectiveInterval*60000)-TZ_OFFSET_MS;
+          if (!masterBuckets[bucketMs]) masterBuckets[bucketMs] = {
+            sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs)
+          };
+          const b = masterBuckets[bucketMs];
+          b.sum.tS += parseFloat(f['field'+flds.tiltShallow])||0;
+          b.sum.tD += parseFloat(f['field'+flds.tiltDeep])||0;
+          b.sum.tA += parseFloat(f['field'+flds.tiltAvg])||0;
+          b.sum.mS += parseFloat(f['field'+flds.moistureShallow])||0;
+          b.sum.mD += parseFloat(f['field'+flds.moistureDeep])||0;
+          b.sum.mA += parseFloat(f['field'+flds.moistureAvg])||0;
+          b.sum.v  += parseFloat(f['field'+flds.vibration])||0;
+          b.count++;
+        });
+      });
+
+      // Convert averaged buckets back to feed format
+      const groupAveragedFeeds = Object.values(masterBuckets)
+        .sort((a,b) => a.time - b.time)
+        .map(b => ({
+          created_at: b.time.toISOString(),
+          ['field'+flds.tiltShallow]:   (b.sum.tS/b.count).toFixed(2),
+          ['field'+flds.tiltDeep]:      (b.sum.tD/b.count).toFixed(2),
+          ['field'+flds.tiltAvg]:       (b.sum.tA/b.count).toFixed(2),
+          ['field'+flds.moistureShallow]:(b.sum.mS/b.count).toFixed(2),
+          ['field'+flds.moistureDeep]:  (b.sum.mD/b.count).toFixed(2),
+          ['field'+flds.moistureAvg]:   (b.sum.mA/b.count).toFixed(2),
+          ['field'+flds.vibration]:     Math.round(b.sum.v/b.count),
+          ['field'+flds.alertLevel]:    0
+        }));
+
+      // Render directly and return — skip the normal single-node flow below
+      if (groupAveragedFeeds.length === 0) {
+        document.getElementById('tiltChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found</div></div>';
+        document.getElementById('moistChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found</div></div>';
+        btn.textContent='📊 Load'; btn.disabled=false; return;
+      }
+
+      const labels=[],tiltVals=[],tiltShallowVals=[],tiltDeepVals=[],moistVals=[],moistDeepVals=[],moistAvgVals=[],vibVals=[],timestamps=[],alertLvls=[];
+      groupAveragedFeeds.forEach(f => {
+        const d = new Date(f.created_at);
+        if (effectiveInterval>=1440) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}));
+        else if (effectiveInterval>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+        else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+        timestamps.push(d);
+        tiltShallowVals.push(parseFloat(f['field'+flds.tiltShallow])||0);
+        tiltDeepVals.push(parseFloat(f['field'+flds.tiltDeep])||0);
+        tiltVals.push(parseFloat(f['field'+flds.tiltAvg])||0);
+        moistVals.push(parseFloat(f['field'+flds.moistureShallow])||0);
+        moistDeepVals.push(parseFloat(f['field'+flds.moistureDeep])||0);
+        moistAvgVals.push(parseFloat(f['field'+flds.moistureAvg])||0);
+        vibVals.push(parseFloat(f['field'+flds.vibration])||0);
+        alertLvls.push(0);
+      });
+      const groupLabel = activeHistoryGroup + ' (Group avg)';
+      document.getElementById('tiltChartTitle').textContent = groupLabel + ' — Tilt: Shallow vs Deep';
+      document.getElementById('moistChartTitle').textContent = groupLabel + ' — Soil Moisture';
+      renderDualTiltChart('tiltChartWrap',labels,tiltShallowVals,tiltDeepVals,tiltVals,effectiveInterval);
+      renderMoistureChart('moistChartWrap',labels,moistVals,moistDeepVals,moistAvgVals,effectiveInterval);
+      renderTable(groupLabel,timestamps,tiltShallowVals,tiltDeepVals,tiltVals,moistVals,moistDeepVals,moistAvgVals,vibVals,alertLvls);
+      btn.textContent='📊 Load'; btn.disabled=false; return;
     }
 
     const res=await fetch(fetchURL); const data=await res.json();
-    // Use merged feeds for group mode, single node feeds otherwise
-    if (isGroupMode && allFeeds.length > 0) data.feeds = allFeeds;
     if (!data.feeds||data.feeds.length===0) {
       document.getElementById('tiltChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
       document.getElementById('moistChartWrap').innerHTML='<div class="chart-empty"><div class="chart-empty-icon">📭</div><div class="chart-empty-text">No data found for that date/time</div></div>';
@@ -1799,20 +1877,37 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     if(j&&j.setAt){
       const jTime=new Date(j.setAt).getTime(),rTime=rowTime?rowTime.getTime():0;
       if(rTime>=jTime){
-        if(j.type==='caution'){displayLv=Math.max(lv,3);label=labels[displayLv]+' <span style="color:#ea580c;font-weight:700;">(Manual Caution)</span>';}
-        else if(j.type==='evacuate'){displayLv=4;label='Level 4 <span style="color:#dc2626;font-weight:700;">(Manual Evacuation Order)</span>';}
+        if(j.type==='caution'){displayLv=Math.max(lv,3);label=labels[displayLv]+' (Manual Caution)';}
+        else if(j.type==='evacuate'){displayLv=4;label='Level 4 (Manual Evacuation)';}
       }
     }
     return `<span class="${cls[displayLv]}">${label}</span>`;
   }
-  const rows=tiltVals.map((t,i)=>{
+
+  // Mobile-friendly card layout instead of wide table
+  const cards = tiltVals.map((t,i)=>{
     const ts=timestamps[i];
     const time=ts.toLocaleDateString([],{month:'short',day:'numeric'})+' '+ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const shallow=tiltShallowVals[i],deep=tiltDeepVals[i],mA=moistVals[i],mB=moistDeepVals[i],mAvg=moistAvgVals[i],v=vibVals[i];
     const dispShallow=Math.abs(shallow),dispDeep=Math.abs(deep),dispAvg=Math.abs(t);
-    return `<tr><td>${time}</td><td class="${tiltClass(dispShallow)}">${dispShallow.toFixed(1)}°</td><td class="${tiltClass(dispDeep)}">${dispDeep.toFixed(1)}°${deep>shallow&&deep>=3?' ⚠️':''}</td><td class="${tiltClass(dispAvg)}">${dispAvg.toFixed(1)}°</td><td class="${moistClass(mA)}">${mA.toFixed(1)}%</td><td class="${moistClass(mB)}">${mB.toFixed(1)}%${mB>mA&&mB>=60?' ⚠️':''}</td><td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td><td class="${vibClass(v)}">${vibLabel(v)}</td><td>${alertLabel(dispAvg,mAvg||Math.max(mA,mB),ts,alertLevelVals[i])}</td></tr>`;
+    const lvSpan = alertLabel(dispAvg,mAvg||Math.max(mA,mB),ts,alertLevelVals[i]);
+    return `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);">${time}</span>
+          ${lvSpan}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="font-size:11px;color:var(--text-muted);">🌱 Shallow Tilt<br><span class="${tiltClass(dispShallow)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispShallow.toFixed(1)}°</span></div>
+          <div style="font-size:11px;color:var(--text-muted);">🪨 Deep Tilt<br><span class="${tiltClass(dispDeep)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispDeep.toFixed(1)}°${deep>shallow&&deep>=3?' ⚠️':''}</span></div>
+          <div style="font-size:11px;color:var(--text-muted);">📐 Avg Tilt<br><span class="${tiltClass(dispAvg)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispAvg.toFixed(1)}°</span></div>
+          <div style="font-size:11px;color:var(--text-muted);">📳 Vibration<br><span class="${vibClass(v)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${vibLabel(v)}</span></div>
+          <div style="font-size:11px;color:var(--text-muted);">💧 Shallow Moisture<br><span class="${moistClass(mA)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${mA.toFixed(1)}%</span></div>
+          <div style="font-size:11px;color:var(--text-muted);">💧 Deep Moisture<br><span class="${moistClass(mB)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${mB.toFixed(1)}%${mB>mA&&mB>=60?' ⚠️':''}</span></div>
+        </div>
+      </div>`;
   }).reverse().join('');
-  wrap.innerHTML=`<table class="data-table"><thead><tr><th>Time</th><th>🌱 Shallow Tilt</th><th>🪨 Deep Tilt</th><th>Avg Tilt</th><th>💧 Moisture Shallow</th><th>💧 Moisture Deep</th><th>💧 Moisture Avg</th><th>Vibration</th><th>Alert Level</th></tr></thead><tbody>${rows}</tbody></table>`;
+  wrap.innerHTML = cards;
 }
 
 // ── Admin / PIN ──
