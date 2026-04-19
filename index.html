@@ -1125,7 +1125,7 @@ async function loadPastAlerts() {
       data.feeds.forEach(f => {
         const lv = Math.min(parseInt(f['field'+node.fields.alertLevel])||0, 4);
         const ts = new Date(f.created_at);
-        const tilt = parseFloat(f['field'+node.fields.tiltAvg]);
+        const tilt = ((parseFloat(f['field'+node.fields.tiltShallow])||0) + (parseFloat(f['field'+node.fields.tiltDeep])||0)) / 2;
         const moist = parseFloat(f['field'+node.fields.moistureAvg]);
         if (prevLevel !== -1 && lv !== prevLevel) {
           // Check if this entry already exists (avoid duplicates)
@@ -1501,7 +1501,7 @@ async function fetchNode(node) {
     const data = await res.json();
     const tiltShallow = parseFloat(data['field' + node.fields.tiltShallow]) || 0;
     const tiltDeep    = parseFloat(data['field' + node.fields.tiltDeep])    || 0;
-    const trueAngle   = parseFloat(data['field' + node.fields.tiltAvg])     || 0;
+    const trueAngle   = (tiltShallow + tiltDeep) / 2; // computed locally — avoids ThingSpeak upload collision on field5
     const timestamp   = data.created_at ? new Date(data.created_at) : null;
     latestTrue[node.id] = trueAngle;
     const calib = getCalib(node.id);
@@ -1734,15 +1734,15 @@ function groupByInterval(feeds, intervalMinutes, node) {
     const d = new Date(f.created_at);
     const TZ_OFFSET_MS = 8*60*60*1000;
     const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(intervalMinutes*60000))*(intervalMinutes*60000)-TZ_OFFSET_MS;
-    if (!buckets[bucketMs]) buckets[bucketMs]={sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0},count:0,time:new Date(bucketMs)};
+    if (!buckets[bucketMs]) buckets[bucketMs]={sum:{tS:0,tD:0,mS:0,mD:0,mA:0,v:0},count:0,time:new Date(bucketMs)};
     const b=buckets[bucketMs];
-    b.sum.tS+=parseFloat(f['field'+node.fields.tiltShallow])||0; b.sum.tD+=parseFloat(f['field'+node.fields.tiltDeep])||0; b.sum.tA+=parseFloat(f['field'+node.fields.tiltAvg])||0;
+    b.sum.tS+=parseFloat(f['field'+node.fields.tiltShallow])||0; b.sum.tD+=parseFloat(f['field'+node.fields.tiltDeep])||0;
     b.sum.mS+=parseFloat(f['field'+node.fields.moistureShallow])||0; b.sum.mD+=parseFloat(f['field'+node.fields.moistureDeep])||0; b.sum.mA+=parseFloat(f['field'+node.fields.moistureAvg])||0;
     b.sum.v+=parseFloat(f['field'+node.fields.vibration])||0; b.count++;
   });
   return Object.values(buckets).sort((a,b)=>a.time-b.time).map(b=>({
     created_at:b.time.toISOString(),
-    ['field'+node.fields.tiltShallow]:(b.sum.tS/b.count).toFixed(2),['field'+node.fields.tiltDeep]:(b.sum.tD/b.count).toFixed(2),['field'+node.fields.tiltAvg]:(b.sum.tA/b.count).toFixed(2),
+    ['field'+node.fields.tiltShallow]:(b.sum.tS/b.count).toFixed(2),['field'+node.fields.tiltDeep]:(b.sum.tD/b.count).toFixed(2),['field'+node.fields.tiltAvg]:((b.sum.tS/b.count+b.sum.tD/b.count)/2).toFixed(2), // computed from tS+tD
     ['field'+node.fields.moistureShallow]:(b.sum.mS/b.count).toFixed(2),['field'+node.fields.moistureDeep]:(b.sum.mD/b.count).toFixed(2),['field'+node.fields.moistureAvg]:(b.sum.mA/b.count).toFixed(2),
     ['field'+node.fields.vibration]:Math.round(b.sum.v/b.count),
   }));
@@ -1858,12 +1858,11 @@ async function loadHistory() {
           const d = new Date(f.created_at);
           const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(effectiveInterval*60000))*(effectiveInterval*60000)-TZ_OFFSET_MS;
           if (!masterBuckets[bucketMs]) masterBuckets[bucketMs] = {
-            sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs)
+            sum:{tS:0,tD:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs)
           };
           const b = masterBuckets[bucketMs];
           b.sum.tS += parseFloat(f['field'+flds.tiltShallow])||0;
           b.sum.tD += parseFloat(f['field'+flds.tiltDeep])||0;
-          b.sum.tA += parseFloat(f['field'+flds.tiltAvg])||0;
           b.sum.mS += parseFloat(f['field'+flds.moistureShallow])||0;
           b.sum.mD += parseFloat(f['field'+flds.moistureDeep])||0;
           b.sum.mA += parseFloat(f['field'+flds.moistureAvg])||0;
@@ -1879,7 +1878,7 @@ async function loadHistory() {
           created_at: b.time.toISOString(),
           ['field'+flds.tiltShallow]:   (b.sum.tS/b.count).toFixed(2),
           ['field'+flds.tiltDeep]:      (b.sum.tD/b.count).toFixed(2),
-          ['field'+flds.tiltAvg]:       (b.sum.tA/b.count).toFixed(2),
+          ['field'+flds.tiltAvg]:       ((b.sum.tS/b.count+b.sum.tD/b.count)/2).toFixed(2), // computed from tS+tD
           ['field'+flds.moistureShallow]:(b.sum.mS/b.count).toFixed(2),
           ['field'+flds.moistureDeep]:  (b.sum.mD/b.count).toFixed(2),
           ['field'+flds.moistureAvg]:   (b.sum.mA/b.count).toFixed(2),
@@ -1901,9 +1900,11 @@ async function loadHistory() {
         else if (effectiveInterval>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
         else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
         timestamps.push(d);
-        tiltShallowVals.push(parseFloat(f['field'+flds.tiltShallow])||0);
-        tiltDeepVals.push(parseFloat(f['field'+flds.tiltDeep])||0);
-        tiltVals.push(parseFloat(f['field'+flds.tiltAvg])||0);
+        const _tS=parseFloat(f['field'+flds.tiltShallow])||0;
+        const _tD=parseFloat(f['field'+flds.tiltDeep])||0;
+        tiltShallowVals.push(_tS);
+        tiltDeepVals.push(_tD);
+        tiltVals.push((_tS+_tD)/2); // computed locally — avoids field5 collision
         moistVals.push(parseFloat(f['field'+flds.moistureShallow])||0);
         moistDeepVals.push(parseFloat(f['field'+flds.moistureDeep])||0);
         moistAvgVals.push(parseFloat(f['field'+flds.moistureAvg])||0);
@@ -1935,9 +1936,11 @@ async function loadHistory() {
       else if(intervalMinutes>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
       else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
       timestamps.push(d);
-      tiltShallowVals.push(parseFloat(f['field'+node.fields.tiltShallow])||0);
-      tiltDeepVals.push(parseFloat(f['field'+node.fields.tiltDeep])||0);
-      tiltVals.push(parseFloat(f['field'+node.fields.tiltAvg])||0);
+      const _tS2=parseFloat(f['field'+node.fields.tiltShallow])||0;
+      const _tD2=parseFloat(f['field'+node.fields.tiltDeep])||0;
+      tiltShallowVals.push(_tS2);
+      tiltDeepVals.push(_tD2);
+      tiltVals.push((_tS2+_tD2)/2); // computed locally — avoids field5 collision
       moistVals.push(parseFloat(f['field'+node.fields.moistureShallow])||0);
       moistDeepVals.push(parseFloat(f['field'+node.fields.moistureDeep])||0);
       moistAvgVals.push(parseFloat(f['field'+node.fields.moistureAvg])||0);
