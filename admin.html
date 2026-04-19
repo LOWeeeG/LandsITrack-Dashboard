@@ -229,21 +229,6 @@
     header{padding:0 16px;}
     nav{padding:0 16px;}
   }
-  /* Calibration tab styles */
-  .calib-node-card{background:var(--card-bg,#fff);border:1.5px solid var(--border,#e2e8f0);border-radius:14px;padding:16px;margin-bottom:14px;}
-  .calib-node-title{font-weight:700;font-size:14px;margin-bottom:4px;}
-  .calib-reading{font-size:13px;color:var(--text-muted,#64748b);margin-bottom:10px;}
-  .calib-reading strong{color:var(--text,#1e293b);}
-  .calib-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  .calib-action-btn{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:monospace;}
-  .calib-action-btn.teal{background:#0d9488;color:#fff;}
-  .calib-action-btn.red{background:#dc2626;color:#fff;}
-  .calib-action-btn.amber{background:#b45309;color:#fff;}
-  .calib-action-btn.blue{background:#1d4ed8;color:#fff;}
-  .calib-log{margin-top:10px;border-top:1px solid var(--border,#e2e8f0);padding-top:10px;}
-  .calib-log-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted,#64748b);font-family:monospace;margin-bottom:6px;}
-  .calib-log-entry{font-size:11px;color:var(--text-muted,#64748b);padding:3px 0;border-bottom:1px solid var(--border,#e2e8f0);}
-  .calib-log-empty{font-size:12px;color:var(--text-muted,#64748b);font-style:italic;}
 </style>
 </head>
 <body>
@@ -285,7 +270,6 @@
     <button class="nav-tab active" onclick="switchTab('nodes')">Node Management</button>
     <button class="nav-tab" onclick="switchTab('thresholds')">Thresholds</button>
     <button class="nav-tab" onclick="switchTab('groups')">Group Management</button>
-    <button class="nav-tab" onclick="switchTab('calibration')">Calibration</button>
     <button class="nav-tab" onclick="switchTab('settings')">Config / API Keys</button>
   </nav>
 
@@ -344,15 +328,6 @@
     </div>
 
     <!-- ══ TAB: SETTINGS ══ -->
-    <div class="section" id="tab-calibration">
-      <div class="section-title">Calibration</div>
-      <p class="section-desc">Set tilt baselines and moisture calibration for each node. Changes sync across all devices in real time.</p>
-
-      <div id="calib-nodes-container">
-        <div style="text-align:center;padding:30px;color:var(--text-muted);font-family:monospace;font-size:13px;">Loading node data...</div>
-      </div>
-    </div>
-
     <div class="section" id="tab-settings">
       <div class="section-title">Config &amp; API Keys</div>
       <p class="section-desc">Register ThingSpeak channel IDs and API keys for each node. These are needed to push threshold changes from this dashboard to the hardware.</p>
@@ -565,7 +540,6 @@ function switchTab(name) {
   if (name === 'thresholds') renderThresholds();
   if (name === 'groups') renderGroups();
   if (name === 'settings') renderApiKeys();
-  if (name === 'calibration') renderCalibrationTab();
 }
 
 // ══════════════════════════════════════════════
@@ -980,146 +954,8 @@ function showToast(msg, type) {
 }
 
 // Auto-focus first PIN input
-// ── Calibration Tab ──
-// Firebase imports already available from module scope (db, doc, getDoc, setDoc, onSnapshot)
-
-const calibCache = {};
-
-async function loadCalibFromFirebase(nodeId) {
-  try {
-    const snap = await getDoc(doc(db, 'calibrations', nodeId));
-    if (snap.exists()) calibCache[nodeId] = snap.data();
-    else calibCache[nodeId] = { baseline: null, log: [] };
-  } catch(e) { calibCache[nodeId] = { baseline: null, log: [] }; }
-}
-
-async function saveCalibToFirebase(nodeId, data) {
-  calibCache[nodeId] = data;
-  await setDoc(doc(db, 'calibrations', nodeId), data);
-}
-
-async function fetchCurrentTilt(node) {
-  try {
-    const res = await fetch(`https://api.thingspeak.com/channels/${node.dataChannel}/feeds/last.json?api_key=${node.dataReadKey}`);
-    const data = await res.json();
-    const tiltAvgField = 5; // field5 = tiltAvg
-    return parseFloat(data['field' + tiltAvgField]) || null;
-  } catch(e) { return null; }
-}
-
-async function renderCalibrationTab() {
-  const container = document.getElementById('calib-nodes-container');
-  if (!container) return;
-
-  // Load calibration data for all nodes
-  await Promise.all(cfg.nodes.map(n => loadCalibFromFirebase(n.id)));
-
-  container.innerHTML = cfg.nodes.map(node => {
-    const calib = calibCache[node.id] || { baseline: null, log: [] };
-    const baselineText = calib.baseline !== null
-      ? calib.baseline.toFixed(2) + '° (set ' + (calib.setAt ? new Date(calib.setAt).toLocaleDateString() : 'unknown') + ')'
-      : 'None — showing true angle';
-    const logEntries = (calib.log || []).slice(0,5).map(e =>
-      `<div class="calib-log-entry">${new Date(e.setAt).toLocaleDateString()} ${new Date(e.setAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true})} — ${e.baseline !== null ? e.baseline.toFixed(2)+'°' : 'cleared'}</div>`
-    ).join('') || '<div class="calib-log-empty">No calibrations recorded yet.</div>';
-
-    return `
-    <div class="calib-node-card" id="calib-card-${node.id}">
-      <div class="calib-node-title">📍 ${node.name}</div>
-      <div class="calib-reading">Current tilt: <strong id="calib-tilt-${node.id}">Loading...</strong></div>
-      <div class="calib-reading">Active baseline: <strong>${baselineText}</strong></div>
-
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;color:var(--text-muted,#64748b);">Tilt Calibration</div>
-      <div class="calib-btn-row">
-        <button class="calib-action-btn teal" onclick="setTiltBaseline('${node.id}')">🎯 Set Tilt Baseline</button>
-        <button class="calib-action-btn red" onclick="clearTiltBaseline('${node.id}')">Clear Baseline</button>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;color:var(--text-muted,#64748b);">Moisture Calibration</div>
-      <div style="font-size:12px;color:var(--text-muted,#64748b);margin-bottom:8px;">Pull sensor from soil → Set Dry. Submerge in water → Set Wet.</div>
-      <div class="calib-btn-row">
-        <button class="calib-action-btn amber" onclick="setMoistureCalib('${node.id}','dry')">💧 Set Dry</button>
-        <button class="calib-action-btn blue" onclick="setMoistureCalib('${node.id}','wet')">🌊 Set Wet</button>
-      </div>
-
-      <div class="calib-log">
-        <div class="calib-log-title">Calibration Log</div>
-        ${logEntries}
-      </div>
-    </div>`;
-  }).join('');
-
-  // Fetch current tilt readings for all nodes
-  cfg.nodes.forEach(async node => {
-    const tilt = await fetchCurrentTilt(node);
-    const el = document.getElementById('calib-tilt-' + node.id);
-    if (el) el.textContent = tilt !== null ? Math.abs(tilt).toFixed(2) + '°' : 'Unavailable';
-  });
-}
-
-async function setTiltBaseline(nodeId) {
-  const node = cfg.nodes.find(n => n.id === nodeId);
-  if (!node) return;
-  const tilt = await fetchCurrentTilt(node);
-  if (tilt === null) { alert('Could not fetch current tilt. Check node connection.'); return; }
-  if (!confirm(`Set ${Math.abs(tilt).toFixed(2)}° as tilt baseline for ${node.name}?`)) return;
-
-  const calib = calibCache[nodeId] || { baseline: null, log: [] };
-  if (!calib.log) calib.log = [];
-  calib.log.unshift({ baseline: tilt, setAt: new Date().toISOString() });
-  if (calib.log.length > 20) calib.log = calib.log.slice(0, 20);
-  calib.baseline = tilt;
-  calib.setAt = new Date().toISOString();
-  await saveCalibToFirebase(nodeId, calib);
-  showToast('Tilt baseline set for ' + node.name, 'success');
-  renderCalibrationTab();
-}
-
-async function clearTiltBaseline(nodeId) {
-  const node = cfg.nodes.find(n => n.id === nodeId);
-  if (!node) return;
-  if (!confirm(`Clear tilt baseline for ${node.name}?`)) return;
-  const calib = calibCache[nodeId] || { baseline: null, log: [] };
-  if (!calib.log) calib.log = [];
-  calib.log.unshift({ baseline: null, setAt: new Date().toISOString() });
-  calib.baseline = null;
-  await saveCalibToFirebase(nodeId, calib);
-  showToast('Tilt baseline cleared for ' + node.name, 'success');
-  renderCalibrationTab();
-}
-
-async function setMoistureCalib(nodeId, type) {
-  const node = cfg.nodes.find(n => n.id === nodeId);
-  if (!node || !node.configWriteKey) { alert('Config write key not set for this node. Add it in Config/API Keys tab.'); return; }
-  const fieldVal = type === 'dry' ? 96 : 95;
-  const label = type === 'dry' ? 'Dry' : 'Wet';
-  const instruction = type === 'dry' ? 'Ensure sensor is in open air (not in soil).' : 'Ensure sensor is submerged in water.';
-  if (!confirm(`${label} calibration for ${node.name}.
-
-${instruction}
-
-Proceed?`)) return;
-
-  let accepted = false, attempts = 0;
-  while (!accepted && attempts < 5) {
-    attempts++;
-    try {
-      const res = await fetch(`https://api.thingspeak.com/update?api_key=${node.configWriteKey}&field8=${fieldVal}`);
-      const entry = parseInt((await res.text()).trim());
-      if (entry > 0) accepted = true;
-      else await new Promise(r => setTimeout(r, 16000));
-    } catch(e) { await new Promise(r => setTimeout(r, 16000)); }
-  }
-  if (!accepted) { alert('Could not send command. Please try again.'); return; }
-  showToast(label + ' moisture baseline command sent to ' + node.name, 'success');
-  alert(`${label} baseline set for ${node.name}. Moisture readings will update within 30 seconds.`);
-}
-
 // ── Expose functions to global scope (required for inline onclick handlers with type="module") ──
 window.logout         = logout;
-window.setTiltBaseline  = setTiltBaseline;
-window.clearTiltBaseline= clearTiltBaseline;
-window.setMoistureCalib = setMoistureCalib;
 window.switchTab      = switchTab;
 window.addNode        = addNode;
 window.removeNode     = removeNode;
