@@ -442,7 +442,10 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
     </div>
   </div>
   <div class="data-table-card">
-    <div class="data-table-title" id="tableTitle">Node 1 — Data Table</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="data-table-title" id="tableTitle" style="margin-bottom:0;">Node 1 — Data Table</div>
+      <button id="exportCsvBtn" style="display:none;background:var(--teal-dark);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⬇ Export CSV</button>
+    </div>
     <div id="tableWrap">
       <div class="chart-empty" style="height:80px;">
         <div class="chart-empty-text">Load history to see data table</div>
@@ -458,8 +461,9 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <div class="history-mode-toggle">
         <button class="mode-btn active" id="alertLogTab">🚨 Alert History</button>
-        <button class="mode-btn" id="smsLogTab" style="display:none;" id="smsLogTabBtn">📱 SMS Log</button>
+        <button class="mode-btn" id="smsLogTab" style="display:none;">📱 SMS Log</button>
       </div>
+      <button id="loadPastAlertsBtn" class="btn" style="font-size:12px;padding:7px 14px;">🔄 Load Past Alerts</button>
     </div>
   </div>
   <!-- Alert History -->
@@ -1081,6 +1085,39 @@ function buildNodeCards() {
 
 }
 
+// ── CSV Export ──
+function exportCSV() {
+  if (!lastTableData) return;
+  const { nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLevelVals } = lastTableData;
+  const levelNames = ['Normal','Level 1','Level 2','Level 3','Level 4'];
+  const header = ['Timestamp','Shallow Tilt (deg)','Deep Tilt (deg)','Avg Tilt (deg)','Moisture Shallow (%)','Moisture Deep (%)','Moisture Avg (%)','Vibration Count','Alert Level'];
+  const rows = timestamps.map((ts, i) => {
+    const lv = Math.min(alertLevelVals[i] || 0, 4);
+    return [
+      ts.toISOString().replace('T',' ').replace('.000Z',''),
+      Math.abs(tiltShallowVals[i]).toFixed(2),
+      Math.abs(tiltDeepVals[i]).toFixed(2),
+      Math.abs(tiltVals[i]).toFixed(2),
+      (moistVals[i]||0).toFixed(2),
+      (moistDeepVals[i]||0).toFixed(2),
+      (moistAvgVals[i]||0).toFixed(2),
+      vibVals[i]||0,
+      levelNames[lv]||'Normal'
+    ].join(',');
+  });
+  const csv = [header.join(','), ...rows.reverse()].join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const safeName = nodeLabel.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  const dateStr  = new Date().toISOString().split('T')[0];
+  a.href = url; a.download = `landsitrack_${safeName}_${dateStr}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+
 // ── Dark Mode ──
 (function initDarkMode() {
   const saved = localStorage.getItem('lits_theme');
@@ -1142,18 +1179,21 @@ function recordAlertChange(nodeId, newLevel, tilt, moisture) {
 function renderAlertLog() {
   const el = document.getElementById('alertLogList');
   if (!el) return;
-  if (alertLog.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No alert events recorded yet.</div>';
+  const levelColors = ['var(--safe)','var(--l1)','var(--l2)','var(--l3)','var(--l4)'];
+  const allEntries = [...alertLog].sort((a,b) => b.timestamp - a.timestamp);
+
+  if (allEntries.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No alert events recorded yet.<br><br><small>Alert events will appear here as sensor levels change.<br>Use "Load Past Alerts" to fetch historical data.</small></div>';
     return;
   }
-  const levelColors = ['var(--safe)','var(--l1)','var(--l2)','var(--l3)','var(--l4)'];
-  el.innerHTML = alertLog.map(entry => {
+
+  el.innerHTML = allEntries.map(entry => {
     const node = nodes.find(n => n.id === entry.nodeId);
-    const name = node?.label || entry.nodeId;
+    const name = node?.label || entry.nodeId || 'System';
     const time = entry.timestamp.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
-                 entry.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                 entry.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const arrow = entry.newLevel > entry.prevLevel ? '▲' : '▼';
-    const color = levelColors[entry.newLevel] || 'var(--text)';
+    const color = levelColors[Math.min(entry.newLevel,4)] || 'var(--text)';
     const details = [entry.tilt ? 'Tilt: '+entry.tilt+'°' : '', entry.moisture ? 'Moisture: '+entry.moisture+'%' : ''].filter(Boolean).join(' · ');
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -1164,6 +1204,49 @@ function renderAlertLog() {
       ${details ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${details}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+async function loadPastAlerts() {
+  const btn = document.getElementById('loadPastAlertsBtn');
+  btn.textContent = '⏳ Loading...'; btn.disabled = true;
+  const levelNames = ['Normal','Level 1','Level 2','Level 3','Level 4'];
+
+  for (const node of nodes) {
+    try {
+      const res = await fetch(`https://api.thingspeak.com/channels/${node.channel}/feeds.json?api_key=${node.apiKey}&results=500`);
+      const data = await res.json();
+      if (!data.feeds || data.feeds.length === 0) continue;
+
+      let prevLevel = -1;
+      data.feeds.forEach(f => {
+        const lv = Math.min(parseInt(f['field'+node.fields.alertLevel])||0, 4);
+        const ts = new Date(f.created_at);
+        const tilt = parseFloat(f['field'+node.fields.tiltAvg]);
+        const moist = parseFloat(f['field'+node.fields.moistureAvg]);
+        if (prevLevel !== -1 && lv !== prevLevel) {
+          // Check if this entry already exists (avoid duplicates)
+          const exists = alertLog.some(e => e.nodeId === node.id && Math.abs(e.timestamp - ts) < 60000 && e.newLevel === lv);
+          if (!exists) {
+            alertLog.push({
+              nodeId: node.id,
+              newLevel: lv,
+              prevLevel: prevLevel,
+              timestamp: ts,
+              tilt: isNaN(tilt) ? null : tilt.toFixed(1),
+              moisture: isNaN(moist) ? null : moist.toFixed(1),
+              label: levelNames[lv] || 'Unknown',
+              prevLabel: levelNames[prevLevel] || 'Unknown'
+            });
+          }
+        }
+        prevLevel = lv;
+      });
+    } catch(e) { console.warn('Alert log fetch error:', e); }
+  }
+
+  alertLog.sort((a,b) => b.timestamp - a.timestamp);
+  renderAlertLog();
+  btn.textContent = '🔄 Refresh'; btn.disabled = false;
 }
 
 // ── SMS Log ──
@@ -1208,6 +1291,18 @@ document.getElementById('alertLogTab').addEventListener('click', () => {
   document.getElementById('smsLogTab').classList.remove('active');
   document.getElementById('alertLogContent').style.display = '';
   document.getElementById('smsLogContent').style.display = 'none';
+});
+document.getElementById('loadPastAlertsBtn').addEventListener('click', loadPastAlerts);
+
+// Auto-load past alerts when Alert Log page is first visited
+let alertLogLoaded = false;
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.getAttribute('data-page') === 'alertLogPage' && !alertLogLoaded) {
+      alertLogLoaded = true;
+      loadPastAlerts();
+    }
+  });
 });
 document.getElementById('smsLogTab').addEventListener('click', () => {
   document.getElementById('smsLogTab').classList.add('active');
@@ -1597,6 +1692,7 @@ function requestNotificationPermission() {
   if (Notification.permission === 'default') Notification.requestPermission();
 }
 let lastNotifiedLevel = 0;
+let lastTableData = null; // stores last loaded history data for CSV export
 function sendLevelNotification(maxLevel, msg) {
   // Log to SMS log if level escalated (sensor-triggered)
   if (maxLevel > 0 && maxLevel !== lastNotifiedLevel) {
@@ -2035,6 +2131,11 @@ function renderMoistureChart(wid, labels, shallowVals, deepVals, avgVals, interv
 function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLevelVals) {
   const nodeId=activeHistoryNode;
   document.getElementById('tableTitle').textContent=nodeLabel+' — Data Table ('+tiltVals.length+' readings)';
+  // Store for CSV export
+  lastTableData = { nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltVals, moistVals, moistDeepVals, moistAvgVals, vibVals, alertLevelVals };
+  // Show export button if admin is logged in
+  const exportBtn = document.getElementById('exportCsvBtn');
+  if (exportBtn && adminAuth) exportBtn.style.display = '';
   const wrap=document.getElementById('tableWrap');
   if (!tiltVals.length) { wrap.innerHTML='<div class="chart-empty" style="height:80px;"><div class="chart-empty-text">No data</div></div>'; return; }
   function tiltClass(v){const t=Math.abs(v);return t>=20?'dt-l4':t>=15?'dt-l3':t>=10?'dt-l2':t>=5?'dt-l1':'dt-safe';}
@@ -2152,7 +2253,7 @@ function pinKey(digit){if(pinBuffer.length>=4)return;pinBuffer+=digit;updatePinD
 function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();document.getElementById('pinError').textContent='';}
 function updatePinDots(){for(let i=0;i<4;i++){const dot=document.getElementById('dot'+i);dot.classList.toggle('filled',i<pinBuffer.length);dot.classList.remove('error');}}
 function checkPin(){
-  if(pinBuffer===ADMIN_PIN){adminAuth=true;showAdminPanel();const smsTab=document.getElementById('smsLogTab');if(smsTab)smsTab.style.display='';}
+  if(pinBuffer===ADMIN_PIN){adminAuth=true;showAdminPanel();const smsTab=document.getElementById('smsLogTab');if(smsTab)smsTab.style.display='';const exportBtn=document.getElementById('exportCsvBtn');if(exportBtn&&lastTableData)exportBtn.style.display='';}
   else{for(let i=0;i<4;i++)document.getElementById('dot'+i).classList.add('error');document.getElementById('pinError').textContent='Incorrect PIN. Try again.';setTimeout(()=>{pinBuffer='';updatePinDots();},900);}
 }
 
