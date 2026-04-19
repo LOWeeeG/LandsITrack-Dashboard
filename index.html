@@ -1865,30 +1865,40 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
     return `<span class="${cls[displayLv]}">${label}</span>`;
   }
 
-  // Mobile-friendly card layout instead of wide table
-  const cards = tiltVals.map((t,i)=>{
+  const rows=tiltVals.map((t,i)=>{
     const ts=timestamps[i];
     const time=ts.toLocaleDateString([],{month:'short',day:'numeric'})+' '+ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const shallow=tiltShallowVals[i],deep=tiltDeepVals[i],mA=moistVals[i],mB=moistDeepVals[i],mAvg=moistAvgVals[i],v=vibVals[i];
     const dispShallow=Math.abs(shallow),dispDeep=Math.abs(deep),dispAvg=Math.abs(t);
-    const lvSpan = alertLabel(dispAvg,mAvg||Math.max(mA,mB),ts,alertLevelVals[i]);
-    return `
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);">${time}</span>
-          ${lvSpan}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <div style="font-size:11px;color:var(--text-muted);">🌱 Shallow Tilt<br><span class="${tiltClass(dispShallow)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispShallow.toFixed(1)}°</span></div>
-          <div style="font-size:11px;color:var(--text-muted);">🪨 Deep Tilt<br><span class="${tiltClass(dispDeep)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispDeep.toFixed(1)}°${deep>shallow&&deep>=3?' ⚠️':''}</span></div>
-          <div style="font-size:11px;color:var(--text-muted);">📐 Avg Tilt<br><span class="${tiltClass(dispAvg)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${dispAvg.toFixed(1)}°</span></div>
-          <div style="font-size:11px;color:var(--text-muted);">📳 Vibration<br><span class="${vibClass(v)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${vibLabel(v)}</span></div>
-          <div style="font-size:11px;color:var(--text-muted);">💧 Shallow Moisture<br><span class="${moistClass(mA)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${mA.toFixed(1)}%</span></div>
-          <div style="font-size:11px;color:var(--text-muted);">💧 Deep Moisture<br><span class="${moistClass(mB)}" style="font-family:var(--mono);font-size:13px;font-weight:700;">${mB.toFixed(1)}%${mB>mA&&mB>=60?' ⚠️':''}</span></div>
-        </div>
-      </div>`;
+    return `<tr>
+      <td style="white-space:nowrap;">${time}</td>
+      <td class="${tiltClass(dispShallow)}">${dispShallow.toFixed(1)}°</td>
+      <td class="${tiltClass(dispDeep)}">${dispDeep.toFixed(1)}°${deep>shallow&&deep>=3?' ⚠️':''}</td>
+      <td class="${tiltClass(dispAvg)}">${dispAvg.toFixed(1)}°</td>
+      <td class="${moistClass(mA)}">${mA.toFixed(1)}%</td>
+      <td class="${moistClass(mB)}">${mB.toFixed(1)}%${mB>mA&&mB>=60?' ⚠️':''}</td>
+      <td class="${moistClass(mAvg)}">${mAvg.toFixed(1)}%</td>
+      <td class="${vibClass(v)}">${vibLabel(v)}</td>
+      <td>${alertLabel(dispAvg,mAvg||Math.max(mA,mB),ts,alertLevelVals[i])}</td>
+    </tr>`;
   }).reverse().join('');
-  wrap.innerHTML = cards;
+  wrap.innerHTML=`
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--border);">
+      <table class="data-table" style="font-size:11px;min-width:600px;width:100%;">
+        <thead><tr>
+          <th style="white-space:nowrap;">Time</th>
+          <th>🌱<br>Shallow<br>Tilt</th>
+          <th>🪨<br>Deep<br>Tilt</th>
+          <th>Avg<br>Tilt</th>
+          <th>💧<br>Shallow<br>Moisture</th>
+          <th>💧<br>Deep<br>Moisture</th>
+          <th>💧<br>Avg<br>Moisture</th>
+          <th>Vibration</th>
+          <th>Alert<br>Level</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
 // ── Admin / PIN ──
