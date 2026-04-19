@@ -454,9 +454,21 @@ let cfg = loadLocalConfig();
 function loadLocalConfig() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return mergeWithDefaults(JSON.parse(raw));
   } catch(e) {}
   return defaultConfig();
+}
+
+// mergeWithDefaults needs to be defined before loadLocalConfig is called
+// but it references defaultConfig — define it early as a forward reference
+function mergeWithDefaults(loaded) {
+  const def = defaultConfig();
+  if (!loaded || !loaded.nodes) return def;
+  loaded.nodes = loaded.nodes.map((node, i) => {
+    const defNode = def.nodes[i] || def.nodes[0];
+    return Object.assign({}, defNode, node);
+  });
+  return loaded;
 }
 
 // Save to both localStorage (instant) and Firebase (synced)
@@ -472,7 +484,7 @@ async function loadFromFirebase() {
   try {
     const snap = await getDoc(CONFIG_DOC);
     if (snap.exists()) {
-      cfg = snap.data();
+      cfg = mergeWithDefaults(snap.data());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
       // Only re-render if app panel is already open (user already logged in)
       if (document.getElementById('app').style.display === 'flex') {
@@ -494,7 +506,7 @@ function startFirebaseSync() {
     const remoteStr = JSON.stringify(remote);
     const localStr  = JSON.stringify(cfg);
     if (remoteStr !== localStr) {
-      cfg = remote;
+      cfg = mergeWithDefaults(remote);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
       // Only re-render if app panel is already open
       if (document.getElementById('app').style.display === 'flex') {
