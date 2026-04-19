@@ -826,6 +826,8 @@ const nodeStatuses = { node1:0, node2:0 };
 let adminAuth = false;
 let pinBuffer = '';
 let activeHistoryNode = 'node1';
+let historyViewMode = 'single'; // 'single' or 'group'
+let activeHistoryGroup = null;  // group name when in group mode
 const historyCharts = {};
 
 // ── Event Listeners ──
@@ -1433,9 +1435,7 @@ function sendLevelNotification(maxLevel, msg) {
 requestNotificationPermission();
 
 // ── History ──
-// ── History view state ──
-let historyViewMode = 'single'; // 'single' or 'group'
-let activeHistoryGroup = null;  // group name when in group mode
+
 
 function getGroupNames() {
   // Try node.groupName first (set by applyAdminConfig)
