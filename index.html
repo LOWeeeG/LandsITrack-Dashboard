@@ -54,6 +54,18 @@ function applyUpdate() {
   --l3:#ea580c; --l3-bg:#ffedd5; --l3-border:#fdba74;
   --l4:#dc2626; --l4-bg:#fee2e2; --l4-border:#fca5a5;
 }
+[data-theme="dark"] {
+  --bg:#0a1a1a; --surface:#0f2421; --surface2:#0d1f1d;
+  --text:#cffafe; --text-muted:#5eead4; --border:#1d4e4a;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --safe-bg:#052e16; --safe-border:#065f46;
+  --l1-bg:#052e16; --l1-border:#065f46;
+  --l2-bg:#422006; --l2-border:#92400e;
+  --l3-bg:#431407; --l3-border:#9a3412;
+  --l4-bg:#450a0a; --l4-border:#991b1b;
+}
+[data-theme="dark"] .node-header:hover{background:#0d2420;}
+[data-theme="dark"] .nav-btn.active{color:#5eead4;border-color:#5eead4;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
 header{background:var(--teal-deep);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.25);}
@@ -299,9 +311,9 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 .history-mode-toggle{display:flex;border-radius:8px;overflow:hidden;border:1.5px solid var(--teal-dark);}
 .mode-btn{background:none;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
 .mode-btn.active{background:var(--teal-dark);color:#fff;}
-.date-input{background:#0f2b2a;border:1.5px solid #0d9488;border-radius:8px;color:#cffafe;padding:7px 10px;font-family:var(--mono);font-size:12px;outline:none;-webkit-appearance:none;appearance:none;}
+.date-input{background:var(--surface2);border:1.5px solid var(--teal-dark);border-radius:8px;color:var(--text);padding:7px 10px;font-family:var(--mono);font-size:12px;outline:none;-webkit-appearance:none;appearance:none;}
 .date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.8;cursor:pointer;}
-.date-input option{background:#0f2b2a;color:#cffafe;}
+.date-input option{background:var(--surface2);color:var(--text);}
 .lang-toggle{display:flex;justify-content:center;margin:16px 0 4px;gap:0;}
 .lang-btn{background:none;border:1.5px solid var(--teal-dark);padding:8px 22px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
 .lang-btn:first-child{border-radius:8px 0 0 8px;}
@@ -322,6 +334,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   <div class="header-right">
     <div class="last-update" id="lastUpdate">—</div>
     <button class="install-header-btn" id="installHeaderBtn">📲 Install App</button>
+    <button class="admin-btn" id="darkModeBtn" title="Toggle Dark/Light Mode" style="font-size:16px;">🌙</button>
     <button class="admin-btn" id="adminOpenBtn" title="Calibration Panel">🔒</button>
     <!-- ⚙️ Opens admin.html for threshold & node management -->
     <a href="admin.html" class="admin-btn" title="Admin Panel — Thresholds &amp; Node Config" style="text-decoration:none;font-size:14px;" target="_blank">⚙️</a>
@@ -331,6 +344,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 <nav>
   <button class="nav-btn active" data-page="homePage">Overview</button>
   <button class="nav-btn" data-page="historyPage">History</button>
+  <button class="nav-btn" data-page="alertLogPage">Alert Log</button>
   <button class="nav-btn" data-page="guidePage">How It Works</button>
 </nav>
 
@@ -438,6 +452,30 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 </div>
 
 <!-- GUIDE -->
+<div class="page" id="alertLogPage">
+  <div class="history-header" style="flex-direction:column;align-items:flex-start;gap:12px;">
+    <div class="page-title">Alert Log</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div class="history-mode-toggle">
+        <button class="mode-btn active" id="alertLogTab">🚨 Alert History</button>
+        <button class="mode-btn" id="smsLogTab" style="display:none;" id="smsLogTabBtn">📱 SMS Log</button>
+      </div>
+    </div>
+  </div>
+  <!-- Alert History -->
+  <div id="alertLogContent">
+    <div id="alertLogList" style="margin-top:8px;">
+      <div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No alert events recorded yet.</div>
+    </div>
+  </div>
+  <!-- SMS Log (admin only) -->
+  <div id="smsLogContent" style="display:none;">
+    <div id="smsLogList" style="margin-top:8px;">
+      <div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No SMS records yet.</div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="guidePage">
   <div class="lang-toggle">
     <button class="lang-btn active" id="langEng">English</button>
@@ -825,6 +863,11 @@ const nodeStatuses = { node1:0, node2:0 };
 let adminAuth = false;
 let pinBuffer = '';
 let activeHistoryNode = 'node1';
+
+// ── Alert log & SMS log state ──
+const alertLog   = []; // { nodeId, level, prevLevel, timestamp, tilt, moisture }
+const smsLog     = []; // { timestamp, recipients, level, nodeId, message }
+const nodeLastLevels = {}; // track previous level per node to detect changes
 let historyViewMode = 'single'; // 'single' or 'group'
 let activeHistoryGroup = null;  // group name when in group mode
 const historyCharts = {};
@@ -989,6 +1032,7 @@ function buildNodeCards() {
         <div class="mini-stats">
           <div class="mini-stat"><div class="mini-stat-val" id="${id}-status">Safe</div><div class="mini-stat-lbl">Status</div></div>
           <div class="mini-stat"><div class="mini-stat-val" id="${id}-time">—</div><div class="mini-stat-lbl">Last Reading</div></div>
+          <div class="mini-stat"><div class="mini-stat-val" id="${id}-health" style="font-size:11px;">—</div><div class="mini-stat-lbl">Node Health</div></div>
         </div>
         <div class="action-panel" id="${id}-actionPanel">
           <div class="action-panel-title">⚡ RESPONSE PROTOCOL</div>
@@ -1036,6 +1080,142 @@ function buildNodeCards() {
   // onchange is attached inside populateHistoryDropdown
 
 }
+
+// ── Dark Mode ──
+(function initDarkMode() {
+  const saved = localStorage.getItem('lits_theme');
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+document.getElementById('darkModeBtn').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('lits_theme', 'light');
+    document.getElementById('darkModeBtn').textContent = '🌙';
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('lits_theme', 'dark');
+    document.getElementById('darkModeBtn').textContent = '☀️';
+  }
+});
+// Set correct icon on load
+if (localStorage.getItem('lits_theme') === 'dark')
+  document.getElementById('darkModeBtn').textContent = '☀️';
+
+// ── Sensor Health Indicator ──
+function updateSensorHealth(nodeId, timestamp) {
+  const el = document.getElementById(nodeId + '-health');
+  if (!el || !timestamp) return;
+  const ageMs = Date.now() - timestamp.getTime();
+  const ageMins = Math.floor(ageMs / 60000);
+  let label, color;
+  if (ageMins < 2)       { label = '🟢 Online';      color = 'var(--safe)'; }
+  else if (ageMins < 10) { label = '🟡 ' + ageMins + 'm ago'; color = '#ca8a04'; }
+  else if (ageMins < 60) { label = '🟠 ' + ageMins + 'm ago'; color = '#ea580c'; }
+  else {
+    const hrs = Math.floor(ageMins/60);
+    label = '🔴 ' + hrs + 'h ago'; color = '#dc2626';
+  }
+  el.textContent = label;
+  el.style.color = color;
+}
+
+// ── Alert Log ──
+function recordAlertChange(nodeId, newLevel, tilt, moisture) {
+  const prev = nodeLastLevels[nodeId] ?? -1;
+  if (newLevel === prev) return; // no change
+  nodeLastLevels[nodeId] = newLevel;
+  if (prev === -1) return; // skip initial load
+  const levelNames = ['Normal','Level 1','Level 2','Level 3','Level 4'];
+  alertLog.unshift({
+    nodeId, newLevel, prevLevel: prev,
+    timestamp: new Date(),
+    tilt: tilt?.toFixed(1), moisture: moisture?.toFixed(1),
+    label: levelNames[newLevel] || 'Unknown',
+    prevLabel: levelNames[prev] || 'Unknown'
+  });
+  if (alertLog.length > 100) alertLog.pop();
+  renderAlertLog();
+}
+
+function renderAlertLog() {
+  const el = document.getElementById('alertLogList');
+  if (!el) return;
+  if (alertLog.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No alert events recorded yet.</div>';
+    return;
+  }
+  const levelColors = ['var(--safe)','var(--l1)','var(--l2)','var(--l3)','var(--l4)'];
+  el.innerHTML = alertLog.map(entry => {
+    const node = nodes.find(n => n.id === entry.nodeId);
+    const name = node?.label || entry.nodeId;
+    const time = entry.timestamp.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
+                 entry.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const arrow = entry.newLevel > entry.prevLevel ? '▲' : '▼';
+    const color = levelColors[entry.newLevel] || 'var(--text)';
+    const details = [entry.tilt ? 'Tilt: '+entry.tilt+'°' : '', entry.moisture ? 'Moisture: '+entry.moisture+'%' : ''].filter(Boolean).join(' · ');
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">${time}</span>
+        <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};">${arrow} ${entry.label}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);margin-top:4px;">${name}: ${entry.prevLabel} → ${entry.label}</div>
+      ${details ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${details}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── SMS Log ──
+function recordSMS(nodeId, level, recipients, message) {
+  smsLog.unshift({
+    nodeId, level, recipients, message,
+    timestamp: new Date()
+  });
+  if (smsLog.length > 50) smsLog.pop();
+  if (adminAuth) renderSmsLog();
+}
+
+function renderSmsLog() {
+  const el = document.getElementById('smsLogList');
+  if (!el) return;
+  if (smsLog.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px;">No SMS records yet.</div>';
+    return;
+  }
+  const levelColors = ['var(--safe)','var(--l1)','var(--l2)','var(--l3)','var(--l4)'];
+  el.innerHTML = smsLog.map(entry => {
+    const node = nodes.find(n => n.id === entry.nodeId);
+    const name = node?.label || entry.nodeId;
+    const time = entry.timestamp.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
+                 entry.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const color = levelColors[entry.level] || 'var(--text)';
+    const levelNames = ['Normal','Level 1','Level 2','Level 3','Level 4'];
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">${time}</span>
+        <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};">${levelNames[entry.level]||''}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);margin-top:4px;">📱 Sent for ${name}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Recipients: ${entry.recipients}</div>
+    </div>`;
+  }).join('');
+}
+
+// Alert Log tab switcher
+document.getElementById('alertLogTab').addEventListener('click', () => {
+  document.getElementById('alertLogTab').classList.add('active');
+  document.getElementById('smsLogTab').classList.remove('active');
+  document.getElementById('alertLogContent').style.display = '';
+  document.getElementById('smsLogContent').style.display = 'none';
+});
+document.getElementById('smsLogTab').addEventListener('click', () => {
+  document.getElementById('smsLogTab').classList.add('active');
+  document.getElementById('alertLogTab').classList.remove('active');
+  document.getElementById('smsLogContent').style.display = '';
+  document.getElementById('alertLogContent').style.display = 'none';
+  renderSmsLog();
+});
 
 // ── Startup ──
 // Always build cards immediately with whatever we have (localStorage or defaults).
@@ -1377,6 +1557,13 @@ async function fetchNode(node) {
 
     nodeStatuses[node.id] = displayLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
+
+    // Sensor health indicator
+    if (timestamp) updateSensorHealth(node.id, timestamp);
+
+    // Alert log — record if level changed
+    recordAlertChange(node.id, displayLevel, Math.abs(trueAngle), moistAvg);
+
     const upd = document.getElementById('lastUpdate');
     if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   } catch(e) { console.error('Fetch error:', e); }
@@ -1409,7 +1596,14 @@ function requestNotificationPermission() {
   if (!('Notification' in window)) return;
   if (Notification.permission === 'default') Notification.requestPermission();
 }
+let lastNotifiedLevel = 0;
 function sendLevelNotification(maxLevel, msg) {
+  // Log to SMS log if level escalated (sensor-triggered)
+  if (maxLevel > 0 && maxLevel !== lastNotifiedLevel) {
+    const recipients = maxLevel >= 3 ? 'Officials, BDRRMC, Residents' : maxLevel >= 2 ? 'Officials, BDRRMC' : 'Officials';
+    recordSMS(null, maxLevel, recipients, msg);
+    lastNotifiedLevel = maxLevel;
+  }
   if (!('Notification' in window) || Notification.permission !== 'granted' || maxLevel === 0) return;
   const titles = { 1:'LandsITrack — Level 1 Warning', 2:'LandsITrack — Level 2 Alert', 3:'LandsITrack — Level 3 High Risk', 4:'LandsITrack — CRITICAL Level 4' };
   const options = { body:msg, icon:'icon-192.png', badge:'icon-192.png', tag:'landsitrack-alert', renotify:true, vibrate:maxLevel>=3?[200,100,200,100,200]:[200,100,200] };
@@ -1939,6 +2133,7 @@ async function setJudgement(nodeId, type) {
     btn.textContent='⚠️ Issue Caution (L3)'; btn.disabled=false;
     if(!accepted){alert('Could not send caution command. Please try again.');return;}
     await saveJudgement(nodeId,'caution'); nodeStatuses[nodeId]=Math.max(nodeStatuses[nodeId],3); applyNodeStatus(nodeId,nodeStatuses[nodeId]); updateBanner('caution',nodeId);
+    recordSMS(nodeId, 3, 'Officials, BDRRMC, Residents', 'Manual Level 3 Caution issued by Barangay Official');
   } else if (type==='evacuate') {
     if(!confirm(`Order EVACUATION for ${nodeName}? This will send a Level 4 EVACUATE SMS to ALL recipients immediately.`)) return;
     const node=nodes.find(n=>n.id===nodeId); const btn=document.getElementById(nodeId+'-btnEvacuate');
@@ -1948,6 +2143,7 @@ async function setJudgement(nodeId, type) {
     btn.textContent='🚨 Order Evacuation (L4)'; btn.disabled=false;
     if(!accepted){alert('Could not send evacuation command. Please try again.');return;}
     await saveJudgement(nodeId,'evacuate'); nodeStatuses['node1']=4; nodeStatuses['node2']=4; applyNodeStatus('node1',4); applyNodeStatus('node2',4); updateBanner('evacuate',nodeId);
+    recordSMS(nodeId, 4, 'Officials, BDRRMC, Residents', 'Manual Level 4 Evacuation ordered by Barangay Official');
   }
   updateJudgementUI(nodeId);
 }
@@ -1956,7 +2152,7 @@ function pinKey(digit){if(pinBuffer.length>=4)return;pinBuffer+=digit;updatePinD
 function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();document.getElementById('pinError').textContent='';}
 function updatePinDots(){for(let i=0;i<4;i++){const dot=document.getElementById('dot'+i);dot.classList.toggle('filled',i<pinBuffer.length);dot.classList.remove('error');}}
 function checkPin(){
-  if(pinBuffer===ADMIN_PIN){adminAuth=true;showAdminPanel();}
+  if(pinBuffer===ADMIN_PIN){adminAuth=true;showAdminPanel();const smsTab=document.getElementById('smsLogTab');if(smsTab)smsTab.style.display='';}
   else{for(let i=0;i<4;i++)document.getElementById('dot'+i).classList.add('error');document.getElementById('pinError').textContent='Incorrect PIN. Try again.';setTimeout(()=>{pinBuffer='';updatePinDots();},900);}
 }
 
