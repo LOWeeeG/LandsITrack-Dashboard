@@ -354,12 +354,12 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
   <div class="history-header" style="flex-direction:column;align-items:flex-start;gap:12px;">
     <div class="page-title">Historical Data</div>
     <div class="history-controls" style="flex-direction:column;align-items:flex-start;gap:8px;width:100%;">
-      <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="node-tab active" id="viewSingle" style="border-radius:999px;">Single</button>
-          <button class="node-tab" id="viewGroup" style="border-radius:999px;">Group</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="history-mode-toggle">
+          <button class="mode-btn active" id="viewSingle">Single</button>
+          <button class="mode-btn" id="viewGroup">Group</button>
         </div>
-        <select id="historySelectors" class="date-input" style="width:auto;min-width:140px;">
+        <select id="historySelectors" class="date-input" style="width:auto;min-width:120px;max-width:180px;">
           <option value="node1">Node 1</option>
           <option value="node2">Node 2</option>
         </select>
@@ -1374,6 +1374,7 @@ async function fetchNode(node) {
     let displayLevel = firmwareLevel;
     if (firmwareLevel >= 1 && trueAngle < 2 && moistAvg < 30) { displayLevel = 0; }
     if (displayLevel >= 4) { displayLevel = 3; }
+
     nodeStatuses[node.id] = displayLevel;
     applyNodeStatus(node.id, nodeStatuses[node.id]);
     const upd = document.getElementById('lastUpdate');
@@ -1486,8 +1487,8 @@ function populateHistoryDropdown() {
 
 function switchHistoryView(mode) {
   historyViewMode = mode;
-  document.getElementById('viewSingle').classList.toggle('active', mode === 'single');
-  document.getElementById('viewGroup').classList.toggle('active', mode === 'group');
+  ['viewSingle','viewGroup'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById(mode === 'single' ? 'viewSingle' : 'viewGroup').classList.add('active');
   populateHistoryDropdown();
   resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
   // Group mode needs a minimum interval — "All readings" gives inaccurate averages
