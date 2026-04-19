@@ -356,11 +356,13 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
     <div class="history-controls" style="flex-direction:column;align-items:flex-start;gap:8px;width:100%;">
       <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
         <div style="display:flex;gap:8px;align-items:center;">
-          <button class="node-tab active" id="viewSingle" onclick="switchHistoryView('single')" style="border-radius:999px;">Single</button>
-          <button class="node-tab" id="viewGroup" onclick="switchHistoryView('group')" style="border-radius:999px;">Group</button>
+          <button class="node-tab active" id="viewSingle" style="border-radius:999px;">Single</button>
+          <button class="node-tab" id="viewGroup" style="border-radius:999px;">Group</button>
         </div>
         <div id="historySelectors" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <!-- populated dynamically as clickable buttons -->
+          <!-- Initial buttons — replaced by populateHistoryDropdown() on load -->
+          <button class="node-tab active" id="hbtn-node1" style="border-radius:999px;">Node 1</button>
+          <button class="node-tab" id="hbtn-node2" style="border-radius:999px;">Node 2</button>
         </div>
       </div>
       <div class="history-date-row" style="flex-wrap:wrap;gap:8px;">
@@ -840,6 +842,25 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
 document.getElementById('loadBtn').addEventListener('click', loadHistory);
 
+document.getElementById('viewSingle').addEventListener('click', () => switchHistoryView('single'));
+document.getElementById('viewGroup').addEventListener('click', () => switchHistoryView('group'));
+
+// Attach click to initial static node buttons
+(function attachInitialNodeBtns() {
+  const b1 = document.getElementById('hbtn-node1');
+  const b2 = document.getElementById('hbtn-node2');
+  if (b1) b1.addEventListener('click', () => {
+    activeHistoryNode = 'node1';
+    document.querySelectorAll('#historySelectors .node-tab').forEach(b => b.classList.remove('active'));
+    b1.classList.add('active');
+  });
+  if (b2) b2.addEventListener('click', () => {
+    activeHistoryNode = 'node2';
+    document.querySelectorAll('#historySelectors .node-tab').forEach(b => b.classList.remove('active'));
+    b2.classList.add('active');
+  });
+})();
+
 document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRecent').classList.add('active');
   document.getElementById('modeDate').classList.remove('active');
@@ -1029,13 +1050,11 @@ function buildNodeCards() {
 
 }
 
-// Expose switchHistoryView for inline onclick
-window.switchHistoryView = switchHistoryView;
-
 // ── Startup ──
 // Always build cards immediately with whatever we have (localStorage or defaults).
 // Firebase then updates node names/groups when it loads — cards rebuild automatically.
 buildNodeCards();
+populateHistoryDropdown(); // populate after cards are built and nodes array is ready
 fetchAll();
 setInterval(fetchAll, 15000);
 window._pollingStarted = true;
@@ -1057,6 +1076,7 @@ window._pollingStarted = true;
         if (tabEl)  tabEl.textContent  = node.label;
       });
       updateGuideThresholds(adminConfigSnap.data());
+      populateHistoryDropdown(); // refresh with group info from Firebase
     }
     // Real-time listener — if admin changes config on another device, update labels only
     // Don't fully rebuild cards (would reset expanded state and sensor readings)
