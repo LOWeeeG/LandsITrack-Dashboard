@@ -359,11 +359,10 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
           <button class="node-tab active" id="viewSingle" style="border-radius:999px;">Single</button>
           <button class="node-tab" id="viewGroup" style="border-radius:999px;">Group</button>
         </div>
-        <div id="historySelectors" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <!-- Initial buttons — replaced by populateHistoryDropdown() on load -->
-          <button class="node-tab active" id="hbtn-node1" style="border-radius:999px;">Node 1</button>
-          <button class="node-tab" id="hbtn-node2" style="border-radius:999px;">Node 2</button>
-        </div>
+        <select id="historySelectors" class="date-input" style="width:auto;min-width:140px;">
+          <option value="node1">Node 1</option>
+          <option value="node2">Node 2</option>
+        </select>
       </div>
       <div class="history-date-row" style="flex-wrap:wrap;gap:8px;">
         <div class="history-mode-toggle">
@@ -847,22 +846,7 @@ document.getElementById('loadBtn').addEventListener('click', loadHistory);
 document.getElementById('viewSingle').addEventListener('click', () => switchHistoryView('single'));
 document.getElementById('viewGroup').addEventListener('click', () => switchHistoryView('group'));
 
-// Attach click to initial static node buttons
-function attachInitialNodeBtns() {
-  const b1 = document.getElementById('hbtn-node1');
-  const b2 = document.getElementById('hbtn-node2');
-  if (b1) b1.addEventListener('click', () => {
-    activeHistoryNode = 'node1';
-    document.querySelectorAll('#historySelectors .node-tab').forEach(b => b.classList.remove('active'));
-    b1.classList.add('active');
-  });
-  if (b2) b2.addEventListener('click', () => {
-    activeHistoryNode = 'node2';
-    document.querySelectorAll('#historySelectors .node-tab').forEach(b => b.classList.remove('active'));
-    b2.classList.add('active');
-  });
-}
-attachInitialNodeBtns();
+
 
 document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRecent').classList.add('active');
@@ -1459,49 +1443,45 @@ function getGroupNames() {
 }
 
 function populateHistoryDropdown() {
-  const container = document.getElementById('historySelectors');
-  if (!container) return;
-  container.innerHTML = '';
+  const sel = document.getElementById('historySelectors');
+  if (!sel) return;
+  sel.innerHTML = '';
 
   if (historyViewMode === 'single') {
-    nodes.forEach((node, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'node-tab' + (node.id === activeHistoryNode ? ' active' : '');
-      btn.textContent = node.label;
-      btn.style.borderRadius = '999px';
-      btn.onclick = () => {
-        activeHistoryNode = node.id;
-        container.querySelectorAll('.node-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      };
-      container.appendChild(btn);
+    nodes.forEach(node => {
+      const opt = document.createElement('option');
+      opt.value = node.id;
+      opt.textContent = node.label;
+      if (node.id === activeHistoryNode) opt.selected = true;
+      sel.appendChild(opt);
     });
-    // Default to first if none selected
     if (!activeHistoryNode && nodes.length > 0) activeHistoryNode = nodes[0].id;
-
+    if (sel.value) activeHistoryNode = sel.value;
   } else {
     const groupNames = getGroupNames();
     if (groupNames.length === 0) {
-      const msg = document.createElement('span');
-      msg.textContent = 'No groups configured in Admin Panel';
-      msg.style.cssText = 'font-size:12px;color:var(--text-muted);padding:8px 0;';
-      container.appendChild(msg);
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No groups — configure in Admin Panel';
+      sel.appendChild(opt);
     } else {
       if (!activeHistoryGroup) activeHistoryGroup = groupNames[0];
       groupNames.forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = 'node-tab' + (name === activeHistoryGroup ? ' active' : '');
-        btn.textContent = name;
-        btn.style.borderRadius = '999px';
-        btn.onclick = () => {
-          activeHistoryGroup = name;
-          container.querySelectorAll('.node-tab').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        };
-        container.appendChild(btn);
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === activeHistoryGroup) opt.selected = true;
+        sel.appendChild(opt);
       });
+      if (sel.value) activeHistoryGroup = sel.value;
     }
   }
+
+  // Update active state on change
+  sel.onchange = () => {
+    if (historyViewMode === 'single') activeHistoryNode = sel.value;
+    else activeHistoryGroup = sel.value;
+  };
 }
 
 function switchHistoryView(mode) {
@@ -1522,11 +1502,6 @@ function switchHistoryView(mode) {
     Array.from(intervalSel.options).forEach(opt => { opt.disabled = false; });
   }
   if (mode === 'single') {
-    // Restore static node buttons if populateHistoryDropdown cleared them
-    const container = document.getElementById('historySelectors');
-    if (container && container.children.length === 0) {
-      attachInitialNodeBtns();
-    }
     const n = nodes.find(nd => nd.id === activeHistoryNode);
     document.getElementById('tiltChartTitle').textContent  = (n?.label || activeHistoryNode || 'Node') + ' — Tilt Angle';
     document.getElementById('moistChartTitle').textContent = (n?.label || activeHistoryNode || 'Node') + ' — Soil Moisture';
@@ -1581,7 +1556,12 @@ function groupByInterval(feeds, intervalMinutes, node) {
 async function loadHistory() {
   const btn=document.getElementById('loadBtn'); btn.textContent='⏳ Loading…'; btn.disabled=true;
   try {
-    // activeHistoryNode / activeHistoryGroup already updated by button clicks
+    // Read current dropdown selection before fetching
+    const hsel = document.getElementById('historySelectors');
+    if (hsel && hsel.value) {
+      if (historyViewMode === 'single') activeHistoryNode = hsel.value;
+      else activeHistoryGroup = hsel.value;
+    }
     // Determine which nodes to fetch
     const isGroupMode = historyViewMode === 'group' && activeHistoryGroup;
     let groupNodes = null;
