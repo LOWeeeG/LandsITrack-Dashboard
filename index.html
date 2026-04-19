@@ -846,7 +846,7 @@ document.getElementById('viewSingle').addEventListener('click', () => switchHist
 document.getElementById('viewGroup').addEventListener('click', () => switchHistoryView('group'));
 
 // Attach click to initial static node buttons
-(function attachInitialNodeBtns() {
+function attachInitialNodeBtns() {
   const b1 = document.getElementById('hbtn-node1');
   const b2 = document.getElementById('hbtn-node2');
   if (b1) b1.addEventListener('click', () => {
@@ -859,7 +859,8 @@ document.getElementById('viewGroup').addEventListener('click', () => switchHisto
     document.querySelectorAll('#historySelectors .node-tab').forEach(b => b.classList.remove('active'));
     b2.classList.add('active');
   });
-})();
+}
+attachInitialNodeBtns();
 
 document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRecent').classList.add('active');
@@ -1510,12 +1511,23 @@ function switchHistoryView(mode) {
   populateHistoryDropdown();
   resetWrap('tiltChartWrap','📈'); resetWrap('moistChartWrap','💧');
   if (mode === 'single') {
+    // Restore static node buttons if populateHistoryDropdown cleared them
+    const container = document.getElementById('historySelectors');
+    if (container && container.children.length === 0) {
+      attachInitialNodeBtns();
+    }
     const n = nodes.find(nd => nd.id === activeHistoryNode);
-    document.getElementById('tiltChartTitle').textContent  = (n?.label || 'Node') + ' — Tilt Angle';
-    document.getElementById('moistChartTitle').textContent = (n?.label || 'Node') + ' — Soil Moisture';
+    document.getElementById('tiltChartTitle').textContent  = (n?.label || activeHistoryNode || 'Node') + ' — Tilt Angle';
+    document.getElementById('moistChartTitle').textContent = (n?.label || activeHistoryNode || 'Node') + ' — Soil Moisture';
   } else {
-    document.getElementById('tiltChartTitle').textContent  = (activeHistoryGroup || 'Group') + ' — Tilt Angle (averaged)';
-    document.getElementById('moistChartTitle').textContent = (activeHistoryGroup || 'Group') + ' — Soil Moisture (averaged)';
+    const groupNames = getGroupNames();
+    if (groupNames.length === 0) {
+      document.getElementById('tiltChartTitle').textContent  = 'No groups configured — set up groups in Admin Panel';
+      document.getElementById('moistChartTitle').textContent = '';
+    } else {
+      document.getElementById('tiltChartTitle').textContent  = (activeHistoryGroup || groupNames[0]) + ' — Tilt Angle (averaged)';
+      document.getElementById('moistChartTitle').textContent = (activeHistoryGroup || groupNames[0]) + ' — Soil Moisture (averaged)';
+    }
   }
 }
 
@@ -1581,7 +1593,15 @@ async function loadHistory() {
         } catch(e) {}
       }
     }
-    const node = isGroupMode ? (groupNodes && groupNodes[0]) : nodes.find(nd=>nd.id===activeHistoryNode);
+    let node = isGroupMode ? (groupNodes && groupNodes[0]) : nodes.find(nd=>nd.id===activeHistoryNode);
+    // Fallback: if nodes array lookup failed, use hardcoded defaults
+    if (!node && !isGroupMode) {
+      const defaults = {
+        node1: { id:'node1', label:'Node 1', channel:3271719, apiKey:'8MTCFINXP6BB88WP', fields:{tiltShallow:3,tiltDeep:4,tiltAvg:5,moistureShallow:1,moistureDeep:6,moistureAvg:7,vibration:2,alertLevel:8} },
+        node2: { id:'node2', label:'Node 2', channel:3272515, apiKey:'UG7PTO84BATZVRLN', fields:{tiltShallow:3,tiltDeep:4,tiltAvg:5,moistureShallow:1,moistureDeep:6,moistureAvg:7,vibration:2,alertLevel:8} }
+      };
+      node = defaults[activeHistoryNode] || defaults['node1'];
+    }
     if (!node) { btn.textContent='📊 Load'; btn.disabled=false; return; }
 
     const byDate=document.getElementById('modeDate').classList.contains('active');
@@ -1679,7 +1699,12 @@ async function loadHistory() {
     renderDualTiltChart('tiltChartWrap',labels,tiltShallowVals,tiltDeepVals,tiltVals,intervalMinutes);
     renderMoistureChart('moistChartWrap',labels,moistVals,moistDeepVals,moistAvgVals,intervalMinutes);
     renderTable(nodeLabel,timestamps,tiltShallowVals,tiltDeepVals,tiltVals,moistVals,moistDeepVals,moistAvgVals,vibVals,alertLvls);
-  } catch(e) { console.error('History load error:',e); }
+  } catch(e) {
+    console.error('History load error:',e);
+    // Show error visibly so it's not silent on mobile
+    document.getElementById('tiltChartWrap').innerHTML =
+      '<div class="chart-empty"><div class="chart-empty-icon">⚠️</div><div class="chart-empty-text">Error loading data: ' + e.message + '</div></div>';
+  }
   btn.textContent='📊 Load'; btn.disabled=false;
 }
 
