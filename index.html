@@ -805,13 +805,23 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.getElementById(page).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    // Auto-load history when History tab is opened
+    if (page === 'historyPage') loadHistory();
   });
 });
 
 document.getElementById('loadBtn').addEventListener('click', loadHistory);
 
-document.getElementById('viewSingle').addEventListener('click', () => switchHistoryView('single'));
-document.getElementById('viewGroup').addEventListener('click', () => switchHistoryView('group'));
+document.getElementById('viewSingle').addEventListener('click', () => { switchHistoryView('single'); autoLoadHistory(); });
+document.getElementById('viewGroup').addEventListener('click', () => { switchHistoryView('group'); autoLoadHistory(); });
+
+// Helper: only load history if history tab is currently visible
+function autoLoadHistory() {
+  if (document.getElementById('historyPage').classList.contains('active')) loadHistory();
+}
+
+// Auto-reload when node selector changes
+document.getElementById('historySelectors').addEventListener('change', autoLoadHistory);
 
 
 
@@ -821,6 +831,7 @@ document.getElementById('modeRecent').addEventListener('click', () => {
   document.getElementById('modeRange').classList.remove('active');
   document.getElementById('datePicker').style.display = 'none';
   document.getElementById('rangePicker').style.display = 'none';
+  autoLoadHistory();
 });
 document.getElementById('modeDate').addEventListener('click', () => {
   document.getElementById('modeDate').classList.add('active');
@@ -831,6 +842,7 @@ document.getElementById('modeDate').addEventListener('click', () => {
   if (!document.getElementById('historyDate').value) {
     document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
   }
+  autoLoadHistory();
 });
 document.getElementById('modeRange').addEventListener('click', () => {
   document.getElementById('modeRange').classList.add('active');
@@ -845,6 +857,17 @@ document.getElementById('modeRange').addEventListener('click', () => {
     document.getElementById('rangeEnd').value = today.toISOString().split('T')[0];
   if (!document.getElementById('rangeStart').value)
     document.getElementById('rangeStart').value = weekAgo.toISOString().split('T')[0];
+  autoLoadHistory();
+});
+
+// Auto-load when date/range inputs change
+document.getElementById('historyDate').addEventListener('change', autoLoadHistory);
+document.getElementById('historyHour').addEventListener('change', autoLoadHistory);
+document.getElementById('rangeStart').addEventListener('change', () => {
+  if (document.getElementById('rangeEnd').value) autoLoadHistory();
+});
+document.getElementById('rangeEnd').addEventListener('change', () => {
+  if (document.getElementById('rangeStart').value) autoLoadHistory();
 });
 
 
@@ -1589,6 +1612,12 @@ async function fetchAll() {
     if (escalated) manualOverride = 'dual_caution';
   }
   updateBanner(manualOverride, manualNode);
+
+  // Auto-refresh history if History tab is open and in Recent mode
+  // Don't refresh if By Date or Date Range — user is viewing a specific period
+  const historyOpen = document.getElementById('historyPage').classList.contains('active');
+  const recentMode = document.getElementById('modeRecent').classList.contains('active');
+  if (historyOpen && recentMode) loadHistory();
 }
 
 // ── Notifications ──
