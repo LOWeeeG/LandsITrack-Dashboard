@@ -1101,7 +1101,7 @@ async function setTiltBaseline(nodeId) {
       const entry = parseInt((await res.text()).trim());
       if (entry > 0) {
         accepted = true;
-        if (btn) btn.textContent = 'Command sent — waiting…';
+        if (btn) btn.textContent = 'Command sent ✓ — waiting for node…';
       } else {
         if (btn) btn.textContent = 'Rate limited — retrying… (' + attempts + '/5)';
         await new Promise(r => setTimeout(r, 16000));
@@ -1112,8 +1112,20 @@ async function setTiltBaseline(nodeId) {
     }
   }
 
+  if (!accepted) {
+    if (btn) { btn.textContent = '🎯 Set Tilt Baseline'; btn.disabled = false; }
+    alert('Could not send calibration command. Please try again.');
+    return;
+  }
+
+  // Wait for ESP32 wake cycle to pick up and execute (~30s max)
+  // Show countdown so user knows hardware is processing
+  for (let s = 30; s >= 1; s--) {
+    if (btn) btn.textContent = 'Node calibrating… (' + s + 's)';
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
   if (btn) { btn.textContent = '🎯 Set Tilt Baseline'; btn.disabled = false; }
-  if (!accepted) { alert('Could not send calibration command. Please try again.'); return; }
 
   // Save baseline to Firebase for dashboard display
   const calib = calibCache[nodeId] || { baseline: null, log: [] };

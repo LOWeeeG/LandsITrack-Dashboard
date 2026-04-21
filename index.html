@@ -312,7 +312,8 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 .mode-btn{background:none;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
 .mode-btn.active{background:var(--teal-dark);color:#fff;}
 .date-input{background:var(--surface2);border:1.5px solid var(--teal-dark);border-radius:8px;color:var(--text);padding:7px 10px;font-family:var(--mono);font-size:12px;outline:none;-webkit-appearance:none;appearance:none;}
-.date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.8;cursor:pointer;}
+.date-input::-webkit-calendar-picker-indicator{opacity:.7;cursor:pointer;filter:invert(0);}
+[data-theme="dark"] .date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.8;}
 .date-input option{background:var(--surface2);color:var(--text);}
 .lang-toggle{display:flex;justify-content:center;margin:16px 0 4px;gap:0;}
 .lang-btn{background:none;border:1.5px solid var(--teal-dark);padding:8px 22px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-mid);cursor:pointer;transition:background .2s,color .2s;}
@@ -1125,7 +1126,7 @@ async function loadPastAlerts() {
       data.feeds.forEach(f => {
         const lv = Math.min(parseInt(f['field'+node.fields.alertLevel])||0, 4);
         const ts = new Date(f.created_at);
-        const tilt = ((parseFloat(f['field'+node.fields.tiltShallow])||0) + (parseFloat(f['field'+node.fields.tiltDeep])||0)) / 2;
+        const tilt = parseFloat(f['field'+node.fields.tiltAvg]);
         const moist = parseFloat(f['field'+node.fields.moistureAvg]);
         if (prevLevel !== -1 && lv !== prevLevel) {
           // Check if this entry already exists (avoid duplicates)
@@ -1501,7 +1502,7 @@ async function fetchNode(node) {
     const data = await res.json();
     const tiltShallow = parseFloat(data['field' + node.fields.tiltShallow]) || 0;
     const tiltDeep    = parseFloat(data['field' + node.fields.tiltDeep])    || 0;
-    const trueAngle   = (tiltShallow + tiltDeep) / 2; // computed locally — avoids ThingSpeak upload collision on field5
+    const trueAngle   = parseFloat(data['field' + node.fields.tiltAvg])     || 0;
     const timestamp   = data.created_at ? new Date(data.created_at) : null;
     latestTrue[node.id] = trueAngle;
     const calib = getCalib(node.id);
@@ -1734,15 +1735,15 @@ function groupByInterval(feeds, intervalMinutes, node) {
     const d = new Date(f.created_at);
     const TZ_OFFSET_MS = 8*60*60*1000;
     const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(intervalMinutes*60000))*(intervalMinutes*60000)-TZ_OFFSET_MS;
-    if (!buckets[bucketMs]) buckets[bucketMs]={sum:{tS:0,tD:0,mS:0,mD:0,mA:0,v:0},count:0,time:new Date(bucketMs)};
+    if (!buckets[bucketMs]) buckets[bucketMs]={sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0},count:0,time:new Date(bucketMs)};
     const b=buckets[bucketMs];
-    b.sum.tS+=parseFloat(f['field'+node.fields.tiltShallow])||0; b.sum.tD+=parseFloat(f['field'+node.fields.tiltDeep])||0;
+    b.sum.tS+=parseFloat(f['field'+node.fields.tiltShallow])||0; b.sum.tD+=parseFloat(f['field'+node.fields.tiltDeep])||0; b.sum.tA+=parseFloat(f['field'+node.fields.tiltAvg])||0;
     b.sum.mS+=parseFloat(f['field'+node.fields.moistureShallow])||0; b.sum.mD+=parseFloat(f['field'+node.fields.moistureDeep])||0; b.sum.mA+=parseFloat(f['field'+node.fields.moistureAvg])||0;
     b.sum.v+=parseFloat(f['field'+node.fields.vibration])||0; b.count++;
   });
   return Object.values(buckets).sort((a,b)=>a.time-b.time).map(b=>({
     created_at:b.time.toISOString(),
-    ['field'+node.fields.tiltShallow]:(b.sum.tS/b.count).toFixed(2),['field'+node.fields.tiltDeep]:(b.sum.tD/b.count).toFixed(2),['field'+node.fields.tiltAvg]:((b.sum.tS/b.count+b.sum.tD/b.count)/2).toFixed(2), // computed from tS+tD
+    ['field'+node.fields.tiltShallow]:(b.sum.tS/b.count).toFixed(2),['field'+node.fields.tiltDeep]:(b.sum.tD/b.count).toFixed(2),['field'+node.fields.tiltAvg]:(b.sum.tA/b.count).toFixed(2),
     ['field'+node.fields.moistureShallow]:(b.sum.mS/b.count).toFixed(2),['field'+node.fields.moistureDeep]:(b.sum.mD/b.count).toFixed(2),['field'+node.fields.moistureAvg]:(b.sum.mA/b.count).toFixed(2),
     ['field'+node.fields.vibration]:Math.round(b.sum.v/b.count),
   }));
@@ -1858,11 +1859,12 @@ async function loadHistory() {
           const d = new Date(f.created_at);
           const bucketMs = Math.floor((d.getTime()+TZ_OFFSET_MS)/(effectiveInterval*60000))*(effectiveInterval*60000)-TZ_OFFSET_MS;
           if (!masterBuckets[bucketMs]) masterBuckets[bucketMs] = {
-            sum:{tS:0,tD:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs)
+            sum:{tS:0,tD:0,tA:0,mS:0,mD:0,mA:0,v:0}, count:0, time:new Date(bucketMs)
           };
           const b = masterBuckets[bucketMs];
           b.sum.tS += parseFloat(f['field'+flds.tiltShallow])||0;
           b.sum.tD += parseFloat(f['field'+flds.tiltDeep])||0;
+          b.sum.tA += parseFloat(f['field'+flds.tiltAvg])||0;
           b.sum.mS += parseFloat(f['field'+flds.moistureShallow])||0;
           b.sum.mD += parseFloat(f['field'+flds.moistureDeep])||0;
           b.sum.mA += parseFloat(f['field'+flds.moistureAvg])||0;
@@ -1878,7 +1880,7 @@ async function loadHistory() {
           created_at: b.time.toISOString(),
           ['field'+flds.tiltShallow]:   (b.sum.tS/b.count).toFixed(2),
           ['field'+flds.tiltDeep]:      (b.sum.tD/b.count).toFixed(2),
-          ['field'+flds.tiltAvg]:       ((b.sum.tS/b.count+b.sum.tD/b.count)/2).toFixed(2), // computed from tS+tD
+          ['field'+flds.tiltAvg]:       (b.sum.tA/b.count).toFixed(2),
           ['field'+flds.moistureShallow]:(b.sum.mS/b.count).toFixed(2),
           ['field'+flds.moistureDeep]:  (b.sum.mD/b.count).toFixed(2),
           ['field'+flds.moistureAvg]:   (b.sum.mA/b.count).toFixed(2),
@@ -1900,11 +1902,9 @@ async function loadHistory() {
         else if (effectiveInterval>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
         else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
         timestamps.push(d);
-        const _tS=parseFloat(f['field'+flds.tiltShallow])||0;
-        const _tD=parseFloat(f['field'+flds.tiltDeep])||0;
-        tiltShallowVals.push(_tS);
-        tiltDeepVals.push(_tD);
-        tiltVals.push((_tS+_tD)/2); // computed locally — avoids field5 collision
+        tiltShallowVals.push(parseFloat(f['field'+flds.tiltShallow])||0);
+        tiltDeepVals.push(parseFloat(f['field'+flds.tiltDeep])||0);
+        tiltVals.push(parseFloat(f['field'+flds.tiltAvg])||0);
         moistVals.push(parseFloat(f['field'+flds.moistureShallow])||0);
         moistDeepVals.push(parseFloat(f['field'+flds.moistureDeep])||0);
         moistAvgVals.push(parseFloat(f['field'+flds.moistureAvg])||0);
@@ -1936,11 +1936,9 @@ async function loadHistory() {
       else if(intervalMinutes>=360) labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
       else labels.push(d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}));
       timestamps.push(d);
-      const _tS2=parseFloat(f['field'+node.fields.tiltShallow])||0;
-      const _tD2=parseFloat(f['field'+node.fields.tiltDeep])||0;
-      tiltShallowVals.push(_tS2);
-      tiltDeepVals.push(_tD2);
-      tiltVals.push((_tS2+_tD2)/2); // computed locally — avoids field5 collision
+      tiltShallowVals.push(parseFloat(f['field'+node.fields.tiltShallow])||0);
+      tiltDeepVals.push(parseFloat(f['field'+node.fields.tiltDeep])||0);
+      tiltVals.push(parseFloat(f['field'+node.fields.tiltAvg])||0);
       moistVals.push(parseFloat(f['field'+node.fields.moistureShallow])||0);
       moistDeepVals.push(parseFloat(f['field'+node.fields.moistureDeep])||0);
       moistAvgVals.push(parseFloat(f['field'+node.fields.moistureAvg])||0);
@@ -2152,13 +2150,10 @@ async function setJudgement(nodeId, type) {
     const btnSafe=document.getElementById(nodeId+'-btnSafe');
     btnSafe.textContent='Sending...'; btnSafe.disabled=true;
     let accepted=false,attempts=0;
-    while(!accepted&&attempts<5){ attempts++; try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=99`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;}else{await new Promise(r=>setTimeout(r,16000));} }catch(e){await new Promise(r=>setTimeout(r,16000));} }
+    while(!accepted&&attempts<5){ attempts++; try{ const res=await fetch(`https://api.thingspeak.com/update?api_key=${node.writeApiKey}&field8=94`); const entry=parseInt((await res.text()).trim()); if(entry>0){accepted=true;}else{await new Promise(r=>setTimeout(r,16000));} }catch(e){await new Promise(r=>setTimeout(r,16000));} }
     btnSafe.textContent='Confirm Safe'; btnSafe.disabled=false;
-    if(!accepted){alert('Could not send command. Please try again.');return;}
-    const calib=getCalib(nodeId); if(!calib.log) calib.log=[];
-    calib.log.unshift({baseline:latestTrue[nodeId],setAt:new Date().toISOString(),note:'Confirmed Safe — hardware calibrated'});
-    if(calib.log.length>20) calib.log=calib.log.slice(0,20); calib.baseline=null;
-    await saveCalib(nodeId,calib); await saveJudgement('node1',null); await saveJudgement('node2',null); fetchAll();
+    if(!accepted){alert('Could not send all-clear command. Please try again.');return;}
+    await saveJudgement('node1',null); await saveJudgement('node2',null); fetchAll();
   } else if (type==='caution') {
     if(!confirm(`Issue CAUTION for ${nodeName}? This will send a Level 3 caution SMS to all recipients.`)) return;
     const node=nodes.find(n=>n.id===nodeId); const btn=document.getElementById(nodeId+'-btnCaution');
