@@ -2104,7 +2104,12 @@ function renderTable(nodeLabel, timestamps, tiltShallowVals, tiltDeepVals, tiltV
   function alertLabel(tilt,moist,rowTime,firmwareLv){
     const t=Math.abs(tilt);
     const staleAfterCalib=(t<2&&moist<10&&firmwareLv>=1);
-    const lv=staleAfterCalib?0:(firmwareLv!==undefined&&firmwareLv>=0)?Math.min(firmwareLv,3):(t>=20||moist>=95)?4:(t>=15||moist>=85)?3:(t>=10||moist>=75)?2:(t>=5||moist>=60)?1:0;
+    // field8 doubles as command channel (94-99 are commands, 0 = cleared after command)
+    // If firmwareLv is a command value or 0 with high tilt, compute from sensors instead
+    const isCmdValue = firmwareLv>=94;
+    const useFirmware = !isCmdValue && firmwareLv>=1;
+    const computed=(t>=20)?4:(t>=15)?3:(t>=10)?2:(t>=5)?1:0;
+    const lv=staleAfterCalib?0:useFirmware?Math.min(firmwareLv,4):computed;
     const labels=['Normal','Level 1','Level 2','Level 3','Level 4'];
     const cls=['dt-safe','dt-l1','dt-l2','dt-l3','dt-l4'];
     let label=labels[lv],displayLv=lv;
