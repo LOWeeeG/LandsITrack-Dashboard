@@ -643,7 +643,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--text-muted);fon
 const ADMIN_PIN = '1234';
 
 import { initializeApp }                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
   apiKey:            'AIzaSyB3euxv8G2-cshHRi2TSENxea922DOH8To',
@@ -1178,13 +1178,36 @@ async function loadPastAlerts() {
 }
 
 // ── SMS Log ──
-function recordSMS(nodeId, level, recipients, message) {
-  smsLog.unshift({
+// Persisted to Firebase so it survives page refreshes and is shared across devices
+
+async function recordSMS(nodeId, level, recipients, message) {
+  const entry = {
     nodeId, level, recipients, message,
-    timestamp: new Date()
-  });
-  if (smsLog.length > 50) smsLog.pop();
+    timestamp: new Date().toISOString()
+  };
+  // Add to in-memory log
+  smsLog.unshift(entry);
+  if (smsLog.length > 100) smsLog.pop();
+  // Persist to Firebase
+  try {
+    await addDoc(collection(db, 'smsLog'), entry);
+  } catch(e) {
+    console.warn('SMS log Firebase write failed:', e);
+  }
   if (adminAuth) renderSmsLog();
+}
+
+async function loadSmsLogFromFirebase() {
+  try {
+    const q = query(collection(db, 'smsLog'), orderBy('timestamp', 'desc'), limit(100));
+    const snap = await getDocs(q);
+    smsLog.length = 0;
+    snap.forEach(d => smsLog.push(d.data()));
+    renderSmsLog();
+  } catch(e) {
+    console.warn('SMS log Firebase load failed:', e);
+    renderSmsLog();
+  }
 }
 
 function renderSmsLog() {
@@ -1198,8 +1221,9 @@ function renderSmsLog() {
   el.innerHTML = smsLog.map(entry => {
     const node = nodes.find(n => n.id === entry.nodeId);
     const name = node?.label || entry.nodeId;
-    const time = entry.timestamp.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
-                 entry.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    const ts = new Date(entry.timestamp);
+    const time = ts.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
+                 ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
     const color = levelColors[entry.level] || 'var(--text)';
     const levelNames = ['Normal','Level 1','Level 2','Level 3','Level 4'];
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
@@ -1233,6 +1257,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 document.getElementById('smsLogTab').addEventListener('click', () => {
+  loadSmsLogFromFirebase(); // load fresh from Firebase each time tab is opened
   document.getElementById('smsLogTab').classList.add('active');
   document.getElementById('alertLogTab').classList.remove('active');
   document.getElementById('smsLogContent').style.display = '';
